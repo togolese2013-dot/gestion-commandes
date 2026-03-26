@@ -2,12 +2,12 @@ import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
 
 export default defineConfig({
-output: "server",
-adapter: node({
-mode: "standalone"
-}),
-server: {
-  port: process.env.PORT || 4321,
-  host: true
-}
+  output: "server",
+  adapter: node({
+    mode: "standalone"
+  }),
+  server: {
+    host: true,
+    port: process.env.PORT
+  }
 });
