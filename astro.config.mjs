@@ -7,6 +7,10 @@ export default defineConfig({
   adapter: node({
     mode: "standalone"
   }),
+  // Disable Astro's built-in CSRF check (Railway proxy changes Origin headers)
+  security: {
+    checkOrigin: false
+  },
   vite: {
     plugins: [tailwindcss()]
   },
