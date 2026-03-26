@@ -1,0 +1,92 @@
+{
+  "name": "3 - Paiement Reçu WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "paiement",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c3d4e5f6-0003-0003-0003-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "paiement-webhook-003"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nreturn [{\n  json: {\n    client_name: body.client_name,\n    client_phone: body.client_phone,\n    order_number: body.order_number,\n    amount_paid: Number(body.amount_paid).toLocaleString('fr-FR'),\n    payment_method: body.payment_method || 'Non spécifié',\n    total_amount: Number(body.total_amount).toLocaleString('fr-FR'),\n    remaining_balance: Number(body.remaining_balance).toLocaleString('fr-FR'),\n    order_url: body.order_url\n  }\n}];"
+      },
+      "id": "c3d4e5f6-0003-0003-0003-000000000002",
+      "name": "Préparer données",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v20.0/1108545832334279/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.client_phone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"paiement_recu\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $json.client_name }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.order_number }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.amount_paid }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.payment_method }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.remaining_balance }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.order_url }}\" }\n        ]\n      }\n    ]\n  }\n}",
+        "options": {}
+      },
+      "id": "c3d4e5f6-0003-0003-0003-000000000003",
+      "name": "Envoyer WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\" }",
+        "options": {}
+      },
+      "id": "c3d4e5f6-0003-0003-0003-000000000004",
+      "name": "Répondre",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Préparer données", "type": "main", "index": 0 }]
+      ]
+    },
+    "Préparer données": {
+      "main": [
+        [{ "node": "Envoyer WhatsApp", "type": "main", "index": 0 }]
+      ]
+    },
+    "Envoyer WhatsApp": {
+      "main": [
+        [{ "node": "Répondre", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "WhatsApp" }, { "name": "Commandes" }]
+}

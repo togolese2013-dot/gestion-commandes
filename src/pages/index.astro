@@ -1,0 +1,8 @@
+---
+import { isAuthenticated } from '../lib/auth';
+
+if (isAuthenticated(Astro.request)) {
+  return Astro.redirect('/admin/orders');
+}
+return Astro.redirect('/login');
+---

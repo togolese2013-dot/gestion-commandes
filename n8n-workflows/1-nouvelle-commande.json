@@ -1,0 +1,92 @@
+{
+  "name": "1 - Nouvelle Commande WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "commande",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "commande-webhook-001"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst products = body.products ?? [];\nconst productsList = products.map(p => `• ${p.name} (${p.condition}) x${p.quantity}`).join('\\n');\nconst delivery = body.delivery_type === 'avion' ? 'EXPRESS ✈️ (4-14 jours)' : 'ECO 🚢 (30-45 jours)';\nreturn [{\n  json: {\n    client_name: body.client_name,\n    client_phone: body.client_phone,\n    order_number: body.order_number,\n    delivery: delivery,\n    total_amount: Number(body.total_amount).toLocaleString('fr-FR'),\n    deposit: Number(body.deposit).toLocaleString('fr-FR'),\n    remaining_balance: Number(body.remaining_balance).toLocaleString('fr-FR'),\n    order_url: body.order_url,\n    products_text: productsList || 'N/A'\n  }\n}];"
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Préparer données",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v20.0/1108545832334279/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.client_phone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"nouvelle_commande\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $json.client_name }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.order_number }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.products_text }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.delivery }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.total_amount }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.deposit }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.remaining_balance }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.order_url }}\" }\n        ]\n      }\n    ]\n  }\n}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000003",
+      "name": "Envoyer WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\" }",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000004",
+      "name": "Répondre",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Préparer données", "type": "main", "index": 0 }]
+      ]
+    },
+    "Préparer données": {
+      "main": [
+        [{ "node": "Envoyer WhatsApp", "type": "main", "index": 0 }]
+      ]
+    },
+    "Envoyer WhatsApp": {
+      "main": [
+        [{ "node": "Répondre", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "WhatsApp" }, { "name": "Commandes" }]
+}

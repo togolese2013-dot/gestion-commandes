@@ -1,0 +1,399 @@
+---
+import { requireAuth } from '../../lib/auth';
+import Layout from '../../layouts/Layout.astro';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+---
+
+<Layout title="Nouvelle commande" isAdmin={true}>
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Nouvelle commande</h1>
+
+    <!-- Success banner -->
+    <div id="success-banner" class="hidden mb-5 p-4 bg-green-50 border border-green-200 rounded-xl">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div>
+          <p class="text-green-800 font-semibold">Commande créée avec succès !</p>
+          <p class="text-green-700 text-sm mt-0.5">
+            Numéro : <span id="success-order-number" class="font-bold font-mono"></span> —
+            <a id="success-link" href="#" class="underline hover:no-underline" target="_blank">Voir la page client</a>
+            <span class="mx-1 text-green-500">·</span>
+            <a href="/admin/orders" class="underline hover:no-underline">Gérer les commandes</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error banner -->
+    <div id="error-banner" class="hidden mb-5 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+      <svg class="w-5 h-5 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <p id="error-msg" class="text-red-700 text-sm"></p>
+    </div>
+
+    <form id="order-form" class="bg-white rounded-2xl shadow-sm border border-gray-200 divide-y divide-gray-100">
+
+      <!-- Client info -->
+      <section class="p-6">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Informations client</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Nom du client <span class="text-red-500">*</span></label>
+            <input
+              type="text"
+              name="client_name"
+              required
+              autocomplete="off"
+              class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition"
+              placeholder="Prénom Nom"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              Numéro WhatsApp <span class="text-red-500">*</span>
+              <span class="text-xs text-gray-400 font-normal ml-1">(ex: 22890000000)</span>
+            </label>
+            <input
+              type="tel"
+              name="client_phone"
+              required
+              autocomplete="off"
+              class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition"
+              placeholder="22890000000"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- Products -->
+      <section class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+            Produits <span class="text-red-500">*</span>
+          </h2>
+          <button
+            type="button"
+            id="add-product-btn"
+            class="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Ajouter un produit
+          </button>
+        </div>
+
+        <div id="products-header" class="hidden"></div>
+
+        <div id="products-list" class="space-y-2"></div>
+
+        <div id="no-product-msg" class="py-8 text-center border-2 border-dashed border-gray-200 rounded-xl">
+          <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <p class="text-sm text-gray-400">Aucun produit ajouté</p>
+          <p class="text-xs text-gray-300 mt-0.5">Cliquez sur "Ajouter un produit"</p>
+        </div>
+      </section>
+
+      <!-- Delivery -->
+      <section class="p-6">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Livraison <span class="text-red-500">*</span></h2>
+        <div class="flex gap-3">
+          <label class="flex-1 flex flex-col items-center justify-center gap-1 cursor-pointer border border-gray-200 rounded-xl p-3.5 text-center hover:border-blue-300 hover:bg-blue-50/50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+            <input type="radio" name="delivery_type" value="avion" required class="w-4 h-4 text-blue-600" />
+            <div class="text-sm font-semibold text-gray-800">✈️ EXPRESS</div>
+            <div class="text-xs text-gray-400">Par Avion<br/>4 jours - 14 jours</div>
+          </label>
+          <label class="flex-1 flex flex-col items-center justify-center gap-1 cursor-pointer border border-gray-200 rounded-xl p-3.5 text-center hover:border-blue-300 hover:bg-blue-50/50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+            <input type="radio" name="delivery_type" value="bateau" class="w-4 h-4 text-blue-600" />
+            <div class="text-sm font-semibold text-gray-800">🚢 ECO</div>
+            <div class="text-xs text-gray-400">Par Bateau<br/>30 jours - 45 jours</div>
+          </label>
+        </div>
+      </section>
+
+      <!-- Financial -->
+      <section class="p-6">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Paiement</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Montant total (FCFA)</label>
+            <div class="relative">
+              <input
+                type="number"
+                id="total_amount"
+                name="total_amount"
+                min="0"
+                step="1"
+                readonly
+                tabindex="-1"
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm font-semibold text-gray-900 cursor-not-allowed"
+                placeholder="0"
+              />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">auto</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Acompte versé (FCFA)</label>
+            <input
+              type="number"
+              id="deposit"
+              name="deposit"
+              min="0"
+              step="1"
+              value="0"
+              class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition"
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Reste à payer (FCFA)</label>
+            <div class="relative">
+              <input
+                type="number"
+                id="remaining_balance"
+                name="remaining_balance"
+                min="0"
+                step="1"
+                readonly
+                tabindex="-1"
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm font-semibold cursor-not-allowed"
+                id2="remaining_balance"
+                placeholder="0"
+              />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">auto</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Mode de paiement</label>
+          <select
+            id="payment_method"
+            name="payment_method"
+            class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white transition"
+          >
+            <option value="">— Sélectionner —</option>
+            <option value="Espèces">Espèces</option>
+            <option value="Mix by Yas">Mix by Yas</option>
+            <option value="Moov Money">Moov Money</option>
+            <option value="Virement bancaire">Virement bancaire</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Notes -->
+      <section class="p-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Notes internes (optionnel)</label>
+        <textarea
+          name="notes"
+          rows="2"
+          class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none transition"
+          placeholder="Informations complémentaires sur la commande..."
+        ></textarea>
+      </section>
+
+      <div class="p-6 bg-gray-50 rounded-b-2xl flex items-center justify-between">
+        <p class="text-xs text-gray-400">Les champs <span class="text-red-400">*</span> sont obligatoires</p>
+        <button
+          type="submit"
+          id="submit-btn"
+          class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <svg id="submit-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <svg id="submit-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          Valider la commande
+        </button>
+      </div>
+    </form>
+  </div>
+</Layout>
+
+<script>
+const productsList = document.getElementById('products-list')!;
+const noProductMsg = document.getElementById('no-product-msg')!;
+const productsHeader = document.getElementById('products-header')!;
+const totalInput = document.getElementById('total_amount') as HTMLInputElement;
+const depositInput = document.getElementById('deposit') as HTMLInputElement;
+const remainingInput = document.getElementById('remaining_balance') as HTMLInputElement;
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function recalcTotal() {
+  const rows = productsList.querySelectorAll('.product-row');
+  let total = 0;
+  rows.forEach(row => {
+    const price = parseFloat((row.querySelector('.p-price') as HTMLInputElement).value) || 0;
+    const qty = parseInt((row.querySelector('.p-qty') as HTMLInputElement).value) || 0;
+    total += price * qty;
+  });
+  totalInput.value = Math.round(total).toString();
+  recalcRemaining();
+}
+
+function recalcRemaining() {
+  const total = parseFloat(totalInput.value) || 0;
+  const deposit = parseFloat(depositInput.value) || 0;
+  const remaining = Math.max(0, total - deposit);
+  remainingInput.value = Math.round(remaining).toString();
+  // Visual feedback on remaining
+  remainingInput.classList.toggle('text-red-600', remaining > 0);
+  remainingInput.classList.toggle('text-green-600', remaining === 0 && total > 0);
+}
+
+function updateHeaderVisibility() {
+  const hasProducts = productsList.children.length > 0;
+  noProductMsg.classList.toggle('hidden', hasProducts);
+  productsHeader.classList.toggle('hidden', !hasProducts);
+}
+
+function addProduct() {
+  const row = document.createElement('div');
+  row.className = 'product-row bg-white border border-gray-200 rounded-xl p-3 hover:border-gray-300 transition-colors space-y-2.5';
+  row.innerHTML = `
+    <div class="flex items-center justify-between gap-2">
+      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Produit</span>
+      <button type="button" class="remove-product-btn p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </button>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-500 mb-1">Nom du produit</label>
+      <input type="text" class="p-name w-full px-2.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="iPhone 15, TV Samsung..." required />
+    </div>
+    <div class="grid grid-cols-3 gap-2">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">État</label>
+        <select class="p-condition w-full px-2.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white" required>
+          <option value="" disabled selected>Choisir</option>
+          <option value="Neuf">Neuf</option>
+          <option value="Occasion">Occasion</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Prix (FCFA)</label>
+        <input type="number" class="p-price w-full px-2.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" min="0" step="1" placeholder="0" required />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Qté</label>
+        <input type="number" class="p-qty w-full px-2.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" min="1" value="1" required />
+      </div>
+    </div>
+  `;
+
+  row.querySelector('.p-price')!.addEventListener('input', recalcTotal);
+  row.querySelector('.p-qty')!.addEventListener('input', recalcTotal);
+  row.querySelector('.remove-product-btn')!.addEventListener('click', () => {
+    row.remove();
+    updateHeaderVisibility();
+    recalcTotal();
+  });
+
+  productsList.appendChild(row);
+  updateHeaderVisibility();
+  (row.querySelector('.p-name') as HTMLInputElement).focus();
+}
+
+document.getElementById('add-product-btn')!.addEventListener('click', addProduct);
+depositInput.addEventListener('input', recalcRemaining);
+
+// Add first product by default
+addProduct();
+
+// Form submission
+document.getElementById('order-form')!.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const submitIcon = document.getElementById('submit-icon')!;
+  const submitSpinner = document.getElementById('submit-spinner')!;
+  const errorBanner = document.getElementById('error-banner')!;
+  const errorMsg = document.getElementById('error-msg')!;
+  const successBanner = document.getElementById('success-banner')!;
+
+  const rows = productsList.querySelectorAll('.product-row');
+  if (!rows.length) {
+    errorMsg.textContent = 'Ajoutez au moins un produit.';
+    errorBanner.classList.remove('hidden');
+    successBanner.classList.add('hidden');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitIcon.classList.add('hidden');
+  submitSpinner.classList.remove('hidden');
+  errorBanner.classList.add('hidden');
+  successBanner.classList.add('hidden');
+
+  const products = Array.from(rows).map(row => ({
+    name: (row.querySelector('.p-name') as HTMLInputElement).value.trim(),
+    condition: (row.querySelector('.p-condition') as HTMLInputElement).value.trim(),
+    price: parseFloat((row.querySelector('.p-price') as HTMLInputElement).value) || 0,
+    quantity: parseInt((row.querySelector('.p-qty') as HTMLInputElement).value) || 1,
+  }));
+
+  const data = new FormData(form);
+  const payload = {
+    client_name: data.get('client_name'),
+    client_phone: data.get('client_phone'),
+    delivery_type: data.get('delivery_type'),
+    total_amount: parseFloat(totalInput.value) || 0,
+    deposit: parseFloat(depositInput.value) || 0,
+    remaining_balance: parseFloat(remainingInput.value) || 0,
+    notes: data.get('notes'),
+    products,
+  };
+
+  try {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      errorMsg.textContent = result.error ?? 'Une erreur est survenue.';
+      errorBanner.classList.remove('hidden');
+      return;
+    }
+
+    document.getElementById('success-order-number')!.textContent = result.order_number;
+    const link = document.getElementById('success-link') as HTMLAnchorElement;
+    link.href = `/commande/${result.order_number}`;
+    successBanner.classList.remove('hidden');
+
+    // Reset form
+    form.reset();
+    productsList.innerHTML = '';
+    totalInput.value = '';
+    remainingInput.value = '';
+    updateHeaderVisibility();
+    addProduct();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch {
+    errorMsg.textContent = 'Erreur de connexion au serveur.';
+    errorBanner.classList.remove('hidden');
+  } finally {
+    submitBtn.disabled = false;
+    submitIcon.classList.remove('hidden');
+    submitSpinner.classList.add('hidden');
+  }
+});
+</script>

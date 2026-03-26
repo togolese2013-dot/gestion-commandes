@@ -1,0 +1,956 @@
+---
+import { requireAuth } from '../../lib/auth';
+import { getAllOrders } from '../../lib/orders';
+import Layout from '../../layouts/Layout.astro';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+
+const orders = getAllOrders();
+
+const statusLabel: Record<string, string> = {
+  en_attente: 'En attente',
+  disponible: 'Disponible',
+  recupere: 'Récupéré',
+};
+
+const statusColor: Record<string, string> = {
+  en_attente: 'bg-yellow-100 text-yellow-800',
+  disponible: 'bg-green-100 text-green-800',
+  recupere: 'bg-gray-100 text-gray-600',
+};
+---
+
+<Layout title="Gestion des commandes" isAdmin={true}>
+  <div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Commandes</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{orders.length} commande{orders.length !== 1 ? 's' : ''} au total</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <a
+          href="/api/orders/export?format=xlsx"
+          class="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+          title="Exporter en Excel"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Excel
+        </a>
+        <a
+          href="/api/orders/export?format=csv"
+          class="flex items-center gap-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+          title="Exporter en CSV"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          CSV
+        </a>
+        <a
+          href="/admin"
+          class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nouvelle commande
+        </a>
+      </div>
+    </div>
+
+    <!-- Status Filters -->
+    <div class="flex gap-2 flex-wrap">
+      {[
+        { key: 'all', label: `Toutes`, count: orders.length },
+        { key: 'en_attente', label: 'En attente', count: orders.filter(o => o.status === 'en_attente').length },
+        { key: 'disponible', label: 'Disponible', count: orders.filter(o => o.status === 'disponible').length },
+        { key: 'recupere', label: 'Récupéré', count: orders.filter(o => o.status === 'recupere').length },
+      ].map(f => (
+        <button
+          class={`filter-btn px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${f.key === 'all' ? 'active' : ''}`}
+          data-filter={f.key}
+        >
+          {f.label}
+          <span class="ml-1.5 bg-black/10 px-1.5 py-0.5 rounded-full text-xs">{f.count}</span>
+        </button>
+      ))}
+    </div>
+
+    <!-- Advanced Search -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Recherche</label>
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Client, numéro de commande..."
+              class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Date début</label>
+          <input id="date-from" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Date fin</label>
+          <input id="date-to" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Montant min (FCFA)</label>
+          <input id="amount-min" type="number" min="0" placeholder="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Montant max (FCFA)</label>
+          <input id="amount-max" type="number" min="0" placeholder="∞" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div class="sm:col-span-2 flex items-end">
+          <button id="reset-search" class="w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            Réinitialiser les filtres
+          </button>
+        </div>
+      </div>
+      <p id="search-count" class="text-xs text-gray-400 mt-3 hidden"></p>
+    </div>
+
+    {orders.length === 0 ? (
+      <div class="text-center py-20 bg-white rounded-2xl border border-gray-200">
+        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+        <p class="font-semibold text-gray-700 text-lg">Aucune commande</p>
+        <p class="text-gray-400 text-sm mt-1 mb-5">Commencez par créer votre première commande</p>
+        <a href="/admin" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Créer une commande
+        </a>
+      </div>
+    ) : (
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th class="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">N° commande</th>
+                <th class="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">Client</th>
+                <th class="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">Livraison</th>
+                <th class="text-right px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">Total</th>
+                <th class="text-right px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">Reste</th>
+                <th class="text-center px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">Statut</th>
+                <th class="text-left px-5 py-3.5 font-semibold text-gray-600 text-xs uppercase tracking-wider">Date</th>
+                <th class="px-5 py-3.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              {orders.map(order => (
+                <tr
+                  class="order-row hover:bg-gray-50/80 transition-colors group"
+                  data-status={order.status}
+                  data-client={order.client_name.toLowerCase()}
+                  data-number={order.order_number.toLowerCase()}
+                  data-date={order.created_at?.slice(0, 10)}
+                  data-total={order.total_amount}
+                >
+                  <td class="px-5 py-4">
+                    <span class="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md">
+                      {order.order_number}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <div class="font-semibold text-gray-900">{order.client_name}</div>
+                    <div class="text-gray-400 text-xs mt-0.5">{order.client_phone}</div>
+                  </td>
+                  <td class="px-5 py-4 text-gray-600">
+                    {order.delivery_type === 'avion' ? '✈️ EXPRESS' : '🚢 ECO'}
+                  </td>
+                  <td class="px-5 py-4 text-right font-semibold text-gray-900">
+                    {order.total_amount.toLocaleString('fr-FR')} FCFA
+                  </td>
+                  <td class="px-5 py-4 text-right">
+                    <span class={order.remaining_balance > 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
+                      {order.remaining_balance.toLocaleString('fr-FR')} FCFA
+                    </span>
+                  </td>
+                  <td class="px-5 py-4 text-center">
+                    <span class={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${statusColor[order.status ?? 'en_attente']}`}>
+                      {statusLabel[order.status ?? 'en_attente']}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4 text-gray-500 text-xs">
+                    {new Date(order.created_at!).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-1 justify-end opacity-60 group-hover:opacity-100 transition-opacity">
+                      <!-- View -->
+                      <button
+                        class="view-btn p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        data-id={order.id}
+                        data-order={JSON.stringify(order)}
+                        title="Voir le détail"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                      </button>
+                      <!-- Edit -->
+                      <button
+                        class="edit-btn p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                        data-id={order.id}
+                        data-order={JSON.stringify(order)}
+                        title="Modifier"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                      </button>
+                      <!-- Confirm available -->
+                      {order.status === 'en_attente' && (
+                        <button
+                          class="confirm-available-btn p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          data-id={order.id}
+                          data-name={order.client_name}
+                          title="Marquer disponible (envoi WhatsApp)"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                          </svg>
+                        </button>
+                      )}
+                      <!-- Confirm picked up -->
+                      {order.status === 'disponible' && (
+                        <button
+                          class="confirm-pickup-btn p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          data-id={order.id}
+                          data-name={order.client_name}
+                          title="Confirmer récupération et paiement"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                          </svg>
+                        </button>
+                      )}
+                      <!-- Payment -->
+                      {order.remaining_balance > 0 && (
+                        <button
+                          class="payment-btn p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          data-id={order.id}
+                          data-name={order.client_name}
+                          data-number={order.order_number}
+                          data-total={order.total_amount}
+                          data-deposit={order.deposit}
+                          data-remaining={order.remaining_balance}
+                          title="Enregistrer un paiement"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                          </svg>
+                        </button>
+                      )}
+                      <!-- Delete -->
+                      <button
+                        class="delete-btn p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        data-id={order.id}
+                        data-name={order.client_name}
+                        data-number={order.order_number}
+                        title="Supprimer"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+  </div>
+
+  <!-- View Modal -->
+  <div id="view-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+        <h2 class="text-base font-bold text-gray-900">Détail commande</h2>
+        <button id="close-view-modal" class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div id="view-modal-content" class="p-6"></div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+        <h2 class="text-base font-bold text-gray-900">Modifier la commande</h2>
+        <button id="close-edit-modal" class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <form id="edit-form" class="p-6 space-y-5">
+        <input type="hidden" id="edit-order-id" />
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Nom client</label>
+            <input id="edit-client-name" type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">WhatsApp</label>
+            <input id="edit-client-phone" type="tel" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Livraison</label>
+            <select id="edit-delivery" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              <option value="avion">✈️ EXPRESS</option>
+              <option value="bateau">🚢 ECO</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Statut</label>
+            <select id="edit-status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              <option value="en_attente">⏳ En attente</option>
+              <option value="disponible">✅ Disponible</option>
+              <option value="recupere">📦 Récupéré</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Edit products -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider">Produits</label>
+            <button type="button" id="edit-add-product"
+              class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Ajouter
+            </button>
+          </div>
+          <div id="edit-products-list" class="space-y-2"></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Total (FCFA)</label>
+            <input id="edit-total" type="number" step="1" readonly class="w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-sm font-semibold cursor-not-allowed" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Acompte (FCFA)</label>
+            <input id="edit-deposit" type="number" step="1" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Reste (FCFA)</label>
+            <input id="edit-remaining" type="number" step="1" readonly class="w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-sm font-semibold cursor-not-allowed" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Notes</label>
+          <textarea id="edit-notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+        </div>
+
+        <div id="edit-error" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"></div>
+
+        <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
+          <button type="button" id="cancel-edit"
+            class="px-4 py-2.5 text-sm font-semibold text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            Annuler
+          </button>
+          <button type="submit" id="edit-submit"
+            class="px-4 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-60">
+            <svg id="edit-submit-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <svg id="edit-submit-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="payment-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 class="text-base font-bold text-gray-900">💰 Enregistrer un paiement</h2>
+        <button id="close-payment-modal" class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="bg-gray-50 rounded-xl p-4 text-sm space-y-2">
+          <div class="flex justify-between"><span class="text-gray-500">Client</span><span id="pay-client-name" class="font-semibold"></span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Commande</span><span id="pay-order-number" class="font-mono text-xs text-blue-700 font-bold"></span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Total</span><span id="pay-total" class="font-semibold"></span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Déjà versé</span><span id="pay-deposit" class="text-green-600 font-semibold"></span></div>
+          <div class="flex justify-between pt-2 border-t border-gray-200 font-bold">
+            <span>Reste à payer</span>
+            <span id="pay-remaining" class="text-red-600"></span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Montant du paiement (FCFA)</label>
+          <input
+            id="pay-amount"
+            type="number"
+            min="1"
+            step="1"
+            class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            placeholder="0"
+          />
+          <button id="pay-full-btn" type="button" class="mt-2 text-xs text-emerald-600 hover:text-emerald-800 font-medium underline">
+            Solder le reste (tout payer)
+          </button>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Mode de paiement</label>
+          <select id="pay-method" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white">
+            <option value="">— Sélectionner —</option>
+            <option value="Espèces">Espèces</option>
+            <option value="Mix by Yas">Mix by Yas</option>
+            <option value="Moov Money">Moov Money</option>
+            <option value="Virement bancaire">Virement bancaire</option>
+          </select>
+        </div>
+        <div id="pay-error" class="hidden text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3">
+          <button id="cancel-payment" class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            Annuler
+          </button>
+          <button id="do-payment" class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <svg id="pay-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            <span id="pay-btn-label">Valider le paiement</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Action Modal -->
+  <div id="confirm-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div id="confirm-icon-wrap" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"></div>
+      <h2 id="confirm-title" class="text-base font-bold text-gray-900 text-center mb-2"></h2>
+      <p id="confirm-msg" class="text-sm text-gray-500 text-center mb-6"></p>
+      <div class="flex gap-3">
+        <button id="cancel-confirm" class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+          Annuler
+        </button>
+        <button id="do-confirm" class="flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-lg transition-colors flex items-center justify-center gap-2">
+          <svg id="confirm-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          <span id="confirm-btn-label"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .filter-btn { border-color: #e5e7eb; color: #6b7280; background: white; }
+  .filter-btn.active { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+  .filter-btn:hover:not(.active) { background: #f9fafb; }
+</style>
+
+<script>
+// ---- Helpers ----
+function esc(str: unknown): string {
+  return String(str ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmt(n: number) {
+  return Number(n).toLocaleString('fr-FR');
+}
+
+// ---- Filter + Search ----
+let activeStatus = 'all';
+
+function applyFilters() {
+  const search = (document.getElementById('search-input') as HTMLInputElement).value.toLowerCase().trim();
+  const dateFrom = (document.getElementById('date-from') as HTMLInputElement).value;
+  const dateTo = (document.getElementById('date-to') as HTMLInputElement).value;
+  const amtMin = parseFloat((document.getElementById('amount-min') as HTMLInputElement).value) || 0;
+  const amtMax = parseFloat((document.getElementById('amount-max') as HTMLInputElement).value) || Infinity;
+
+  let visible = 0;
+  document.querySelectorAll('.order-row').forEach(row => {
+    const r = row as HTMLElement;
+    const status = r.dataset.status ?? '';
+    const client = r.dataset.client ?? '';
+    const number = r.dataset.number ?? '';
+    const date = r.dataset.date ?? '';
+    const total = parseFloat(r.dataset.total ?? '0');
+
+    const matchStatus = activeStatus === 'all' || status === activeStatus;
+    const matchSearch = !search || client.includes(search) || number.includes(search);
+    const matchDateFrom = !dateFrom || date >= dateFrom;
+    const matchDateTo = !dateTo || date <= dateTo;
+    const matchAmt = total >= amtMin && total <= amtMax;
+
+    const show = matchStatus && matchSearch && matchDateFrom && matchDateTo && matchAmt;
+    r.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  const countEl = document.getElementById('search-count')!;
+  const hasFilter = search || dateFrom || dateTo || amtMin > 0 || amtMax < Infinity;
+  countEl.textContent = `${visible} commande${visible !== 1 ? 's' : ''} trouvée${visible !== 1 ? 's' : ''}`;
+  countEl.classList.toggle('hidden', !hasFilter);
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeStatus = btn.getAttribute('data-filter') ?? 'all';
+    applyFilters();
+  });
+});
+
+['search-input', 'date-from', 'date-to', 'amount-min', 'amount-max'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', applyFilters);
+});
+
+document.getElementById('reset-search')?.addEventListener('click', () => {
+  (document.getElementById('search-input') as HTMLInputElement).value = '';
+  (document.getElementById('date-from') as HTMLInputElement).value = '';
+  (document.getElementById('date-to') as HTMLInputElement).value = '';
+  (document.getElementById('amount-min') as HTMLInputElement).value = '';
+  (document.getElementById('amount-max') as HTMLInputElement).value = '';
+  applyFilters();
+});
+
+// ---- View Modal ----
+const viewModal = document.getElementById('view-modal')!;
+const viewContent = document.getElementById('view-modal-content')!;
+
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const order = JSON.parse(btn.getAttribute('data-order')!);
+    const statusMap: Record<string, string> = {
+      en_attente: '⏳ En attente',
+      disponible: '✅ Disponible',
+      recupere: '📦 Récupéré',
+    };
+    const productsHtml = (order.products ?? []).map((p: any) => `
+      <div class="flex items-start justify-between py-2 border-b border-gray-50 last:border-0">
+        <div>
+          <span class="font-medium text-gray-900">${esc(p.name)}</span>
+          <span class="text-gray-400 text-xs ml-2">${esc(p.condition)}</span>
+        </div>
+        <div class="text-right text-xs text-gray-600 shrink-0 ml-4">
+          ${esc(p.quantity)} × ${fmt(p.price)} = <strong>${fmt(p.quantity * p.price)} FCFA</strong>
+        </div>
+      </div>
+    `).join('');
+
+    // Fetch payment history
+    let paymentsHtml = '';
+    try {
+      const res = await fetch(`/api/orders/${order.id}/payments`);
+      if (res.ok) {
+        const payments: any[] = await res.json();
+        if (payments.length > 0) {
+          paymentsHtml = `
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Historique des paiements</p>
+              <div class="bg-gray-50 rounded-xl divide-y divide-gray-100">
+                ${payments.map((p, i) => `
+                  <div class="flex items-center justify-between px-4 py-2.5 text-sm">
+                    <div>
+                      <span class="font-medium text-gray-700">Paiement #${i + 1}</span>
+                      <span class="text-xs text-gray-400 ml-2">${new Date(p.created_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'short',year:'numeric'})}</span>
+                      ${p.payment_method ? `<span class="ml-2 text-xs bg-white border border-gray-200 px-1.5 py-0.5 rounded text-gray-600">${esc(p.payment_method)}</span>` : ''}
+                    </div>
+                    <span class="font-bold text-green-600">+${fmt(p.amount)} FCFA</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+      }
+    } catch {}
+
+    viewContent.innerHTML = `
+      <div class="space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+          <span class="font-mono text-sm font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg">${esc(order.order_number)}</span>
+          <span class="text-xs text-gray-400">${new Date(order.created_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'})}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div><span class="text-gray-400 text-xs block">Client</span><span class="font-semibold">${esc(order.client_name)}</span></div>
+          <div><span class="text-gray-400 text-xs block">WhatsApp</span><span class="font-mono">${esc(order.client_phone)}</span></div>
+          <div><span class="text-gray-400 text-xs block">Livraison</span><span>${order.delivery_type === 'avion' ? '✈️ EXPRESS' : '🚢 ECO'}</span></div>
+          <div><span class="text-gray-400 text-xs block">Statut</span><span>${esc(statusMap[order.status] ?? order.status)}</span></div>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Produits</p>
+          <div class="bg-gray-50 rounded-xl px-4 py-1">${productsHtml}</div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-gray-500">Montant total</span><span class="font-bold">${fmt(order.total_amount)} FCFA</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Total versé</span><span class="text-green-600">− ${fmt(order.deposit)} FCFA</span></div>
+          <div class="flex justify-between pt-2 border-t border-gray-200 font-bold">
+            <span>Reste à payer</span>
+            <span class="${Number(order.remaining_balance) > 0 ? 'text-red-600' : 'text-green-600'}">${fmt(order.remaining_balance)} FCFA</span>
+          </div>
+        </div>
+        ${paymentsHtml}
+        ${order.notes ? `<div class="bg-blue-50 rounded-xl px-4 py-3 text-sm text-blue-800"><span class="font-semibold">Note : </span>${esc(order.notes)}</div>` : ''}
+        <a href="/commande/${esc(order.order_number)}" target="_blank"
+          class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-sm font-medium">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          Voir la page client
+        </a>
+      </div>
+    `;
+    viewModal.classList.remove('hidden');
+  });
+});
+document.getElementById('close-view-modal')!.addEventListener('click', () => viewModal.classList.add('hidden'));
+viewModal.addEventListener('click', e => { if (e.target === viewModal) viewModal.classList.add('hidden'); });
+
+// ---- Edit Modal ----
+const editModal = document.getElementById('edit-modal')!;
+const editProductsList = document.getElementById('edit-products-list')!;
+const editTotalInput = document.getElementById('edit-total') as HTMLInputElement;
+const editDepositInput = document.getElementById('edit-deposit') as HTMLInputElement;
+const editRemainingInput = document.getElementById('edit-remaining') as HTMLInputElement;
+
+function recalcEditTotal() {
+  let total = 0;
+  editProductsList.querySelectorAll('.edit-p-row').forEach(row => {
+    const price = parseFloat((row.querySelector('.ep-price') as HTMLInputElement).value) || 0;
+    const qty = parseInt((row.querySelector('.ep-qty') as HTMLInputElement).value) || 0;
+    total += price * qty;
+  });
+  editTotalInput.value = Math.round(total).toString();
+  editRemainingInput.value = Math.max(0, total - (parseFloat(editDepositInput.value) || 0)).toFixed(0);
+}
+
+function addEditProductRow(p?: {name:string; condition:string; price:number; quantity:number}) {
+  const row = document.createElement('div');
+  row.className = 'edit-p-row grid grid-cols-12 gap-2 items-center bg-gray-50 rounded-xl p-2.5 border border-gray-200';
+  row.innerHTML = `
+    <div class="col-span-4"><input type="text" class="ep-name w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" value="${esc(p?.name??'')}" placeholder="Produit..." required /></div>
+    <div class="col-span-3"><input type="text" class="ep-condition w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" value="${esc(p?.condition??'')}" placeholder="État..." required /></div>
+    <div class="col-span-2"><input type="number" class="ep-price w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" value="${p?.price??0}" min="0" step="1" /></div>
+    <div class="col-span-2"><input type="number" class="ep-qty w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" value="${p?.quantity??1}" min="1" /></div>
+    <div class="col-span-1 flex justify-center">
+      <button type="button" class="ep-remove p-1 text-gray-300 hover:text-red-500 rounded transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+  `;
+  row.querySelector('.ep-price')!.addEventListener('input', recalcEditTotal);
+  row.querySelector('.ep-qty')!.addEventListener('input', recalcEditTotal);
+  row.querySelector('.ep-remove')!.addEventListener('click', () => { row.remove(); recalcEditTotal(); });
+  editProductsList.appendChild(row);
+}
+
+document.getElementById('edit-add-product')!.addEventListener('click', () => { addEditProductRow(); recalcEditTotal(); });
+editDepositInput.addEventListener('input', recalcEditTotal);
+
+document.querySelectorAll('.edit-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const order = JSON.parse(btn.getAttribute('data-order')!);
+    (document.getElementById('edit-order-id') as HTMLInputElement).value = order.id;
+    (document.getElementById('edit-client-name') as HTMLInputElement).value = order.client_name;
+    (document.getElementById('edit-client-phone') as HTMLInputElement).value = order.client_phone;
+    (document.getElementById('edit-delivery') as HTMLSelectElement).value = order.delivery_type;
+    (document.getElementById('edit-status') as HTMLSelectElement).value = order.status;
+    editDepositInput.value = order.deposit;
+    editTotalInput.value = Math.round(Number(order.total_amount)).toString();
+    editRemainingInput.value = Math.round(Number(order.remaining_balance)).toString();
+    (document.getElementById('edit-notes') as HTMLTextAreaElement).value = order.notes ?? '';
+    editProductsList.innerHTML = '';
+    (order.products ?? []).forEach((p: any) => addEditProductRow(p));
+    (document.getElementById('edit-error') as HTMLElement).classList.add('hidden');
+    editModal.classList.remove('hidden');
+  });
+});
+
+document.getElementById('close-edit-modal')!.addEventListener('click', () => editModal.classList.add('hidden'));
+document.getElementById('cancel-edit')!.addEventListener('click', () => editModal.classList.add('hidden'));
+editModal.addEventListener('click', e => { if (e.target === editModal) editModal.classList.add('hidden'); });
+
+document.getElementById('edit-form')!.addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = (document.getElementById('edit-order-id') as HTMLInputElement).value;
+  const submitBtn = document.getElementById('edit-submit') as HTMLButtonElement;
+  const submitIcon = document.getElementById('edit-submit-icon')!;
+  const submitSpinner = document.getElementById('edit-submit-spinner')!;
+  const errorDiv = document.getElementById('edit-error') as HTMLElement;
+
+  submitBtn.disabled = true;
+  submitIcon.classList.add('hidden');
+  submitSpinner.classList.remove('hidden');
+  errorDiv.classList.add('hidden');
+
+  const products = Array.from(editProductsList.querySelectorAll('.edit-p-row')).map(row => ({
+    name: (row.querySelector('.ep-name') as HTMLInputElement).value.trim(),
+    condition: (row.querySelector('.ep-condition') as HTMLInputElement).value.trim(),
+    price: parseFloat((row.querySelector('.ep-price') as HTMLInputElement).value) || 0,
+    quantity: parseInt((row.querySelector('.ep-qty') as HTMLInputElement).value) || 1,
+  }));
+
+  const total = parseFloat(editTotalInput.value) || 0;
+  const deposit = parseFloat(editDepositInput.value) || 0;
+
+  const payload = {
+    client_name: (document.getElementById('edit-client-name') as HTMLInputElement).value.trim(),
+    client_phone: (document.getElementById('edit-client-phone') as HTMLInputElement).value.trim(),
+    delivery_type: (document.getElementById('edit-delivery') as HTMLSelectElement).value,
+    status: (document.getElementById('edit-status') as HTMLSelectElement).value,
+    total_amount: total,
+    deposit: deposit,
+    remaining_balance: Math.max(0, total - deposit),
+    notes: (document.getElementById('edit-notes') as HTMLTextAreaElement).value,
+    products,
+  };
+
+  try {
+    const res = await fetch(`/api/orders/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      window.location.reload();
+    } else {
+      const data = await res.json();
+      errorDiv.textContent = data.error ?? 'Erreur lors de la modification.';
+      errorDiv.classList.remove('hidden');
+    }
+  } catch {
+    errorDiv.textContent = 'Erreur de connexion.';
+    errorDiv.classList.remove('hidden');
+  } finally {
+    submitBtn.disabled = false;
+    submitIcon.classList.remove('hidden');
+    submitSpinner.classList.add('hidden');
+  }
+});
+
+// ---- Confirm Modal (shared for available, pickup, delete) ----
+const confirmModal = document.getElementById('confirm-modal')!;
+let confirmAction: (() => Promise<void>) | null = null;
+
+function showConfirm(opts: {
+  title: string;
+  msg: string;
+  btnLabel: string;
+  btnColor: string;
+  iconHtml: string;
+  iconBg: string;
+  action: () => Promise<void>;
+}) {
+  document.getElementById('confirm-title')!.textContent = opts.title;
+  document.getElementById('confirm-msg')!.textContent = opts.msg;
+  document.getElementById('confirm-btn-label')!.textContent = opts.btnLabel;
+  const doBtn = document.getElementById('do-confirm') as HTMLButtonElement;
+  doBtn.className = `flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-lg transition-colors flex items-center justify-center gap-2 ${opts.btnColor}`;
+  document.getElementById('confirm-icon-wrap')!.className = `w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${opts.iconBg}`;
+  document.getElementById('confirm-icon-wrap')!.innerHTML = opts.iconHtml;
+  confirmAction = opts.action;
+  confirmModal.classList.remove('hidden');
+}
+
+document.getElementById('cancel-confirm')!.addEventListener('click', () => confirmModal.classList.add('hidden'));
+confirmModal.addEventListener('click', e => { if (e.target === confirmModal) confirmModal.classList.add('hidden'); });
+
+document.getElementById('do-confirm')!.addEventListener('click', async () => {
+  if (!confirmAction) return;
+  const doBtn = document.getElementById('do-confirm') as HTMLButtonElement;
+  const spinner = document.getElementById('confirm-spinner')!;
+  const label = document.getElementById('confirm-btn-label')!;
+  doBtn.disabled = true;
+  spinner.classList.remove('hidden');
+  label.classList.add('hidden');
+  await confirmAction();
+  doBtn.disabled = false;
+  spinner.classList.add('hidden');
+  label.classList.remove('hidden');
+});
+
+// Confirm Available
+document.querySelectorAll('.confirm-available-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = btn.getAttribute('data-id')!;
+    const name = btn.getAttribute('data-name')!;
+    showConfirm({
+      title: 'Marquer comme disponible',
+      msg: `La commande de ${name} sera marquée "Disponible" et un message WhatsApp sera envoyé automatiquement.`,
+      btnLabel: 'Confirmer',
+      btnColor: 'bg-green-600 hover:bg-green-700',
+      iconBg: 'bg-green-100',
+      iconHtml: '<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+      action: async () => {
+        const res = await fetch(`/api/orders/${id}/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'available' }),
+        });
+        if (res.ok) window.location.reload();
+        else alert('Erreur lors de la confirmation.');
+      },
+    });
+  });
+});
+
+// Confirm Pickup
+document.querySelectorAll('.confirm-pickup-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = btn.getAttribute('data-id')!;
+    const name = btn.getAttribute('data-name')!;
+    showConfirm({
+      title: 'Confirmer la récupération',
+      msg: `Confirmer que ${name} a récupéré sa commande et effectué le paiement ?`,
+      btnLabel: 'Confirmer',
+      btnColor: 'bg-purple-600 hover:bg-purple-700',
+      iconBg: 'bg-purple-100',
+      iconHtml: '<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>',
+      action: async () => {
+        const res = await fetch(`/api/orders/${id}/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'picked_up' }),
+        });
+        if (res.ok) window.location.reload();
+        else alert('Erreur lors de la confirmation.');
+      },
+    });
+  });
+});
+
+// ---- Payment Modal ----
+const paymentModal = document.getElementById('payment-modal')!;
+const payAmountInput = document.getElementById('pay-amount') as HTMLInputElement;
+const payError = document.getElementById('pay-error')!;
+let paymentOrderId: string | null = null;
+let paymentRemaining = 0;
+
+document.querySelectorAll('.payment-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    paymentOrderId = btn.getAttribute('data-id');
+    paymentRemaining = parseFloat(btn.getAttribute('data-remaining') ?? '0');
+    document.getElementById('pay-client-name')!.textContent = btn.getAttribute('data-name') ?? '';
+    document.getElementById('pay-order-number')!.textContent = btn.getAttribute('data-number') ?? '';
+    document.getElementById('pay-total')!.textContent = fmt(parseFloat(btn.getAttribute('data-total') ?? '0')) + ' FCFA';
+    document.getElementById('pay-deposit')!.textContent = fmt(parseFloat(btn.getAttribute('data-deposit') ?? '0')) + ' FCFA';
+    document.getElementById('pay-remaining')!.textContent = fmt(paymentRemaining) + ' FCFA';
+    payAmountInput.value = '';
+    payAmountInput.max = String(paymentRemaining);
+    payError.classList.add('hidden');
+    paymentModal.classList.remove('hidden');
+    payAmountInput.focus();
+  });
+});
+
+document.getElementById('pay-full-btn')!.addEventListener('click', () => {
+  payAmountInput.value = String(paymentRemaining);
+});
+
+document.getElementById('close-payment-modal')!.addEventListener('click', () => paymentModal.classList.add('hidden'));
+document.getElementById('cancel-payment')!.addEventListener('click', () => paymentModal.classList.add('hidden'));
+paymentModal.addEventListener('click', e => { if (e.target === paymentModal) paymentModal.classList.add('hidden'); });
+
+document.getElementById('do-payment')!.addEventListener('click', async () => {
+  const amount = parseFloat(payAmountInput.value);
+  if (!amount || amount <= 0 || amount > paymentRemaining) {
+    payError.textContent = 'Montant invalide ou supérieur au reste à payer.';
+    payError.classList.remove('hidden');
+    return;
+  }
+  payError.classList.add('hidden');
+  const doBtn = document.getElementById('do-payment') as HTMLButtonElement;
+  const spinner = document.getElementById('pay-spinner')!;
+  const label = document.getElementById('pay-btn-label')!;
+  doBtn.disabled = true;
+  spinner.classList.remove('hidden');
+  label.classList.add('hidden');
+
+  const payMethod = (document.getElementById('pay-method') as HTMLSelectElement).value;
+  const res = await fetch(`/api/orders/${paymentOrderId}/payment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount, payment_method: payMethod }),
+  });
+
+  doBtn.disabled = false;
+  spinner.classList.add('hidden');
+  label.classList.remove('hidden');
+
+  if (res.ok) {
+    paymentModal.classList.add('hidden');
+    window.location.reload();
+  } else {
+    payError.textContent = 'Erreur lors de l\'enregistrement du paiement.';
+    payError.classList.remove('hidden');
+  }
+});
+
+// Delete
+document.querySelectorAll('.delete-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = btn.getAttribute('data-id')!;
+    const name = btn.getAttribute('data-name')!;
+    const number = btn.getAttribute('data-number')!;
+    showConfirm({
+      title: 'Supprimer la commande',
+      msg: `Supprimer définitivement la commande ${number} de ${name} ? Cette action est irréversible.`,
+      btnLabel: 'Supprimer',
+      btnColor: 'bg-red-600 hover:bg-red-700',
+      iconBg: 'bg-red-100',
+      iconHtml: '<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>',
+      action: async () => {
+        const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+        if (res.ok) window.location.reload();
+        else alert('Erreur lors de la suppression.');
+      },
+    });
+  });
+});
+</script>

@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  isAdmin?: boolean;
+}
+
+const { title, isAdmin = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} — Gestion Commandes</title>
+  </head>
+  <body class="bg-gray-50 min-h-screen text-gray-900">
+    {isAdmin && (
+      <header class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-6">
+            <span class="font-bold text-lg text-blue-700">Gestion Commandes</span>
+            <nav class="flex gap-4 text-sm font-medium">
+              <a href="/admin/dashboard" class="text-gray-600 hover:text-blue-700 transition-colors">
+                Dashboard
+              </a>
+              <a href="/admin" class="text-gray-600 hover:text-blue-700 transition-colors">
+                + Nouvelle commande
+              </a>
+              <a href="/admin/orders" class="text-gray-600 hover:text-blue-700 transition-colors">
+                Toutes les commandes
+              </a>
+            </nav>
+          </div>
+          <form action="/api/auth/logout" method="POST">
+            <button
+              type="submit"
+              class="text-sm text-gray-500 hover:text-red-600 transition-colors"
+            >
+              Déconnexion
+            </button>
+          </form>
+        </div>
+      </header>
+    )}
+    <main class="max-w-7xl mx-auto px-4 py-8">
+      <slot />
+    </main>
+  </body>
+</html>

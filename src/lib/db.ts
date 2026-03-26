@@ -1,0 +1,62 @@
+import Database from 'better-sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Use DB_PATH env var for Railway volume, fallback to project root for local dev
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', '..', '..', 'orders.db');
+
+let db: Database.Database;
+
+export function getDb(): Database.Database {
+  if (!db) {
+    db = new Database(DB_PATH);
+    db.pragma('journal_mode = WAL');
+    db.pragma('foreign_keys = ON');
+    initSchema(db);
+  }
+  return db;
+}
+
+function initSchema(db: Database.Database) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_number TEXT UNIQUE NOT NULL,
+      client_name TEXT NOT NULL,
+      client_phone TEXT NOT NULL,
+      delivery_type TEXT NOT NULL CHECK(delivery_type IN ('avion', 'bateau')),
+      total_amount REAL NOT NULL DEFAULT 0,
+      deposit REAL NOT NULL DEFAULT 0,
+      remaining_balance REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'en_attente' CHECK(status IN ('en_attente', 'disponible', 'recupere')),
+      notes TEXT DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      condition TEXT NOT NULL,
+      price REAL NOT NULL DEFAULT 0,
+      quantity INTEGER NOT NULL DEFAULT 1,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      payment_method TEXT DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+    CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
+    CREATE INDEX IF NOT EXISTS idx_products_order_id ON products(order_id);
+    CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+  `);
+}

@@ -1,0 +1,260 @@
+---
+import { getOrderByNumber, getPaymentsByOrderId } from '../../lib/orders';
+import Layout from '../../layouts/Layout.astro';
+
+const { numero } = Astro.params;
+const order = numero ? getOrderByNumber(numero) : null;
+const payments = order?.id ? getPaymentsByOrderId(order.id) : [];
+
+const statusConfig: Record<string, { label: string; color: string; icon: string; description: string; step: number }> = {
+  en_attente: {
+    label: 'En cours de traitement',
+    color: 'bg-amber-50 border-amber-200 text-amber-900',
+    icon: '⏳',
+    description: 'Votre commande est en cours de préparation. Vous serez contacté(e) via WhatsApp dès que vos colis seront disponibles à la boutique (Togo).',
+    step: 1,
+  },
+  disponible: {
+    label: 'Prête à récupérer',
+    color: 'bg-green-50 border-green-200 text-green-900',
+    icon: '✅',
+    description: 'Bonne nouvelle ! Votre commande est prête. Venez la récupérer avec votre numéro de commande.',
+    step: 2,
+  },
+  recupere: {
+    label: 'Commande récupérée',
+    color: 'bg-gray-50 border-gray-200 text-gray-700',
+    icon: '📦',
+    description: 'Cette commande a été récupérée et soldée. Merci pour votre confiance !',
+    step: 3,
+  },
+};
+
+const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? statusConfig['en_attente']) : null;
+---
+
+<Layout title={order ? `Commande ${order.order_number}` : 'Suivi de commande'}>
+  <div class="max-w-lg mx-auto">
+
+    {!order ? (
+      <!-- Search / Not found -->
+      <div class="text-center py-8">
+        <!-- Search box always shown -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 mb-6">
+          <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <h1 class="text-xl font-bold text-gray-900 mb-2">Suivre ma commande</h1>
+          <p class="text-gray-500 text-sm mb-6">
+            Entrez votre numéro de commande pour voir l'état de votre livraison.
+          </p>
+          <form method="GET" action="" id="search-form" class="flex flex-col gap-3">
+            <input
+              type="text"
+              name="q"
+              id="search-input"
+              required
+              placeholder="CMD-20260326-0001"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center tracking-widest uppercase"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="characters"
+            />
+            <button
+              type="submit"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+            >
+              Rechercher
+            </button>
+          </form>
+        </div>
+
+        {numero && numero !== 'undefined' && (
+          <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+            <div class="flex items-center gap-2 mb-1">
+              <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="font-semibold">Commande introuvable</span>
+            </div>
+            <p>Aucune commande trouvée pour <span class="font-mono font-bold">{numero}</span>.<br/>Vérifiez le numéro et réessayez.</p>
+          </div>
+        )}
+      </div>
+    ) : (
+      <!-- Order found -->
+      <div class="space-y-4 py-2">
+        <!-- Header -->
+        <div class="text-center">
+          <p class="text-xs text-gray-400 uppercase tracking-widest mb-1.5">Numéro de commande</p>
+          <h1 class="text-2xl font-bold font-mono text-blue-700 tracking-wider">{order.order_number}</h1>
+        </div>
+
+        <!-- Progress steps -->
+        <div class="flex items-center justify-between px-2 py-4">
+          {[
+            { label: 'Commande reçue', step: 1 },
+            { label: 'Disponible', step: 2 },
+            { label: 'Récupérée', step: 3 },
+          ].map((s, i) => (
+            <div class="flex items-center flex-1">
+              <div class="flex flex-col items-center flex-1">
+                <div class={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  s.step <= (statusInfo?.step ?? 1)
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+                    : 'bg-gray-100 text-gray-400'
+                }`}>
+                  {s.step < (statusInfo?.step ?? 1) ? (
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  ) : s.step.toString()}
+                </div>
+                <span class={`text-xs mt-1.5 font-medium text-center leading-tight ${
+                  s.step <= (statusInfo?.step ?? 1) ? 'text-blue-700' : 'text-gray-400'
+                }`}>{s.label}</span>
+              </div>
+              {i < 2 && (
+                <div class={`h-0.5 flex-1 mx-1 mb-5 rounded transition-all ${
+                  s.step < (statusInfo?.step ?? 1) ? 'bg-blue-400' : 'bg-gray-200'
+                }`}></div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <!-- Status banner -->
+        <div class={`rounded-2xl border-2 p-5 text-center ${statusInfo?.color}`}>
+          <div class="text-3xl mb-2">{statusInfo?.icon}</div>
+          <div class="font-bold text-base mb-1">{statusInfo?.label}</div>
+          <div class="text-sm opacity-75 leading-relaxed">{statusInfo?.description}</div>
+        </div>
+
+        <!-- Info card -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-3 bg-gray-50 border-b border-gray-100">
+            <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Informations</h2>
+          </div>
+          <div class="px-5 py-4 space-y-3 text-sm">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500">Client</span>
+              <span class="font-semibold text-gray-900">{order.client_name}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500">Mode de livraison</span>
+              <span class="font-medium">{order.delivery_type === 'avion' ? '✈️ EXPRESS' : '🚢 ECO'}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500">Date</span>
+              <span class="text-gray-700">{new Date(order.created_at!).toLocaleDateString('fr-FR', {
+                year: 'numeric', month: 'long', day: 'numeric'
+              })}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-3 bg-gray-50 border-b border-gray-100">
+            <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Produits commandés ({(order.products ?? []).length})
+            </h2>
+          </div>
+          <div class="divide-y divide-gray-50">
+            {(order.products ?? []).map(p => (
+              <div class="px-5 py-3.5 flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <div class="font-semibold text-gray-900 truncate">{p.name}</div>
+                  <div class="text-xs text-gray-400 mt-0.5">
+                    {p.condition}
+                    {p.quantity > 1 && <span class="ml-2 bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">× {p.quantity}</span>}
+                  </div>
+                </div>
+                <div class="text-sm font-semibold text-gray-700 ml-4 shrink-0">
+                  {(p.price * p.quantity).toLocaleString('fr-FR')} FCFA
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Payment summary -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-3 bg-gray-50 border-b border-gray-100">
+            <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Résumé paiement</h2>
+          </div>
+          <div class="px-5 py-4 space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-500">Montant total</span>
+              <span class="font-semibold text-gray-900">{order.total_amount.toLocaleString('fr-FR')} FCFA</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Total versé</span>
+              <span class="text-green-600 font-medium">− {order.deposit.toLocaleString('fr-FR')} FCFA</span>
+            </div>
+            <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+              <span class="font-bold text-gray-900">Reste à payer</span>
+              <span class={`text-lg font-bold ${order.remaining_balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {order.remaining_balance.toLocaleString('fr-FR')} FCFA
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment history -->
+        {payments.length > 0 && (
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-3 bg-gray-50 border-b border-gray-100">
+              <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Historique des paiements</h2>
+            </div>
+            <div class="divide-y divide-gray-50">
+              {payments.map((p, i) => (
+                <div class="px-5 py-3 flex items-center justify-between text-sm">
+                  <div>
+                    <div class="font-medium text-gray-800">Paiement #{i + 1}</div>
+                    <div class="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
+                      <span>{new Date(p.created_at!).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      {p.payment_method && <span class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{p.payment_method}</span>}
+                    </div>
+                  </div>
+                  <span class="font-bold text-green-600">+{p.amount.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {order.notes && (
+          <div class="bg-blue-50 border border-blue-100 rounded-xl px-5 py-3.5 text-sm text-blue-800 flex gap-2">
+            <svg class="w-4 h-4 text-blue-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p><span class="font-semibold">Note : </span>{order.notes}</p>
+          </div>
+        )}
+
+        <p class="text-center text-xs text-gray-400 pb-4">
+          Pour toute question, mentionnez le numéro <span class="font-mono font-bold">{order.order_number}</span>
+        </p>
+      </div>
+    )}
+  </div>
+</Layout>
+
+<script>
+  // Handle search form — redirect to /commande/[numero]
+  const form = document.getElementById('search-form') as HTMLFormElement | null;
+  const input = document.getElementById('search-input') as HTMLInputElement | null;
+  if (form && input) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = input.value.trim().toUpperCase();
+      if (val) window.location.href = `/commande/${encodeURIComponent(val)}`;
+    });
+    // Pre-fill from query param
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) input.value = q.toUpperCase();
+  }
+</script>
