@@ -8,14 +8,15 @@ export const POST: APIRoute = async ({ request }) => {
   if (!checkAdminPassword(password)) {
     return new Response(null, {
       status: 303,
-      headers: { Location: new URL('/login?error=1', request.url).toString() },
+      // Use relative redirect — avoids localhost URL from Railway's internal proxy
+      headers: { Location: '/login?error=1' },
     });
   }
 
   return new Response(null, {
     status: 303,
     headers: {
-      Location: new URL('/admin/orders', request.url).toString(),
+      Location: '/admin/orders',
       'Set-Cookie': buildSessionCookieHeader(),
     },
   });

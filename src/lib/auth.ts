@@ -26,7 +26,8 @@ function verify(signed: string): string | null {
 export function buildSessionCookieHeader(): string {
   const expires = Date.now() + SESSION_DURATION;
   const value = sign(`auth:${expires}`);
-  return `${SESSION_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Path=/; SameSite=Strict; Max-Age=${SESSION_DURATION / 1000}`;
+  // SameSite=Lax allows cookie to be sent after redirect; Secure required for HTTPS
+  return `${SESSION_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Path=/; SameSite=Lax; Secure; Max-Age=${SESSION_DURATION / 1000}`;
 }
 
 export function isAuthenticated(request: Request): boolean {
