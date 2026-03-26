@@ -8,6 +8,6 @@ export default defineConfig({
   }),
   server: {
     host: true,
-    port: process.env.PORT
+    port: parseInt(process.env.PORT || '4321')
   }
 });

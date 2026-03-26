@@ -24,10 +24,11 @@ RUN npm run build
 # Remove dev dependencies
 RUN npm prune --omit=dev
 
-# Expose port
-EXPOSE 4321
-
 # Data directory for SQLite volume
 RUN mkdir -p /data
 
-CMD ["node", "dist/server/entry.mjs"]
+# Expose default port (Railway injects $PORT at runtime)
+EXPOSE 4321
+
+# Use shell form so $PORT env var is expanded at runtime
+CMD node dist/server/entry.mjs --port ${PORT:-4321} --host
