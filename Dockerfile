@@ -27,8 +27,11 @@ RUN npm prune --omit=dev
 # Data directory for SQLite volume
 RUN mkdir -p /data
 
-# Expose default port (Railway injects $PORT at runtime)
+# Force binding to all interfaces (required for Railway proxy)
+ENV HOST=0.0.0.0
+
+# Expose default port
 EXPOSE 4321
 
-# Use shell form so $PORT env var is expanded at runtime
-CMD node dist/server/entry.mjs --port ${PORT:-4321} --host
+# Railway injects $PORT — standalone server reads HOST + PORT env vars
+CMD node dist/server/entry.mjs
