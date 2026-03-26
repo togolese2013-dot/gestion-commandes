@@ -7,6 +7,7 @@ adapter: node({
 mode: "standalone"
 }),
 server: {
-host: true
+  port: process.env.PORT || 4321,
+  host: true
 }
 });
