@@ -49,19 +49,28 @@ export async function sendPaymentWebhook(order: Order, amount_paid: number, paym
 
 export async function sendOrderReadyWebhook(order: Order): Promise<void> {
   const url = getEnv('N8N_WEBHOOK_ORDER_READY');
-  if (!url || url.includes('your-n8n-instance')) return;
+  console.log('[Webhook order_ready] URL:', url || 'NON DEFINIE');
+  if (!url) { console.error('[Webhook order_ready] Variable N8N_WEBHOOK_ORDER_READY manquante'); return; }
+  if (url.includes('your-n8n-instance')) { console.error('[Webhook order_ready] URL placeholder détectée'); return; }
 
   const siteUrl = getEnv('PUBLIC_SITE_URL');
-  await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      event: 'order_ready',
-      order_number: order.order_number,
-      client_name: order.client_name,
-      client_phone: order.client_phone,
-      remaining_balance: order.remaining_balance,
-      order_url: `${siteUrl}/commande/${order.order_number}`,
-    }),
-  }).catch(err => console.error('[Webhook order_ready]', err));
+  const payload = {
+    event: 'order_ready',
+    order_number: order.order_number,
+    client_name: order.client_name,
+    client_phone: order.client_phone,
+    remaining_balance: order.remaining_balance,
+    order_url: `${siteUrl}/commande/${order.order_number}`,
+  };
+  console.log('[Webhook order_ready] Envoi vers:', url);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    console.log('[Webhook order_ready] Réponse HTTP:', res.status);
+  } catch (err) {
+    console.error('[Webhook order_ready] Erreur fetch:', err);
+  }
 }
