@@ -490,6 +490,20 @@ const estimatedDeliveryStr = order
       }
 
       body { background: #fff !important; font-size: 11px; color: #111 !important; }
+
+      /* Tous les textes gris → noir à l'impression */
+      .label, .info-box-header, .company-tagline, .doc-date,
+      .section-title, .product-condition, .summary-label,
+      .footer, .back-footer,
+      [style*="color:#9ca3af"], [style*="color:#6b7280"],
+      [style*="color:#374151"], [style*="color:#4b5563"] {
+        color: #111 !important;
+      }
+      .company-contact { color: #111 !important; }
+      .info-box-body .label { color: #111 !important; }
+      tbody td:first-child { color: #111 !important; }
+      .doc-date { color: #111 !important; }
+      tfoot td { color: #1e40af !important; } /* garder le bleu sur le total */
       .page-wrapper { padding: 0; gap: 0; }
 
       .page, .page-back {
