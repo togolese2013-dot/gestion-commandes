@@ -9,21 +9,20 @@ const { numero } = Astro.params;
 const order = numero ? getOrderByNumber(numero) : null;
 const payments = order?.id ? getPaymentsByOrderId(order.id) : [];
 
-const deliveryLabel = order?.delivery_type === 'avion' ? 'EXPRESS (avion)' : 'ECONOMIQUE (bateau)';
 const fmt = (n: number) => n.toLocaleString('fr-FR');
 const dateStr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-
-// Estimated delivery: 14 days for air, 45 days for sea
-const deliveryDays = order?.delivery_type === 'avion' ? 14 : 45;
-const estimatedDeliveryStr = order
-  ? dateStr(new Date(new Date(order.created_at!).getTime() + deliveryDays * 24 * 60 * 60 * 1000).toISOString())
-  : '';
 
 const statusLabel: Record<string, string> = {
   en_attente: 'En attente',
   disponible: 'Disponible',
   recupere: 'Récupéré',
 };
+
+// Estimated delivery: 14 days for air, 45 days for sea
+const deliveryDays = order?.delivery_type === 'avion' ? 14 : 45;
+const estimatedDeliveryStr = order
+  ? dateStr(new Date(new Date(order.created_at!).getTime() + deliveryDays * 24 * 60 * 60 * 1000).toISOString())
+  : '';
 ---
 
 <!doctype html>
@@ -76,16 +75,15 @@ const statusLabel: Record<string, string> = {
     }
     .no-print a:hover { color: #fff; }
     .no-print .spacer { flex: 1; }
-    .no-print .hint {
-      color: #93c5fd;
-      font-size: 12px;
-    }
+    .no-print .hint { color: #93c5fd; font-size: 12px; }
 
     /* A4 page wrapper */
     .page-wrapper {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       padding: 24px 16px 48px;
+      gap: 0;
     }
 
     .page {
@@ -127,10 +125,7 @@ const statusLabel: Record<string, string> = {
       color: #374151;
       line-height: 1.7;
     }
-    .company-contact strong {
-      color: #1e40af;
-      font-weight: 700;
-    }
+    .company-contact strong { color: #1e40af; font-weight: 700; }
 
     /* Separator */
     .divider {
@@ -150,7 +145,6 @@ const statusLabel: Record<string, string> = {
     .doc-badge {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
       background: #1e40af;
       color: #fff;
       font-size: 14px;
@@ -170,6 +164,7 @@ const statusLabel: Record<string, string> = {
       padding: 5px 12px;
       border-radius: 5px;
       letter-spacing: 0.5px;
+      margin-top: 10px;
     }
     .doc-date {
       font-size: 12px;
@@ -232,16 +227,8 @@ const statusLabel: Record<string, string> = {
       font-size: 11px;
       font-weight: 700;
     }
-    .delivery-avion {
-      background: #eff6ff;
-      color: #1e40af;
-      border: 1px solid #bfdbfe;
-    }
-    .delivery-bateau {
-      background: #f0fdf4;
-      color: #166534;
-      border: 1px solid #bbf7d0;
-    }
+    .delivery-avion { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .delivery-bateau { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
     .status-badge {
       display: inline-block;
       padding: 3px 10px;
@@ -252,16 +239,8 @@ const statusLabel: Record<string, string> = {
       color: #854d0e;
       border: 1px solid #fde68a;
     }
-    .status-disponible {
-      background: #f0fdf4;
-      color: #166534;
-      border-color: #bbf7d0;
-    }
-    .status-recupere {
-      background: #f9fafb;
-      color: #4b5563;
-      border-color: #e5e7eb;
-    }
+    .status-disponible { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+    .status-recupere   { background: #f9fafb; color: #4b5563; border-color: #e5e7eb; }
 
     /* Products table */
     .section-title {
@@ -280,10 +259,7 @@ const statusLabel: Record<string, string> = {
       margin-bottom: 20px;
       font-size: 12.5px;
     }
-    thead tr {
-      background: #1e40af;
-      color: #fff;
-    }
+    thead tr { background: #1e40af; color: #fff; }
     thead th {
       padding: 9px 12px;
       text-align: left;
@@ -295,7 +271,7 @@ const statusLabel: Record<string, string> = {
     thead th:last-child, thead th:nth-child(3) { text-align: right; }
     thead th:nth-child(1) { text-align: center; width: 44px; }
     tbody tr:nth-child(even) { background: #f8fafc; }
-    tbody tr:nth-child(odd) { background: #fff; }
+    tbody tr:nth-child(odd)  { background: #fff; }
     tbody td {
       padding: 9px 12px;
       border-bottom: 1px solid #f1f5f9;
@@ -313,14 +289,10 @@ const statusLabel: Record<string, string> = {
       font-size: 13px;
       border-top: 2px solid #bfdbfe;
     }
-    tfoot td:first-child { text-align: center; color: #1e40af; }
+    tfoot td:first-child { text-align: center; }
     tfoot td:nth-child(2) { text-align: left; }
     .product-name { font-weight: 600; color: #111; }
-    .product-condition {
-      font-size: 10.5px;
-      color: #9ca3af;
-      margin-top: 1px;
-    }
+    .product-condition { font-size: 10.5px; color: #9ca3af; margin-top: 1px; }
 
     /* Financial summary */
     .summary-wrapper {
@@ -346,30 +318,17 @@ const statusLabel: Record<string, string> = {
     .summary-row:last-child { border-bottom: none; }
     .summary-label { color: #6b7280; font-weight: 500; }
     .summary-value { font-weight: 700; color: #111; }
-    .summary-row.total-row {
-      background: #f8fafc;
-      font-size: 13.5px;
-    }
+    .summary-row.total-row { background: #f8fafc; font-size: 13.5px; }
     .summary-row.total-row .summary-label { color: #374151; font-weight: 700; }
     .summary-row.paid-row .summary-value { color: #059669; }
     .summary-row.remaining-positive .summary-value { color: #dc2626; }
     .summary-row.remaining-zero .summary-value { color: #059669; }
-    .summary-row.remaining-row {
-      background: #fef2f2;
-    }
-    .summary-row.remaining-zero-row {
-      background: #f0fdf4;
-    }
+    .summary-row.remaining-row { background: #fef2f2; }
+    .summary-row.remaining-zero-row { background: #f0fdf4; }
 
     /* Payments history */
-    .payments-section {
-      margin-bottom: 20px;
-    }
-    .payments-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
+    .payments-section { margin-bottom: 20px; }
+    .payments-table { width: 100%; border-collapse: collapse; font-size: 12px; }
     .payments-table th {
       background: #f8fafc;
       padding: 7px 12px;
@@ -381,46 +340,8 @@ const statusLabel: Record<string, string> = {
       letter-spacing: 0.8px;
       border-bottom: 1px solid #e5e7eb;
     }
-    .payments-table td {
-      padding: 7px 12px;
-      border-bottom: 1px solid #f1f5f9;
-      color: #374151;
-    }
-    .payments-table td.amount {
-      font-weight: 700;
-      color: #059669;
-      text-align: right;
-    }
-
-    /* Conditions */
-    .conditions {
-      background: #f8fafc;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      padding: 12px 16px;
-      margin-bottom: 20px;
-    }
-    .conditions-title {
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #6b7280;
-      margin-bottom: 7px;
-    }
-    .conditions ol {
-      padding-left: 16px;
-      font-size: 11px;
-      color: #4b5563;
-      line-height: 1.6;
-    }
-    .conditions ol li { margin-bottom: 2px; }
-    .conditions p {
-      font-size: 11px;
-      color: #4b5563;
-      margin-top: 5px;
-      font-style: italic;
-    }
+    .payments-table td { padding: 7px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; }
+    .payments-table td.amount { font-weight: 700; color: #059669; text-align: right; }
 
     /* Footer */
     .footer {
@@ -430,13 +351,7 @@ const statusLabel: Record<string, string> = {
       color: #9ca3af;
       font-size: 11.5px;
     }
-    .footer strong {
-      display: block;
-      font-size: 13px;
-      color: #374151;
-      font-weight: 700;
-      margin-bottom: 3px;
-    }
+    .footer strong { display: block; font-size: 13px; color: #374151; font-weight: 700; margin-bottom: 3px; }
 
     /* Error page */
     .error-page {
@@ -448,13 +363,18 @@ const statusLabel: Record<string, string> = {
       gap: 12px;
       color: #6b7280;
     }
-    .error-page h2 {
-      font-size: 20px;
-      color: #374151;
-      font-weight: 700;
-    }
+    .error-page h2 { font-size: 20px; color: #374151; font-weight: 700; }
 
-    /* ===== BACK PAGE (conditions) ===== */
+    /* Back page */
+    .page-label {
+      text-align: center;
+      font-size: 11px;
+      color: #9ca3af;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin: 20px 0 8px;
+    }
     .page-back {
       background: #fff;
       width: 100%;
@@ -463,7 +383,6 @@ const statusLabel: Record<string, string> = {
       padding: 40px 48px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.10);
       border-radius: 4px;
-      margin-top: 32px;
       display: flex;
       flex-direction: column;
     }
@@ -474,9 +393,9 @@ const statusLabel: Record<string, string> = {
       letter-spacing: 2px;
       color: #1e40af;
       text-align: center;
-      margin-bottom: 6px;
       padding-bottom: 10px;
       border-bottom: 2px solid #1e40af;
+      margin-bottom: 6px;
     }
     .back-subtitle {
       font-size: 10px;
@@ -485,24 +404,15 @@ const statusLabel: Record<string, string> = {
       margin-bottom: 28px;
       font-style: italic;
     }
-    .conditions-back {
-      flex: 1;
-    }
+    .conditions-back { flex: 1; }
     .conditions-back ol {
       padding-left: 20px;
       font-size: 12.5px;
       color: #374151;
       line-height: 1.9;
-      counter-reset: item;
     }
-    .conditions-back ol li {
-      margin-bottom: 12px;
-      padding-left: 4px;
-    }
-    .conditions-back ol li::marker {
-      font-weight: 700;
-      color: #1e40af;
-    }
+    .conditions-back ol li { margin-bottom: 12px; padding-left: 4px; }
+    .conditions-back ol li::marker { font-weight: 700; color: #1e40af; }
     .conditions-back .privacy {
       margin-top: 24px;
       padding: 12px 16px;
@@ -521,34 +431,15 @@ const statusLabel: Record<string, string> = {
       font-size: 11px;
       margin-top: auto;
     }
-    .back-footer strong {
-      display: block;
-      font-size: 12px;
-      color: #374151;
-      font-weight: 700;
-      margin-bottom: 3px;
-    }
-    .page-label {
-      text-align: center;
-      font-size: 11px;
-      color: #9ca3af;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin: 16px 0 8px;
-    }
+    .back-footer strong { display: block; font-size: 12px; color: #374151; font-weight: 700; margin-bottom: 3px; }
 
     /* ===== PRINT STYLES ===== */
     @media print {
       .no-print { display: none !important; }
-
-      body {
-        background: #fff;
-        font-size: 11px;
-      }
-
-      .page-wrapper { padding: 0; }
       .page-label { display: none; }
+
+      body { background: #fff; font-size: 11px; }
+      .page-wrapper { padding: 0; gap: 0; }
 
       .page, .page-back {
         max-width: 100%;
@@ -560,25 +451,20 @@ const statusLabel: Record<string, string> = {
         margin: 0;
       }
 
-      .page-back {
-        page-break-before: always;
-      }
+      .page-back { page-break-before: always; }
 
       .company-name { font-size: 22px; }
       table { font-size: 10.5px; }
       thead th { font-size: 9.5px; }
       .conditions-back ol { font-size: 11.5px; }
 
-      @page {
-        size: A4;
-        margin: 0;
-      }
+      @page { size: A4; margin: 0; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Print action bar (hidden on print) -->
+  <!-- Print action bar -->
   <div class="no-print">
     <button onclick="window.print()">
       <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -592,6 +478,8 @@ const statusLabel: Record<string, string> = {
   </div>
 
   <div class="page-wrapper">
+
+    <!-- ===== RECTO ===== -->
     <div class="page">
 
       {!order ? (
@@ -600,7 +488,7 @@ const statusLabel: Record<string, string> = {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
           </svg>
           <h2>Commande introuvable</h2>
-          <p>Le numéro de commande <strong>{numero}</strong> n'existe pas dans le système.</p>
+          <p>Le numéro <strong>{numero}</strong> n'existe pas.</p>
           <a href="/admin/orders" style="margin-top:8px; color:#1e40af; font-weight:600;">← Retour aux commandes</a>
         </div>
       ) : (
@@ -620,9 +508,9 @@ const statusLabel: Record<string, string> = {
 
           <div class="divider"></div>
 
-          <!-- Document title row -->
+          <!-- Title row -->
           <div class="doc-title-row">
-            <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div style="display:flex; flex-direction:column; align-items:center;">
               <span class="doc-badge">Bon de commande</span>
               <span class="order-number-badge">{order.order_number}</span>
             </div>
@@ -632,7 +520,7 @@ const statusLabel: Record<string, string> = {
             </div>
           </div>
 
-          <!-- Info grid: client | livraison -->
+          <!-- Info grid -->
           <div class="info-grid">
             <div class="info-box">
               <div class="info-box-header">Informations client</div>
@@ -662,12 +550,10 @@ const statusLabel: Record<string, string> = {
                 </div>
                 <div style="margin-top:10px;">
                   <div class="label">Livraison prévue</div>
-                  <div class="value" style="font-size:13px; font-weight:700; color:#1e40af;">
-                    {estimatedDeliveryStr}
-                  </div>
+                  <div class="value" style="font-size:13px; font-weight:700; color:#1e40af;">{estimatedDeliveryStr}</div>
                 </div>
                 <div style="margin-top:10px;">
-                  <div class="label">Statut commande</div>
+                  <div class="label">Statut</div>
                   <div class="value" style="margin-top:2px;">
                     <span class={`status-badge ${order.status === 'disponible' ? 'status-disponible' : order.status === 'recupere' ? 'status-recupere' : ''}`}>
                       {statusLabel[order.status ?? 'en_attente']}
@@ -703,15 +589,15 @@ const statusLabel: Record<string, string> = {
                   </td>
                 </tr>
               ) : (
-                (order.products ?? []).map((product) => (
+                (order.products ?? []).map((p) => (
                   <tr>
-                    <td>{product.quantity}</td>
+                    <td>{p.quantity}</td>
                     <td>
-                      <div class="product-name">{product.name}</div>
-                      {product.condition && <div class="product-condition">{product.condition}</div>}
+                      <div class="product-name">{p.name}</div>
+                      {p.condition && <div class="product-condition">{p.condition}</div>}
                     </td>
-                    <td>{fmt(product.price)} FCFA</td>
-                    <td>{fmt(product.price * product.quantity)} FCFA</td>
+                    <td>{fmt(p.price)} FCFA</td>
+                    <td>{fmt(p.price * p.quantity)} FCFA</td>
                   </tr>
                 ))
               )}
@@ -741,14 +627,12 @@ const statusLabel: Record<string, string> = {
               </div>
               <div class={`summary-row ${order.remaining_balance > 0 ? 'remaining-row remaining-positive' : 'remaining-zero-row remaining-zero'}`}>
                 <span class="summary-label" style="font-weight:700;">Reste à payer</span>
-                <span class="summary-value" style="font-size:15px;">
-                  {fmt(order.remaining_balance)} FCFA
-                </span>
+                <span class="summary-value" style="font-size:15px;">{fmt(order.remaining_balance)} FCFA</span>
               </div>
             </div>
           </div>
 
-          <!-- Payments history (shown only if there are payments) -->
+          <!-- Payments history -->
           {payments.length > 0 && (
             <div class="payments-section">
               <div class="section-title">Historique des versements</div>
@@ -791,7 +675,7 @@ const statusLabel: Record<string, string> = {
       <>
         <p class="page-label">— Verso : Conditions générales —</p>
 
-        <!-- Back page: conditions générales -->
+        <!-- ===== VERSO ===== -->
         <div class="page-back">
           <div class="back-title">Conditions Générales de Vente</div>
           <div class="back-subtitle">TOGOLESE — Vente et distribution — Lomé, TOGO</div>
@@ -807,7 +691,6 @@ const statusLabel: Record<string, string> = {
               <li>Le client s'engage à fournir des informations exactes lors de la commande. TOGOLESE ne saurait être tenu responsable des erreurs de livraison dues à des informations incorrectes.</li>
               <li>Tout litige relatif à la présente commande sera soumis à la juridiction compétente de Lomé, TOGO.</li>
             </ol>
-
             <div class="privacy">
               <strong>Protection des données personnelles :</strong> Les informations collectées lors de votre commande (nom, téléphone) sont utilisées exclusivement pour le traitement et le suivi de votre commande. Elles ne sont ni vendues ni transmises à des tiers.
             </div>
