@@ -788,7 +788,7 @@ const estimatedDeliveryStr = order
               )}
               {/* Empty rows to always total 9 lines */}
               {Array.from({ length: Math.max(0, 9 - (order.products ?? []).length) }).map(() => (
-                <tr>
+                <tr style="height:44px;">
                   <td></td>
                   <td></td>
                   <td></td>
