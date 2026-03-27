@@ -649,6 +649,63 @@ const estimatedDeliveryStr = order
       }
       .footer strong { font-size: 11px; }
 
+      /* ═══ SUMMARY PROTÉGÉ — ne pas modifier ═══ */
+      .summary-wrapper, .summary-box, .summary-row,
+      .total-row, .paid-row, .remaining-row, .remaining-zero-row {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .summary-wrapper {
+        display: flex !important;
+        justify-content: flex-end !important;
+        margin-bottom: 16px !important;
+      }
+      .summary-box {
+        min-width: 260px !important;
+        max-width: 320px !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+      }
+      .summary-row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 8px 14px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        font-size: 11.5px !important;
+      }
+      .summary-row:last-child { border-bottom: none !important; }
+      .summary-label { color: #6b7280 !important; font-weight: 500 !important; }
+      .summary-value { font-weight: 700 !important; color: #111 !important; }
+      .summary-row.total-row { background: #f8fafc !important; font-size: 12.5px !important; }
+      .summary-row.total-row .summary-label { color: #374151 !important; font-weight: 700 !important; }
+      .summary-row.paid-row .summary-value { color: #059669 !important; }
+      .summary-row.remaining-positive .summary-value { color: #dc2626 !important; }
+      .summary-row.remaining-zero .summary-value { color: #059669 !important; }
+      .summary-row.remaining-row { background: #fef2f2 !important; }
+      .summary-row.remaining-zero-row { background: #f0fdf4 !important; }
+      /* ═══ FIN SUMMARY PROTÉGÉ ═══ */
+
+      /* ═══ FOOTER PROTÉGÉ — ne pas modifier ═══ */
+      .footer {
+        text-align: center !important;
+        border-top: 1px solid #e5e7eb !important;
+        color: #6b7280 !important;
+        font-size: 10px !important;
+        background: #fff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .footer strong {
+        display: block !important;
+        font-size: 11px !important;
+        color: #374151 !important;
+        font-weight: 700 !important;
+        margin-bottom: 2px !important;
+      }
+      /* ═══ FIN FOOTER PROTÉGÉ ═══ */
+
       @page { size: A4; margin: 0; }
     }
   </style>
