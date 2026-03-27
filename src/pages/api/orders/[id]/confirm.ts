@@ -18,7 +18,14 @@ export const POST: APIRoute = async ({ request, params }) => {
       order = confirmOrderPickedUp(id);
     } else {
       order = confirmOrderAvailable(id);
-      if (order) sendOrderReadyWebhook(order);
+      // await so the webhook request completes before response is sent
+      if (order) {
+        try {
+          await sendOrderReadyWebhook(order);
+        } catch (webhookErr) {
+          console.error('[Webhook order_ready failed]', webhookErr);
+        }
+      }
     }
 
     if (!order) return new Response(JSON.stringify({ error: 'Commande introuvable' }), { status: 404 });
