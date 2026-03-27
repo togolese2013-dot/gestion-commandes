@@ -7,6 +7,7 @@ const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
 const currentUser = getCurrentUser(Astro.request);
+if (currentUser?.role !== 'admin') return Astro.redirect('/admin/orders');
 const db = getDb();
 const users = db.prepare('SELECT id, username, full_name, role, created_at FROM users ORDER BY created_at ASC').all() as any[];
 ---

@@ -9,6 +9,7 @@ interface Props {
 
 const { title, isAdmin = false } = Astro.props;
 const currentUser = isAdmin ? getCurrentUser(Astro.request) : null;
+const isAdminRole = currentUser?.role === 'admin';
 ---
 
 <!doctype html>
@@ -24,21 +25,26 @@ const currentUser = isAdmin ? getCurrentUser(Astro.request) : null;
       <header class="bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-4">
           <div class="flex items-center gap-4 h-12 overflow-x-auto">
-            <!-- Logo -->
             <span class="font-bold text-sm text-blue-700 shrink-0">Gestion Commandes</span>
-            <!-- Nav + user on same line -->
             <nav class="flex items-center gap-4 text-sm font-medium">
               <a href="/admin/dashboard" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Dashboard</a>
               <a href="/admin" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">+ Nouvelle</a>
               <a href="/admin/orders" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Commandes</a>
-              <a href="/admin/users" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Utilisateurs</a>
+              {isAdminRole && (
+                <a href="/admin/users" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Utilisateurs</a>
+              )}
             </nav>
-            <!-- Spacer -->
             <div class="flex-1"></div>
-            <!-- User + logout -->
             <div class="flex items-center gap-3 shrink-0">
               {currentUser && (
-                <span class="text-xs font-medium text-gray-700 whitespace-nowrap">👤 {currentUser.full_name}</span>
+                <button
+                  id="profile-btn"
+                  class="text-xs font-medium text-gray-700 hover:text-blue-700 transition-colors whitespace-nowrap cursor-pointer"
+                  data-id={currentUser.id}
+                  data-name={currentUser.full_name}
+                >
+                  👤 {currentUser.full_name}
+                </button>
               )}
               <form action="/api/auth/logout" method="POST" style="display:flex;align-items:center;">
                 <button type="submit" class="text-xs text-gray-400 hover:text-red-600 transition-colors whitespace-nowrap" style="line-height:1;">
@@ -50,8 +56,92 @@ const currentUser = isAdmin ? getCurrentUser(Astro.request) : null;
         </div>
       </header>
     )}
+
+    <!-- Profile edit modal -->
+    {isAdmin && currentUser && (
+      <div id="profile-modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+          <h2 class="text-base font-semibold text-gray-900 mb-4">Mon profil</h2>
+          <form id="profile-form" class="space-y-3">
+            <input type="hidden" name="id" value={currentUser.id} />
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet</label>
+              <input type="text" name="full_name" required value={currentUser.full_name}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Nouveau mot de passe</label>
+              <input type="password" name="password" placeholder="Laisser vide pour ne pas changer"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <p id="profile-error" class="text-sm text-red-600 hidden"></p>
+            <p id="profile-success" class="text-sm text-green-600 hidden">Modifications enregistrées ✓</p>
+            <div class="flex gap-2 pt-1">
+              <button type="submit"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+                Enregistrer
+              </button>
+              <button type="button" id="profile-cancel"
+                class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold py-2 rounded-lg transition-colors">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+
     <main class="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 w-full overflow-x-hidden">
       <slot />
     </main>
+
+    {isAdmin && currentUser && (
+      <script>
+        const modal   = document.getElementById('profile-modal')!;
+        const form    = document.getElementById('profile-form') as HTMLFormElement;
+        const errEl   = document.getElementById('profile-error')!;
+        const okEl    = document.getElementById('profile-success')!;
+
+        document.getElementById('profile-btn')?.addEventListener('click', () => {
+          errEl.classList.add('hidden');
+          okEl.classList.add('hidden');
+          (form.querySelector('[name=password]') as HTMLInputElement).value = '';
+          modal.classList.remove('hidden');
+        });
+
+        document.getElementById('profile-cancel')?.addEventListener('click', () => modal.classList.add('hidden'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          errEl.classList.add('hidden');
+          okEl.classList.add('hidden');
+          const id        = (form.querySelector('[name=id]') as HTMLInputElement).value;
+          const full_name = (form.querySelector('[name=full_name]') as HTMLInputElement).value.trim();
+          const password  = (form.querySelector('[name=password]') as HTMLInputElement).value.trim();
+
+          const body: Record<string, string> = { full_name };
+          if (password) body.password = password;
+
+          const res = await fetch(`/api/users/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+
+          if (res.ok) {
+            okEl.classList.remove('hidden');
+            // Update displayed name in header
+            const btn = document.getElementById('profile-btn');
+            if (btn) btn.textContent = '👤 ' + full_name;
+            setTimeout(() => modal.classList.add('hidden'), 1000);
+          } else {
+            const err = await res.json();
+            errEl.textContent = err.error ?? 'Erreur';
+            errEl.classList.remove('hidden');
+          }
+        });
+      </script>
+    )}
   </body>
 </html>
