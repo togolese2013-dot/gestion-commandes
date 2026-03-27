@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { isAuthenticated } from '../../../lib/auth';
+import { isAuthenticated, getCurrentUser } from '../../../lib/auth';
 import { createOrder, getAllOrders } from '../../../lib/orders';
 import { sendNewOrderWebhook } from '../../../lib/webhook';
 
@@ -64,6 +64,9 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
+    const currentUser = getCurrentUser(request);
+    const performedBy = currentUser?.full_name ?? '';
+
     const order = createOrder({
       client_name: client_name.trim(),
       client_phone: client_phone.trim(),
@@ -78,7 +81,7 @@ export const POST: APIRoute = async ({ request }) => {
         price: Number(p.price),
         quantity: Math.max(1, Math.floor(Number(p.quantity))),
       })),
-    });
+    }, performedBy);
 
     sendNewOrderWebhook(order);
 

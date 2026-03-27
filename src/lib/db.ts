@@ -14,12 +14,23 @@ export function getDb(): Database.Database {
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
     initSchema(db);
+    runMigrations(db);
+    seedInitialUser(db);
   }
   return db;
 }
 
 function initSchema(db: Database.Database) {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      full_name TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'admin',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       order_number TEXT UNIQUE NOT NULL,
@@ -31,6 +42,9 @@ function initSchema(db: Database.Database) {
       remaining_balance REAL NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'en_attente' CHECK(status IN ('en_attente', 'disponible', 'recupere')),
       notes TEXT DEFAULT '',
+      created_by TEXT DEFAULT '',
+      marked_available_by TEXT DEFAULT '',
+      picked_up_by TEXT DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -50,6 +64,7 @@ function initSchema(db: Database.Database) {
       order_id INTEGER NOT NULL,
       amount REAL NOT NULL,
       payment_method TEXT DEFAULT '',
+      performed_by TEXT DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
     );
@@ -59,4 +74,29 @@ function initSchema(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_products_order_id ON products(order_id);
     CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
   `);
+}
+
+// Add new columns to existing DB without losing data
+function runMigrations(db: Database.Database) {
+  const migrations = [
+    `ALTER TABLE orders ADD COLUMN created_by TEXT DEFAULT ''`,
+    `ALTER TABLE orders ADD COLUMN marked_available_by TEXT DEFAULT ''`,
+    `ALTER TABLE orders ADD COLUMN picked_up_by TEXT DEFAULT ''`,
+    `ALTER TABLE payments ADD COLUMN performed_by TEXT DEFAULT ''`,
+  ];
+  for (const sql of migrations) {
+    try { db.exec(sql); } catch { /* column already exists */ }
+  }
+}
+
+// Create default admin user on first launch if no users exist
+function seedInitialUser(db: Database.Database) {
+  const count = (db.prepare('SELECT COUNT(*) as c FROM users').get() as { c: number }).c;
+  if (count === 0) {
+    const username = process.env.INITIAL_ADMIN_USERNAME || 'admin';
+    const password = process.env.INITIAL_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'admin123';
+    const full_name = process.env.INITIAL_ADMIN_NAME || 'Administrateur';
+    db.prepare('INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)').run(username, password, full_name, 'admin');
+    console.log(`[Auth] Compte admin créé : ${username}`);
+  }
 }

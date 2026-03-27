@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { isAuthenticated } from '../../../../lib/auth';
+import { isAuthenticated, getCurrentUser } from '../../../../lib/auth';
 import { confirmOrderAvailable, confirmOrderPickedUp } from '../../../../lib/orders';
 import { sendOrderReadyWebhook } from '../../../../lib/webhook';
 
@@ -13,11 +13,14 @@ export const POST: APIRoute = async ({ request, params }) => {
     const body = await request.json().catch(() => ({}));
     const action = body.action ?? 'available'; // 'available' | 'picked_up'
 
+    const currentUser = getCurrentUser(request);
+    const performedBy = currentUser?.full_name ?? '';
+
     let order;
     if (action === 'picked_up') {
-      order = confirmOrderPickedUp(id);
+      order = confirmOrderPickedUp(id, performedBy);
     } else {
-      order = confirmOrderAvailable(id);
+      order = confirmOrderAvailable(id, performedBy);
       // await so the webhook request completes before response is sent
       if (order) {
         try {

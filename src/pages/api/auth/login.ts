@@ -1,14 +1,16 @@
 import type { APIRoute } from 'astro';
-import { checkAdminPassword, buildSessionCookieHeader } from '../../../lib/auth';
+import { checkUserCredentials, buildSessionCookieHeader } from '../../../lib/auth';
 
 export const POST: APIRoute = async ({ request }) => {
   const formData = await request.formData();
+  const username = formData.get('username')?.toString().trim() ?? '';
   const password = formData.get('password')?.toString() ?? '';
 
-  if (!checkAdminPassword(password)) {
+  const user = checkUserCredentials(username, password);
+
+  if (!user) {
     return new Response(null, {
       status: 303,
-      // Use relative redirect — avoids localhost URL from Railway's internal proxy
       headers: { Location: '/login?error=1' },
     });
   }
@@ -17,7 +19,7 @@ export const POST: APIRoute = async ({ request }) => {
     status: 303,
     headers: {
       Location: '/admin/orders',
-      'Set-Cookie': buildSessionCookieHeader(),
+      'Set-Cookie': buildSessionCookieHeader(user.id),
     },
   });
 };

@@ -5,6 +5,7 @@ export interface Payment {
   order_id?: number;
   amount: number;
   payment_method?: string;
+  performed_by?: string;
   created_at?: string;
 }
 
@@ -28,6 +29,9 @@ export interface Order {
   remaining_balance: number;
   status?: 'en_attente' | 'disponible' | 'recupere';
   notes?: string;
+  created_by?: string;
+  marked_available_by?: string;
+  picked_up_by?: string;
   created_at?: string;
   updated_at?: string;
   products?: Product[];
@@ -66,15 +70,15 @@ function attachProducts(orders: Order[]): Order[] {
   return orders;
 }
 
-export function createOrder(data: Order): Order {
+export function createOrder(data: Order, performedBy = ''): Order {
   const db = getDb();
   const order_number = generateOrderNumber();
   const products = data.products ?? [];
 
   const insertOrder = db.prepare(`
     INSERT INTO orders (order_number, client_name, client_phone, delivery_type,
-      total_amount, deposit, remaining_balance, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      total_amount, deposit, remaining_balance, notes, created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const insertProduct = db.prepare(`
@@ -91,7 +95,8 @@ export function createOrder(data: Order): Order {
       data.total_amount,
       data.deposit,
       data.remaining_balance,
-      data.notes ?? ''
+      data.notes ?? '',
+      performedBy
     );
     const orderId = result.lastInsertRowid as number;
     for (const p of products) {
@@ -176,21 +181,21 @@ export function updateOrder(id: number, data: Partial<Order>): Order | null {
   return getOrderById(id);
 }
 
-export function confirmOrderAvailable(id: number): Order | null {
+export function confirmOrderAvailable(id: number, performedBy = ''): Order | null {
   if (!id || isNaN(id)) return null;
   const db = getDb();
   db.prepare(
-    `UPDATE orders SET status = 'disponible', updated_at = datetime('now') WHERE id = ? AND status = 'en_attente'`
-  ).run(id);
+    `UPDATE orders SET status = 'disponible', marked_available_by = ?, updated_at = datetime('now') WHERE id = ? AND status = 'en_attente'`
+  ).run(performedBy, id);
   return getOrderById(id);
 }
 
-export function confirmOrderPickedUp(id: number): Order | null {
+export function confirmOrderPickedUp(id: number, performedBy = ''): Order | null {
   if (!id || isNaN(id)) return null;
   const db = getDb();
   db.prepare(
-    `UPDATE orders SET status = 'recupere', updated_at = datetime('now') WHERE id = ? AND status = 'disponible'`
-  ).run(id);
+    `UPDATE orders SET status = 'recupere', picked_up_by = ?, updated_at = datetime('now') WHERE id = ? AND status = 'disponible'`
+  ).run(performedBy, id);
   return getOrderById(id);
 }
 
@@ -248,7 +253,7 @@ export function getPaymentsByOrderId(orderId: number): Payment[] {
   ).all(orderId) as Payment[];
 }
 
-export function recordPayment(id: number, amount: number, payment_method = ''): Order | null {
+export function recordPayment(id: number, amount: number, payment_method = '', performedBy = ''): Order | null {
   if (!id || isNaN(id) || amount <= 0) return null;
   const db = getDb();
   const order = getOrderById(id);
@@ -260,8 +265,8 @@ export function recordPayment(id: number, amount: number, payment_method = ''): 
       `UPDATE orders SET deposit = ?, remaining_balance = ?, updated_at = datetime('now') WHERE id = ?`
     ).run(newDeposit, newRemaining, id);
     db.prepare(
-      `INSERT INTO payments (order_id, amount, payment_method) VALUES (?, ?, ?)`
-    ).run(id, amount, payment_method);
+      `INSERT INTO payments (order_id, amount, payment_method, performed_by) VALUES (?, ?, ?, ?)`
+    ).run(id, amount, payment_method, performedBy);
   })();
   return getOrderById(id);
 }

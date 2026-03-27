@@ -1,0 +1,144 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { requireAuth, getCurrentUser } from '../../lib/auth';
+import { getDb } from '../../lib/db';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+
+const currentUser = getCurrentUser(Astro.request);
+const db = getDb();
+const users = db.prepare('SELECT id, username, full_name, role, created_at FROM users ORDER BY created_at ASC').all() as any[];
+---
+
+<Layout title="Utilisateurs" isAdmin={true}>
+  <div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>
+        <p class="text-gray-500 text-sm mt-1">{users.length} compte{users.length > 1 ? 's' : ''}</p>
+      </div>
+    </div>
+
+    <!-- Add user form -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-4">Ajouter un utilisateur</h2>
+      <form id="add-user-form" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet</label>
+          <input type="text" name="full_name" required placeholder="Alice Martin"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Nom d'utilisateur</label>
+          <input type="text" name="username" required placeholder="alice"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Mot de passe</label>
+          <input type="text" name="password" required placeholder="motdepasse"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div class="sm:col-span-3">
+          <button type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
+            Ajouter
+          </button>
+          <span id="add-error" class="ml-3 text-sm text-red-600 hidden"></span>
+          <span id="add-success" class="ml-3 text-sm text-green-600 hidden">Utilisateur créé ✓</span>
+        </div>
+      </form>
+    </div>
+
+    <!-- Users list -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th class="text-left px-5 py-3 font-semibold text-gray-600">Nom complet</th>
+            <th class="text-left px-5 py-3 font-semibold text-gray-600">Identifiant</th>
+            <th class="text-left px-5 py-3 font-semibold text-gray-600">Créé le</th>
+            <th class="text-left px-5 py-3 font-semibold text-gray-600"></th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          {users.map(user => (
+            <tr class="border-b border-gray-50 hover:bg-gray-50/80 transition-colors" data-user-id={user.id}>
+              <td class="px-5 py-3 font-medium text-gray-900">
+                {user.full_name}
+                {user.id === currentUser?.id && (
+                  <span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Vous</span>
+                )}
+              </td>
+              <td class="px-5 py-3 text-gray-600 font-mono">{user.username}</td>
+              <td class="px-5 py-3 text-gray-500">{new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
+              <td class="px-5 py-3 text-right">
+                {user.id !== currentUser?.id && (
+                  <button
+                    class="delete-user-btn text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                    data-id={user.id}
+                    data-name={user.full_name}
+                  >
+                    Supprimer
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Layout>
+
+<script>
+// Add user
+document.getElementById('add-user-form')!.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  const errorEl = document.getElementById('add-error')!;
+  const successEl = document.getElementById('add-success')!;
+  errorEl.classList.add('hidden');
+  successEl.classList.add('hidden');
+
+  const data = {
+    full_name: (form.querySelector('[name=full_name]') as HTMLInputElement).value.trim(),
+    username: (form.querySelector('[name=username]') as HTMLInputElement).value.trim(),
+    password: (form.querySelector('[name=password]') as HTMLInputElement).value.trim(),
+  };
+
+  const res = await fetch('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (res.ok) {
+    successEl.classList.remove('hidden');
+    form.reset();
+    setTimeout(() => window.location.reload(), 800);
+  } else {
+    const err = await res.json();
+    errorEl.textContent = err.error ?? 'Erreur';
+    errorEl.classList.remove('hidden');
+  }
+});
+
+// Delete user
+document.querySelectorAll('.delete-user-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = btn.getAttribute('data-id')!;
+    const name = btn.getAttribute('data-name')!;
+    if (!confirm(`Supprimer le compte de ${name} ?`)) return;
+
+    const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      document.querySelector(`tr[data-user-id="${id}"]`)?.remove();
+    } else {
+      const err = await res.json();
+      alert(err.error ?? 'Erreur lors de la suppression');
+    }
+  });
+});
+</script>
