@@ -482,7 +482,14 @@ const estimatedDeliveryStr = order
       .no-print { display: none !important; }
       .page-label { display: none; }
 
-      body { background: #fff; font-size: 11px; }
+      /* Force TOUTES les couleurs, fonds et bordures à s'imprimer fidèlement */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+
+      body { background: #fff !important; font-size: 11px; color: #111 !important; }
       .page-wrapper { padding: 0; gap: 0; }
 
       .page, .page-back {
