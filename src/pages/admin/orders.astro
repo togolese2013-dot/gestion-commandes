@@ -141,8 +141,77 @@ const statusColor: Record<string, string> = {
         </a>
       </div>
     ) : (
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="overflow-x-auto">
+      <>
+        <!-- Mobile cards (hidden on md+) -->
+        <div class="md:hidden space-y-3">
+          {orders.map(order => (
+            <div
+              class="order-row bg-white rounded-2xl border border-gray-200 shadow-sm p-4"
+              data-status={order.status}
+              data-client={order.client_name.toLowerCase()}
+              data-number={order.order_number.toLowerCase()}
+              data-date={order.created_at?.slice(0, 10)}
+              data-total={order.total_amount}
+            >
+              <!-- Top row: number + status -->
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md">
+                  {order.order_number}
+                </span>
+                <span class={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusColor[order.status ?? 'en_attente']}`}>
+                  {statusLabel[order.status ?? 'en_attente']}
+                </span>
+              </div>
+              <!-- Client + delivery -->
+              <div class="font-semibold text-gray-900 text-sm">{order.client_name}</div>
+              <div class="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
+                <span>{order.client_phone}</span>
+                <span>·</span>
+                <span>{order.delivery_type === 'avion' ? '✈️ EXPRESS' : '🚢 ECO'}</span>
+                <span>·</span>
+                <span>{new Date(order.created_at!).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+              </div>
+              <!-- Balance + actions -->
+              <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                <div class="text-sm">
+                  <span class="text-gray-500 text-xs">Reste : </span>
+                  <span class={order.remaining_balance > 0 ? 'text-red-600 font-bold' : 'text-green-600 font-bold'}>
+                    {order.remaining_balance.toLocaleString('fr-FR')} FCFA
+                  </span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button class="view-btn p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" data-id={order.id} data-order={JSON.stringify(order)} title="Voir le détail">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  </button>
+                  <button class="edit-btn p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" data-id={order.id} data-order={JSON.stringify(order)} title="Modifier">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  </button>
+                  {order.status === 'en_attente' && (
+                    <button class="confirm-available-btn p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} title="Marquer disponible">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
+                  )}
+                  {order.status === 'disponible' && (
+                    <button class="confirm-pickup-btn p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} title="Confirmer récupération">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </button>
+                  )}
+                  {order.remaining_balance > 0 && (
+                    <button class="payment-btn p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} data-number={order.order_number} data-total={order.total_amount} data-deposit={order.deposit} data-remaining={order.remaining_balance} title="Enregistrer un paiement">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
+                  )}
+                  <button class="delete-btn p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} data-number={order.order_number} title="Supprimer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <!-- Desktop table (hidden on mobile) -->
+        <div class="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b border-gray-100">
               <tr>
@@ -196,83 +265,29 @@ const statusColor: Record<string, string> = {
                   </td>
                   <td class="px-5 py-4">
                     <div class="flex items-center gap-1 justify-end opacity-60 group-hover:opacity-100 transition-opacity">
-                      <!-- View -->
-                      <button
-                        class="view-btn p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        data-id={order.id}
-                        data-order={JSON.stringify(order)}
-                        title="Voir le détail"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
+                      <button class="view-btn p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" data-id={order.id} data-order={JSON.stringify(order)} title="Voir le détail">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                       </button>
-                      <!-- Edit -->
-                      <button
-                        class="edit-btn p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                        data-id={order.id}
-                        data-order={JSON.stringify(order)}
-                        title="Modifier"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
+                      <button class="edit-btn p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" data-id={order.id} data-order={JSON.stringify(order)} title="Modifier">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                       </button>
-                      <!-- Confirm available -->
                       {order.status === 'en_attente' && (
-                        <button
-                          class="confirm-available-btn p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          data-id={order.id}
-                          data-name={order.client_name}
-                          title="Marquer disponible (envoi WhatsApp)"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
+                        <button class="confirm-available-btn p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} title="Marquer disponible (envoi WhatsApp)">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </button>
                       )}
-                      <!-- Confirm picked up -->
                       {order.status === 'disponible' && (
-                        <button
-                          class="confirm-pickup-btn p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                          data-id={order.id}
-                          data-name={order.client_name}
-                          title="Confirmer récupération et paiement"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                          </svg>
+                        <button class="confirm-pickup-btn p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} title="Confirmer récupération et paiement">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         </button>
                       )}
-                      <!-- Payment -->
                       {order.remaining_balance > 0 && (
-                        <button
-                          class="payment-btn p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          data-id={order.id}
-                          data-name={order.client_name}
-                          data-number={order.order_number}
-                          data-total={order.total_amount}
-                          data-deposit={order.deposit}
-                          data-remaining={order.remaining_balance}
-                          title="Enregistrer un paiement"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
+                        <button class="payment-btn p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} data-number={order.order_number} data-total={order.total_amount} data-deposit={order.deposit} data-remaining={order.remaining_balance} title="Enregistrer un paiement">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </button>
                       )}
-                      <!-- Delete -->
-                      <button
-                        class="delete-btn p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        data-id={order.id}
-                        data-name={order.client_name}
-                        data-number={order.order_number}
-                        title="Supprimer"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
+                      <button class="delete-btn p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} data-number={order.order_number} title="Supprimer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                       </button>
                     </div>
                   </td>
@@ -281,7 +296,7 @@ const statusColor: Record<string, string> = {
             </tbody>
           </table>
         </div>
-      </div>
+      </>
     )}
   </div>
 
