@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body;\nconst products = body.products ?? [];\nconst productsList = products.map(p => `• ${p.name} (${p.condition}) x${p.quantity}`).join('\\n');\nconst delivery = body.delivery_type === 'avion' ? 'EXPRESS ✈️ (4-14 jours)' : 'ECO 🚢 (30-45 jours)';\nreturn [{\n  json: {\n    client_name: body.client_name,\n    client_phone: body.client_phone,\n    order_number: body.order_number,\n    delivery: delivery,\n    total_amount: Number(body.total_amount).toLocaleString('fr-FR'),\n    deposit: Number(body.deposit).toLocaleString('fr-FR'),\n    remaining_balance: Number(body.remaining_balance).toLocaleString('fr-FR'),\n    order_url: body.order_url,\n    products_text: productsList || 'N/A'\n  }\n}];"
+        "jsCode": "const body = $input.first().json.body;\nconst products = body.products ?? [];\nconst productsList = products.map(p => `${p.name} (${p.condition}) x${p.quantity}`).join(', ');\nconst delivery = body.delivery_type === 'avion' ? 'EXPRESS (4-14 jours)' : 'ECO (30-45 jours)';\nreturn [{\n  json: {\n    client_name: body.client_name,\n    client_phone: body.client_phone,\n    order_number: body.order_number,\n    delivery: delivery,\n    total_amount: Number(body.total_amount).toLocaleString('fr-FR'),\n    deposit: Number(body.deposit).toLocaleString('fr-FR'),\n    remaining_balance: Number(body.remaining_balance).toLocaleString('fr-FR'),\n    order_url: body.order_url,\n    products_text: productsList || 'N/A'\n  }\n}];"
       },
       "id": "a1b2c3d4-0001-0001-0001-000000000002",
       "name": "Préparer données",

@@ -449,6 +449,7 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
       .company-tagline {
         font-size: 10px !important; color: #111 !important;
         font-weight: 600 !important; letter-spacing: 2px !important; text-transform: uppercase !important;
+        margin-top: 4px !important; text-align: center !important;
       }
       .company-contact { font-size: 10.5px !important; color: #111 !important; text-align: right !important; line-height: 1.7 !important; }
       .company-contact strong { color: #15803d !important; font-weight: 700 !important; }
@@ -464,10 +465,11 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
         border-radius: 5px !important; text-transform: uppercase !important;
       }
       .order-number-badge {
+        font-family: 'Courier New', Courier, monospace !important;
         font-size: 13px !important; font-weight: 700 !important;
         color: #15803d !important; background: #f0fdf4 !important;
-        border: 1.5px solid #15803d !important; padding: 4px 10px !important;
-        border-radius: 4px !important; margin-top: 8px !important;
+        border: 1.5px solid #bbf7d0 !important; padding: 4px 10px !important;
+        border-radius: 4px !important; margin-top: 6px !important; letter-spacing: 0.5px !important;
       }
       .doc-date { font-size: 11px !important; color: #111 !important; text-align: right !important; }
       .doc-date strong { font-size: 12px !important; color: #111 !important; }
@@ -485,9 +487,9 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
       .info-box-body .value { font-size: 12px !important; color: #111 !important; font-weight: 600 !important; }
       .info-box-body .value.big { font-size: 13px !important; font-weight: 700 !important; color: #15803d !important; text-transform: uppercase !important; }
       .delivery-badge { display: inline-block !important; padding: 2px 9px !important; border-radius: 20px !important; font-size: 10px !important; font-weight: 700 !important; }
-      .delivery-avion  { background: #f0fdf4 !important; color: #15803d !important; border: 1px solid #15803d !important; }
-      .delivery-bateau { background: #f0fdf4 !important; color: #166534 !important; border: 1px solid #166534 !important; }
-      .status-badge { display: inline-block !important; padding: 2px 9px !important; border-radius: 20px !important; font-size: 10px !important; font-weight: 700 !important; background: #fefce8 !important; color: #854d0e !important; border: 1px solid #854d0e !important; }
+      .delivery-avion  { background: #f0fdf4 !important; color: #15803d !important; border: 1px solid #bbf7d0 !important; }
+      .delivery-bateau { background: #f0fdf4 !important; color: #166534 !important; border: 1px solid #bbf7d0 !important; }
+      .status-badge { display: inline-block !important; padding: 2px 9px !important; border-radius: 20px !important; font-size: 10px !important; font-weight: 700 !important; background: #fefce8 !important; color: #854d0e !important; border: 1px solid #fde68a !important; }
       .status-disponible { background: #f0fdf4 !important; color: #166534 !important; border-color: #166534 !important; }
       .status-recupere   { background: #f9fafb !important; color: #111 !important; border-color: #111 !important; }
 
@@ -509,7 +511,7 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
       tbody td:first-child { text-align: center !important; color: #111 !important; font-weight: 600 !important; }
       tbody td:nth-child(3), tbody td:last-child { text-align: center !important; font-weight: 600 !important; color: #111 !important; }
       tfoot tr { background: #f0fdf4 !important; }
-      tfoot td { padding: 7px 10px !important; font-weight: 700 !important; color: #15803d !important; text-align: right !important; font-size: 11px !important; border-top: 2px solid #15803d !important; }
+      tfoot td { padding: 7px 10px !important; font-weight: 700 !important; color: #15803d !important; text-align: right !important; font-size: 11px !important; border-top: 2px solid #bbf7d0 !important; }
       tfoot td:first-child { text-align: center !important; }
       tfoot td:nth-child(2) { text-align: left !important; }
       tfoot td:last-child { text-align: center !important; }
