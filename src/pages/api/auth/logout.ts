@@ -4,7 +4,7 @@ export const POST: APIRoute = async ({ request }) => {
   return new Response(null, {
     status: 303,
     headers: {
-      Location: new URL('/login', request.url).toString(),
+      Location: '/login',
       'Set-Cookie': 'gestion_session=; HttpOnly; Path=/; SameSite=Strict; Max-Age=0',
     },
   });
