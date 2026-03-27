@@ -368,7 +368,7 @@ document.getElementById('order-form')!.addEventListener('submit', async (e) => {
     const result = await res.json();
 
     if (!res.ok) {
-      errorMsg.textContent = result.error ?? 'Une erreur est survenue.';
+      errorMsg.textContent = (result.error ?? 'Une erreur est survenue.') + (result.detail ? ' — ' + result.detail : '');
       errorBanner.classList.remove('hidden');
       return;
     }
