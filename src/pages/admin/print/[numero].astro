@@ -786,6 +786,15 @@ const estimatedDeliveryStr = order
                   </tr>
                 ))
               )}
+              {/* Empty rows for additional products to be written manually */}
+              {Array.from({ length: 9 }).map((_, i) => (
+                <tr style="height:28px; border-bottom:1px dashed #e5e7eb;">
+                  <td style="border-right:1px solid #f3f4f6; color:#d1d5db; font-size:10px; text-align:center;">{(order.products ?? []).length + i + 1}</td>
+                  <td style="border-right:1px solid #f3f4f6;"></td>
+                  <td style="border-right:1px solid #f3f4f6;"></td>
+                  <td></td>
+                </tr>
+              ))}
             </tbody>
             {(order.products ?? []).length > 0 && (
               <tfoot>
