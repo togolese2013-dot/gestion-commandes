@@ -1,28 +1,16 @@
 ---
 import { requireAuth } from '../../../../lib/auth';
-import { getOrderByNumber, getPaymentsByOrderId } from '../../../../lib/orders';
+import { getOrderByNumber } from '../../../../lib/orders';
 
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
 const { numero } = Astro.params;
 const order = numero ? getOrderByNumber(numero) : null;
-const payments = order?.id ? getPaymentsByOrderId(order.id) : [];
 
 const fmt = (n: number) => n.toLocaleString('fr-FR');
 const dateStr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-
-const statusLabel: Record<string, string> = {
-  en_attente: 'En attente',
-  disponible: 'Disponible',
-  recupere: 'Récupéré',
-};
-
-// Estimated delivery: 14 days for air, 45 days for sea
-const deliveryDays = order?.delivery_type === 'avion' ? 14 : 45;
-const estimatedDeliveryStr = order
-  ? dateStr(new Date(new Date(order.created_at!).getTime() + deliveryDays * 24 * 60 * 60 * 1000).toISOString())
-  : '';
+const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 ---
 
 <!doctype html>
@@ -46,7 +34,7 @@ const estimatedDeliveryStr = order
       position: sticky;
       top: 0;
       z-index: 100;
-      background: #1e40af;
+      background: #15803d;
       padding: 10px 24px;
       display: flex;
       align-items: center;
@@ -55,7 +43,7 @@ const estimatedDeliveryStr = order
     }
     .no-print button {
       background: #fff;
-      color: #1e40af;
+      color: #15803d;
       border: none;
       border-radius: 6px;
       padding: 8px 18px;
@@ -66,16 +54,16 @@ const estimatedDeliveryStr = order
       align-items: center;
       gap: 6px;
     }
-    .no-print button:hover { background: #e0e7ff; }
+    .no-print button:hover { background: #dcfce7; }
     .no-print a {
-      color: #bfdbfe;
+      color: #bbf7d0;
       text-decoration: none;
       font-size: 13px;
       font-weight: 600;
     }
     .no-print a:hover { color: #fff; }
     .no-print .spacer { flex: 1; }
-    .no-print .hint { color: #93c5fd; font-size: 12px; }
+    .no-print .hint { color: #86efac; font-size: 12px; }
 
     /* A4 page wrapper */
     .page-wrapper {
@@ -88,15 +76,15 @@ const estimatedDeliveryStr = order
 
     .page {
       background: #fff;
-      width: 100%;
-      max-width: 800px;
-      min-height: 1100px;
-      padding: 40px 48px;
+      width: 210mm;
+      height: 297mm;
+      padding: 15mm 18mm;
       box-shadow: 0 4px 24px rgba(0,0,0,0.10);
       border-radius: 4px;
       display: flex;
       flex-direction: column;
       position: relative;
+      overflow: hidden;
     }
     .page-content { flex: 1; }
 
@@ -110,7 +98,7 @@ const estimatedDeliveryStr = order
     .company-name {
       font-size: 30px;
       font-weight: 900;
-      color: #1e40af;
+      color: #15803d;
       letter-spacing: -0.5px;
       line-height: 1;
     }
@@ -129,12 +117,12 @@ const estimatedDeliveryStr = order
       color: #111;
       line-height: 1.7;
     }
-    .company-contact strong { color: #1e40af; font-weight: 700; }
+    .company-contact strong { color: #15803d; font-weight: 700; }
 
     /* Separator */
     .divider {
       height: 3px;
-      background: linear-gradient(90deg, #1e40af 0%, #3b82f6 60%, #bfdbfe 100%);
+      background: linear-gradient(90deg, #15803d 0%, #16a34a 60%, #bbf7d0 100%);
       border-radius: 2px;
       margin: 14px 0;
     }
@@ -149,7 +137,7 @@ const estimatedDeliveryStr = order
     .doc-badge {
       display: inline-flex;
       align-items: center;
-      background: #1e40af;
+      background: #15803d;
       color: #fff;
       font-size: 14px;
       font-weight: 800;
@@ -162,13 +150,13 @@ const estimatedDeliveryStr = order
       font-family: 'Courier New', Courier, monospace;
       font-size: 15px;
       font-weight: 700;
-      color: #1e40af;
-      background: #eff6ff;
-      border: 1.5px solid #bfdbfe;
+      color: #15803d;
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
       padding: 5px 12px;
       border-radius: 5px;
       letter-spacing: 0.5px;
-      margin-top: 10px;
+      margin-top: 6px;
     }
     .doc-date {
       font-size: 12px;
@@ -221,7 +209,7 @@ const estimatedDeliveryStr = order
     .info-box-body .value.big {
       font-size: 15px;
       font-weight: 700;
-      color: #1e40af;
+      color: #15803d;
       text-transform: uppercase;
     }
     .delivery-badge {
@@ -231,7 +219,7 @@ const estimatedDeliveryStr = order
       font-size: 11px;
       font-weight: 700;
     }
-    .delivery-avion  { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .delivery-avion  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
     .delivery-bateau { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
     .status-badge {
       display: inline-block;
@@ -263,7 +251,7 @@ const estimatedDeliveryStr = order
       margin-bottom: 20px;
       font-size: 12.5px;
     }
-    thead tr { background: #1e40af; color: #fff; }
+    thead tr { background: #15803d; color: #fff; }
     thead th {
       padding: 9px 12px;
       text-align: left;
@@ -284,17 +272,18 @@ const estimatedDeliveryStr = order
     }
     tbody td:first-child { text-align: center; color: #111; font-weight: 600; }
     tbody td:nth-child(3), tbody td:last-child { text-align: center; vertical-align: middle; font-weight: 600; color: #111; }
-    tfoot tr { background: #eff6ff; }
+    tfoot tr { background: #f0fdf4; }
     tfoot td {
       padding: 9px 12px;
       font-weight: 700;
-      color: #1e40af;
+      color: #15803d;
       text-align: right;
       font-size: 13px;
-      border-top: 2px solid #bfdbfe;
+      border-top: 2px solid #bbf7d0;
     }
     tfoot td:first-child { text-align: center; }
     tfoot td:nth-child(2) { text-align: left; }
+    tfoot td:last-child { text-align: center; }
     .product-name { font-weight: 600; color: #111; }
     .product-condition { font-size: 10.5px; color: #111; margin-top: 1px; }
 
@@ -349,16 +338,20 @@ const estimatedDeliveryStr = order
 
     /* Signature zone — pinned at bottom on screen */
     .signature-section {
+      position: absolute;
+      bottom: 38mm;
+      left: 18mm;
+      right: 18mm;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
-      padding-top: 12px;
+      background: #fff;
     }
     .signature-box {
       border: 1.5px dashed #111;
       border-radius: 6px;
-      padding: 10px 14px;
-      min-height: 80px;
+      padding: 16px 18px;
+      min-height: 140px;
       display: flex;
       flex-direction: column;
     }
@@ -372,12 +365,12 @@ const estimatedDeliveryStr = order
     }
     .signature-line {
       border-bottom: 1px solid #111;
-      margin-top: 28px;
+      margin-top: 22px;
     }
     .signature-date-line {
       font-size: 11px;
       color: #111;
-      margin-top: 6px;
+      margin-top: 22px;
     }
     .signature-box-hint {
       font-size: 10px;
@@ -388,14 +381,19 @@ const estimatedDeliveryStr = order
 
     /* Footer */
     .footer {
-      text-align: center;
-      padding-top: 10px;
-      margin-top: 16px;
-      border-top: 1px solid #111;
-      color: #111;
-      font-size: 11.5px;
+      position: absolute !important;
+      bottom: 14mm !important;
+      left: 18mm !important;
+      right: 18mm !important;
+      text-align: center !important;
+      padding-top: 10px !important;
+      margin-top: 0 !important;
+      border-top: 1px solid #111 !important;
+      color: #111 !important;
+      font-size: 11.5px !important;
+      background: #fff !important;
     }
-    .footer strong { display: block; font-size: 13px; color: #111; font-weight: 700; margin-bottom: 3px; }
+    .footer strong { display: block !important; font-size: 13px !important; color: #111 !important; font-weight: 700 !important; margin-bottom: 3px !important; }
 
     /* Error page */
     .error-page {
@@ -446,29 +444,29 @@ const estimatedDeliveryStr = order
       /* ══ HEADER ══ */
       .company-name {
         font-size: 22px !important; font-weight: 900 !important;
-        color: #1e40af !important; letter-spacing: -0.5px !important; line-height: 1 !important;
+        color: #15803d !important; letter-spacing: -0.5px !important; line-height: 1 !important;
       }
       .company-tagline {
         font-size: 10px !important; color: #111 !important;
         font-weight: 600 !important; letter-spacing: 2px !important; text-transform: uppercase !important;
       }
       .company-contact { font-size: 10.5px !important; color: #111 !important; text-align: right !important; line-height: 1.7 !important; }
-      .company-contact strong { color: #1e40af !important; font-weight: 700 !important; }
+      .company-contact strong { color: #15803d !important; font-weight: 700 !important; }
       .divider {
         height: 3px !important;
-        background: linear-gradient(90deg, #1e40af 0%, #3b82f6 60%, #bfdbfe 100%) !important;
+        background: linear-gradient(90deg, #15803d 0%, #16a34a 60%, #bbf7d0 100%) !important;
         margin: 12px 0 !important;
       }
       .doc-badge {
-        background: #1e40af !important; color: #fff !important;
+        background: #15803d !important; color: #fff !important;
         font-size: 12px !important; font-weight: 800 !important;
         letter-spacing: 1.5px !important; padding: 6px 14px !important;
         border-radius: 5px !important; text-transform: uppercase !important;
       }
       .order-number-badge {
         font-size: 13px !important; font-weight: 700 !important;
-        color: #1e40af !important; background: #eff6ff !important;
-        border: 1.5px solid #1e40af !important; padding: 4px 10px !important;
+        color: #15803d !important; background: #f0fdf4 !important;
+        border: 1.5px solid #15803d !important; padding: 4px 10px !important;
         border-radius: 4px !important; margin-top: 8px !important;
       }
       .doc-date { font-size: 11px !important; color: #111 !important; text-align: right !important; }
@@ -485,9 +483,9 @@ const estimatedDeliveryStr = order
       .info-box-body { padding: 10px 12px !important; line-height: 1.8 !important; }
       .info-box-body .label { font-size: 9.5px !important; color: #111 !important; font-weight: 600 !important; text-transform: uppercase !important; }
       .info-box-body .value { font-size: 12px !important; color: #111 !important; font-weight: 600 !important; }
-      .info-box-body .value.big { font-size: 13px !important; font-weight: 700 !important; color: #1e40af !important; text-transform: uppercase !important; }
+      .info-box-body .value.big { font-size: 13px !important; font-weight: 700 !important; color: #15803d !important; text-transform: uppercase !important; }
       .delivery-badge { display: inline-block !important; padding: 2px 9px !important; border-radius: 20px !important; font-size: 10px !important; font-weight: 700 !important; }
-      .delivery-avion  { background: #eff6ff !important; color: #1e40af !important; border: 1px solid #1e40af !important; }
+      .delivery-avion  { background: #f0fdf4 !important; color: #15803d !important; border: 1px solid #15803d !important; }
       .delivery-bateau { background: #f0fdf4 !important; color: #166534 !important; border: 1px solid #166534 !important; }
       .status-badge { display: inline-block !important; padding: 2px 9px !important; border-radius: 20px !important; font-size: 10px !important; font-weight: 700 !important; background: #fefce8 !important; color: #854d0e !important; border: 1px solid #854d0e !important; }
       .status-disponible { background: #f0fdf4 !important; color: #166534 !important; border-color: #166534 !important; }
@@ -500,7 +498,7 @@ const estimatedDeliveryStr = order
         margin-bottom: 6px !important; padding-bottom: 4px !important; border-bottom: 1px solid #111 !important;
       }
       table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 16px !important; font-size: 10.5px !important; }
-      thead tr { background: #1e40af !important; color: #fff !important; }
+      thead tr { background: #15803d !important; color: #fff !important; }
       thead th { padding: 7px 10px !important; font-size: 9.5px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 0.8px !important; color: #fff !important; }
       thead th:last-child, thead th:nth-child(3) { text-align: center !important; }
       thead th:nth-child(1) { text-align: center !important; width: 40px !important; }
@@ -510,10 +508,11 @@ const estimatedDeliveryStr = order
       tbody td { padding: 7px 10px !important; border-bottom: 1px solid #111 !important; vertical-align: middle !important; color: #111 !important; }
       tbody td:first-child { text-align: center !important; color: #111 !important; font-weight: 600 !important; }
       tbody td:nth-child(3), tbody td:last-child { text-align: center !important; font-weight: 600 !important; color: #111 !important; }
-      tfoot tr { background: #eff6ff !important; }
-      tfoot td { padding: 7px 10px !important; font-weight: 700 !important; color: #1e40af !important; text-align: right !important; font-size: 11px !important; border-top: 2px solid #1e40af !important; }
+      tfoot tr { background: #f0fdf4 !important; }
+      tfoot td { padding: 7px 10px !important; font-weight: 700 !important; color: #15803d !important; text-align: right !important; font-size: 11px !important; border-top: 2px solid #15803d !important; }
       tfoot td:first-child { text-align: center !important; }
       tfoot td:nth-child(2) { text-align: left !important; }
+      tfoot td:last-child { text-align: center !important; }
       .product-name { font-weight: 600 !important; color: #111 !important; }
       .product-condition { font-size: 9.5px !important; color: #111 !important; margin-top: 1px !important; }
 
@@ -546,10 +545,10 @@ const estimatedDeliveryStr = order
         display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 16px !important;
         padding-top: 0 !important; margin-top: 0 !important; background: #fff !important;
       }
-      .signature-box { border: 1.5px dashed #111 !important; border-radius: 6px !important; padding: 10px 14px !important; min-height: 80px !important; display: flex !important; flex-direction: column !important; }
+      .signature-box { border: 1.5px dashed #111 !important; border-radius: 6px !important; padding: 16px 18px !important; min-height: 140px !important; display: flex !important; flex-direction: column !important; }
       .signature-box-title { font-size: 10px !important; font-weight: 800 !important; text-transform: uppercase !important; letter-spacing: 1.2px !important; color: #111 !important; margin-bottom: 8px !important; }
-      .signature-line { border-bottom: 1px solid #111 !important; margin-top: 28px !important; }
-      .signature-date-line { font-size: 11px !important; color: #111 !important; margin-top: 6px !important; }
+      .signature-line { border-bottom: 1px solid #111 !important; margin-top: 22px !important; }
+      .signature-date-line { font-size: 11px !important; color: #111 !important; margin-top: 22px !important; }
       .signature-box-hint { font-size: 10px !important; color: #111 !important; font-style: italic !important; margin-top: 6px !important; }
 
       /* ══ FOOTER ══ */
@@ -570,6 +569,12 @@ const estimatedDeliveryStr = order
 
   <!-- Print action bar -->
   <div class="no-print">
+    {order && (
+      <a href={`/admin/print/${order.order_number}`} style="background:#fff; color:#15803d; border-radius:6px; padding:8px 14px; font-size:13px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:6px;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Facture
+      </a>
+    )}
     <button onclick="window.print()">
       <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
@@ -593,7 +598,7 @@ const estimatedDeliveryStr = order
           </svg>
           <h2>Commande introuvable</h2>
           <p>Le numéro <strong>{numero}</strong> n'existe pas.</p>
-          <a href="/admin/orders" style="margin-top:8px; color:#1e40af; font-weight:600;">← Retour aux commandes</a>
+          <a href="/admin/orders" style="margin-top:8px; color:#15803d; font-weight:600;">← Retour aux commandes</a>
         </div>
       ) : (
         <>
@@ -620,8 +625,8 @@ const estimatedDeliveryStr = order
               <span class="order-number-badge">{order.order_number}</span>
             </div>
             <div class="doc-date">
-              <span style="font-size:10.5px; color:#111; text-transform:uppercase; letter-spacing:0.8px;">Date d'émission</span>
-              <strong>{dateStr(order.created_at!)}</strong>
+              <span style="font-size:10.5px; color:#111; text-transform:uppercase; letter-spacing:0.8px;">Date de livraison</span>
+              <strong>{todayStr}</strong>
             </div>
           </div>
 
@@ -645,45 +650,40 @@ const estimatedDeliveryStr = order
               </div>
             </div>
             <div class="info-box">
-              <div class="info-box-header">Livraison &amp; Statut</div>
+              <div class="info-box-header">Détails livraison</div>
               <div class="info-box-body">
                 <div class="label">Mode de livraison</div>
                 <div class="value" style="margin-top:2px;">
                   <span class={`delivery-badge ${order.delivery_type === 'avion' ? 'delivery-avion' : 'delivery-bateau'}`}>
-                    {order.delivery_type === 'avion' ? 'EXPRESS' : 'ECO'}
+                    {order.delivery_type === 'avion' ? 'EXPRESS (avion)' : 'ECONOMIQUE (bateau)'}
                   </span>
                 </div>
                 <div style="margin-top:10px;">
-                  <div class="label">Livraison prévue</div>
-                  <div class="value" style="font-size:13px; font-weight:700; color:#1e40af;">{estimatedDeliveryStr}</div>
+                  <div class="label">Date de commande</div>
+                  <div class="value" style="font-size:12px;">{dateStr(order.created_at!)}</div>
                 </div>
                 <div style="margin-top:10px;">
-                  <div class="label">Statut</div>
-                  <div class="value" style="margin-top:2px;">
-                    <span class={`status-badge ${order.status === 'disponible' ? 'status-disponible' : order.status === 'recupere' ? 'status-recupere' : ''}`}>
-                      {statusLabel[order.status ?? 'en_attente']}
-                    </span>
-                  </div>
+                  <div class="label">Montant total</div>
+                  <div class="value" style="font-size:13px; color:#15803d;">{fmt(order.total_amount)} FCFA</div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Products table -->
-          <div class="section-title">Détail des produits</div>
+          <div class="section-title">Articles livrés</div>
           <table>
             <thead>
               <tr>
                 <th>Qté</th>
                 <th>Description / Produit</th>
-                <th>Prix unitaire</th>
-                <th>Total</th>
+                <th style="text-align:center;">Total</th>
               </tr>
             </thead>
             <tbody>
               {(order.products ?? []).length === 0 ? (
                 <tr>
-                  <td colspan="4" style="text-align:center; color:#111; font-style:italic; padding:20px;">
+                  <td colspan="3" style="text-align:center; color:#111; font-style:italic; padding:20px;">
                     Aucun produit enregistré
                   </td>
                 </tr>
@@ -695,79 +695,21 @@ const estimatedDeliveryStr = order
                       <div class="product-name">{p.name}</div>
                       {p.condition && <div class="product-condition">{p.condition}</div>}
                     </td>
-                    <td>{fmt(p.price)} FCFA</td>
                     <td>{fmt(p.price * p.quantity)} FCFA</td>
                   </tr>
                 ))
               )}
-              {/* Empty rows to always total 9 lines */}
-              {Array.from({ length: Math.max(0, 9 - (order.products ?? []).length) }).map(() => (
-                <tr style="height:44px;">
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-              ))}
             </tbody>
             {(order.products ?? []).length > 0 && (
               <tfoot>
                 <tr>
                   <td></td>
                   <td>TOTAL</td>
-                  <td></td>
                   <td>{fmt(order.total_amount)} FCFA</td>
                 </tr>
               </tfoot>
             )}
           </table>
-
-          <!-- Financial summary -->
-          <div class="summary-wrapper">
-            <div class="summary-box">
-              <div class="summary-row total-row">
-                <span class="summary-label">Montant total</span>
-                <span class="summary-value">{fmt(order.total_amount)} FCFA</span>
-              </div>
-              <div class="summary-row paid-row">
-                <span class="summary-label">Acompte versé</span>
-                <span class="summary-value">{fmt(order.deposit)} FCFA</span>
-              </div>
-              <div class={`summary-row ${order.remaining_balance > 0 ? 'remaining-row remaining-positive' : 'remaining-zero-row remaining-zero'}`}>
-                <span class="summary-label" style="font-weight:700;">Reste à payer</span>
-                <span class="summary-value" style="font-size:15px;">{fmt(order.remaining_balance)} FCFA</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Payments history -->
-          {payments.length > 0 && (
-            <div class="payments-section">
-              <div class="section-title">Historique des versements</div>
-              <table class="payments-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Date</th>
-                    <th>Moyen de paiement</th>
-                    <th>Enregistré par</th>
-                    <th style="text-align:right;">Montant</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((payment, i) => (
-                    <tr>
-                      <td style="color:#111; font-size:11px;">{i + 1}</td>
-                      <td>{payment.created_at ? dateStr(payment.created_at) : '—'}</td>
-                      <td>{payment.payment_method || '—'}</td>
-                      <td>{payment.performed_by || '—'}</td>
-                      <td class="amount">{fmt(payment.amount)} FCFA</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
 
           </div>{/* end page-content */}
 
