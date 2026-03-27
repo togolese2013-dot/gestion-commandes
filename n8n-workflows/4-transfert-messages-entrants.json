@@ -1,0 +1,130 @@
+{
+  "name": "4 - Transfert messages clients → Kent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "ALL",
+        "path": "whatsapp-inbox",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000001",
+      "name": "Webhook WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "whatsapp-inbox-001"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-verify",
+              "leftValue": "={{ $json.query['hub.mode'] }}",
+              "rightValue": "subscribe",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000002",
+      "name": "Vérification Meta ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000003",
+      "name": "Répondre challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [700, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nconst entry = body?.entry?.[0];\nconst change = entry?.changes?.[0];\nconst value = change?.value;\nconst message = value?.messages?.[0];\n\n// Ignorer si pas de message texte\nif (!message) return [];\n\nconst from = message.from;\nconst name = value?.contacts?.[0]?.profile?.name || from;\nconst timestamp = new Date(parseInt(message.timestamp) * 1000)\n  .toLocaleString('fr-FR', { timeZone: 'Africa/Lome', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });\n\nlet texte = '';\nif (message.type === 'text') {\n  texte = message.text.body;\n} else if (message.type === 'image') {\n  texte = '[Image reçue]';\n} else if (message.type === 'audio') {\n  texte = '[Message vocal reçu]';\n} else if (message.type === 'video') {\n  texte = '[Vidéo reçue]';\n} else if (message.type === 'document') {\n  texte = '[Document reçu]';\n} else {\n  texte = `[Message de type : ${message.type}]`;\n}\n\nconst forwarded = `📩 *Nouveau message client*\\n\\n👤 *${name}*\\n📞 +${from}\\n🕐 ${timestamp}\\n\\n💬 ${texte}`;\n\nreturn [{ json: { from, name, timestamp, texte, forwarded } }];"
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000004",
+      "name": "Extraire message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 440]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1108545832334279/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"22890226491\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $json.forwarded }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000005",
+      "name": "Transférer à Kent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [940, 440]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\" }",
+        "options": { "responseCode": 200 }
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000006",
+      "name": "Répondre OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1160, 440]
+    }
+  ],
+  "connections": {
+    "Webhook WhatsApp": {
+      "main": [
+        [{ "node": "Vérification Meta ?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Vérification Meta ?": {
+      "main": [
+        [{ "node": "Répondre challenge", "type": "main", "index": 0 }],
+        [{ "node": "Extraire message", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extraire message": {
+      "main": [
+        [{ "node": "Transférer à Kent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Transférer à Kent": {
+      "main": [
+        [{ "node": "Répondre OK", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "WhatsApp" }, { "name": "Inbox" }]
+}
