@@ -96,6 +96,7 @@ const estimatedDeliveryStr = order
       border-radius: 4px;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
     .page-content { flex: 1; }
 
@@ -346,13 +347,12 @@ const estimatedDeliveryStr = order
     .payments-table td { padding: 7px 12px; border-bottom: 1px solid #111; color: #111; }
     .payments-table td.amount { font-weight: 700; color: #059669; text-align: right; }
 
-    /* Signature zone */
+    /* Signature zone — pinned at bottom on screen */
     .signature-section {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
-      margin-top: auto;
-      padding-top: 20px;
+      padding-top: 12px;
     }
     .signature-box {
       border: 1.5px dashed #111;
@@ -441,7 +441,7 @@ const estimatedDeliveryStr = order
       /* ══ LAYOUT ══ */
       .header { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; margin-bottom: 6px !important; }
       .doc-title-row { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 14px !important; }
-      .page-content { flex: 1 !important; }
+      .page-content { flex: 1 !important; display: block !important; }
 
       /* ══ HEADER ══ */
       .company-name {
@@ -550,7 +550,7 @@ const estimatedDeliveryStr = order
       .signature-box-title { font-size: 10px !important; font-weight: 800 !important; text-transform: uppercase !important; letter-spacing: 1.2px !important; color: #111 !important; margin-bottom: 8px !important; }
       .signature-line { border-bottom: 1px solid #111 !important; margin-top: 28px !important; }
       .signature-date-line { font-size: 11px !important; color: #111 !important; margin-top: 6px !important; }
-      .signature-box-hint { font-size: 10px !important; color: #111 !important; font-style: italic !important; margin-top: auto !important; }
+      .signature-box-hint { font-size: 10px !important; color: #111 !important; font-style: italic !important; margin-top: 6px !important; }
 
       /* ══ FOOTER ══ */
       .footer {
@@ -597,6 +597,7 @@ const estimatedDeliveryStr = order
         </div>
       ) : (
         <>
+          <div class="page-content">
           <!-- Header -->
           <div class="header">
             <div>
@@ -768,19 +769,21 @@ const estimatedDeliveryStr = order
             </div>
           )}
 
+          </div>{/* end page-content */}
+
           <!-- Signature zone -->
           <div class="signature-section">
             <div class="signature-box">
-              <div class="signature-box-title">Signature client</div>
+              <div class="signature-box-title">Signature du client</div>
               <div class="signature-line"></div>
-              <div class="signature-date-line">Date : _______________</div>
-              <div class="signature-box-hint">Lu et approuvé</div>
+              <div class="signature-date-line">Date : _____ / _____ / _________</div>
+              <div class="signature-box-hint">Je soussigné(e) atteste avoir reçu les articles ci-dessus en bon état.</div>
             </div>
             <div class="signature-box">
               <div class="signature-box-title">Cachet &amp; Signature TOGOLESE</div>
               <div class="signature-line"></div>
-              <div class="signature-date-line">Date : _______________</div>
-              <div class="signature-box-hint">Représentant autorisé</div>
+              <div class="signature-date-line">Remis par : ________________________________</div>
+              <div class="signature-box-hint">Représentant(e) TOGOLESE</div>
             </div>
           </div>
 
