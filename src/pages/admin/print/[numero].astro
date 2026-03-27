@@ -556,6 +556,78 @@ const estimatedDeliveryStr = order
       .doc-date strong { font-size: 12px !important; color: #111 !important; }
       /* ═══ FIN HEADER PROTÉGÉ ═══ */
 
+      /* ═══ INFO GRID PROTÉGÉ — ne pas modifier ═══ */
+      .info-grid, .info-box, .info-box-header, .info-box-body,
+      .delivery-badge, .delivery-avion, .delivery-bateau,
+      .status-badge, .status-disponible, .status-recupere {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .info-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 14px !important;
+        margin-bottom: 18px !important;
+      }
+      .info-box {
+        border: 1px solid #e5e7eb !important;
+        border-radius: 6px !important;
+        overflow: hidden !important;
+      }
+      .info-box-header {
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        padding: 6px 12px !important;
+        font-size: 9px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1.2px !important;
+        color: #6b7280 !important;
+      }
+      .info-box-body {
+        padding: 10px 12px !important;
+        line-height: 1.8 !important;
+      }
+      .info-box-body .label {
+        font-size: 9.5px !important;
+        color: #9ca3af !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+      }
+      .info-box-body .value {
+        font-size: 12px !important;
+        color: #111 !important;
+        font-weight: 600 !important;
+      }
+      .info-box-body .value.big {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        color: #1e40af !important;
+        text-transform: uppercase !important;
+      }
+      .delivery-badge {
+        display: inline-block !important;
+        padding: 2px 9px !important;
+        border-radius: 20px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+      }
+      .delivery-avion  { background: #eff6ff !important; color: #1e40af !important; border: 1px solid #bfdbfe !important; }
+      .delivery-bateau { background: #f0fdf4 !important; color: #166534 !important; border: 1px solid #bbf7d0 !important; }
+      .status-badge {
+        display: inline-block !important;
+        padding: 2px 9px !important;
+        border-radius: 20px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        background: #fefce8 !important;
+        color: #854d0e !important;
+        border: 1px solid #fde68a !important;
+      }
+      .status-disponible { background: #f0fdf4 !important; color: #166534 !important; border-color: #bbf7d0 !important; }
+      .status-recupere   { background: #f9fafb !important; color: #4b5563 !important; border-color: #e5e7eb !important; }
+      /* ═══ FIN INFO GRID PROTÉGÉ ═══ */
+
       .signature-section {
         position: fixed;
         bottom: 38mm;
