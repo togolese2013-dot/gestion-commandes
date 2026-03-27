@@ -448,6 +448,90 @@ const statusLabel: Record<string, string> = {
       font-weight: 700;
     }
 
+    /* ===== BACK PAGE (conditions) ===== */
+    .page-back {
+      background: #fff;
+      width: 100%;
+      max-width: 800px;
+      min-height: 1100px;
+      padding: 40px 48px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      border-radius: 4px;
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+    }
+    .back-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #1e40af;
+      text-align: center;
+      margin-bottom: 6px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #1e40af;
+    }
+    .back-subtitle {
+      font-size: 10px;
+      color: #9ca3af;
+      text-align: center;
+      margin-bottom: 28px;
+      font-style: italic;
+    }
+    .conditions-back {
+      flex: 1;
+    }
+    .conditions-back ol {
+      padding-left: 20px;
+      font-size: 12.5px;
+      color: #374151;
+      line-height: 1.9;
+      counter-reset: item;
+    }
+    .conditions-back ol li {
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
+    .conditions-back ol li::marker {
+      font-weight: 700;
+      color: #1e40af;
+    }
+    .conditions-back .privacy {
+      margin-top: 24px;
+      padding: 12px 16px;
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      border-radius: 0 6px 6px 0;
+      font-size: 11.5px;
+      color: #4b5563;
+      font-style: italic;
+    }
+    .back-footer {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      color: #9ca3af;
+      font-size: 11px;
+      margin-top: auto;
+    }
+    .back-footer strong {
+      display: block;
+      font-size: 12px;
+      color: #374151;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+    .page-label {
+      text-align: center;
+      font-size: 11px;
+      color: #9ca3af;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin: 16px 0 8px;
+    }
+
     /* ===== PRINT STYLES ===== */
     @media print {
       .no-print { display: none !important; }
@@ -457,27 +541,27 @@ const statusLabel: Record<string, string> = {
         font-size: 11px;
       }
 
-      .page-wrapper {
-        padding: 0;
-      }
+      .page-wrapper { padding: 0; }
+      .page-label { display: none; }
 
-      .page {
+      .page, .page-back {
         max-width: 100%;
         width: 100%;
         min-height: auto;
         box-shadow: none;
-        padding: 20mm 18mm;
+        padding: 15mm 18mm;
         border-radius: 0;
+        margin: 0;
       }
 
-      .company-name { font-size: 24px; }
+      .page-back {
+        page-break-before: always;
+      }
 
-      table { font-size: 11px; }
-      thead th { font-size: 10px; }
-
-      .conditions ol { font-size: 9px; }
-      .conditions p { font-size: 9px; }
-      .conditions-title { font-size: 9px; }
+      .company-name { font-size: 22px; }
+      table { font-size: 10.5px; }
+      thead th { font-size: 9.5px; }
+      .conditions-back ol { font-size: 11.5px; }
 
       @page {
         size: A4;
@@ -681,21 +765,7 @@ const statusLabel: Record<string, string> = {
             </div>
           )}
 
-          <!-- Terms and conditions -->
-          <div class="conditions">
-            <div class="conditions-title">Conditions générales</div>
-            <ol>
-              <li>Acompte de 70% exigé à la commande. Solde (30%) dû à la livraison.</li>
-              <li>Une fois la commande passée, aucun remboursement n'est possible.</li>
-              <li>Délai de réclamation : 1 mois à compter de la date de livraison.</li>
-              <li>Tout produit est vérifié et testé en présence du client lors de la remise de commande.</li>
-              <li>TOGOLESE ne peut être tenu responsable des retards de livraison involontaires.</li>
-              <li>Les produits bénéficient d'une garantie constructeur. Tout défaut constaté après réception doit être signalé dans le délai de réclamation ; aucune garantie ne couvre les dommages causés par une mauvaise utilisation.</li>
-            </ol>
-            <p>Protection des données : vos données sont utilisées uniquement pour le traitement de votre commande.</p>
-          </div>
-
-          <!-- Footer -->
+          <!-- Footer recto -->
           <div class="footer">
             <strong>Merci pour votre confiance !</strong>
             TOGOLESE &mdash; Kégué derrière l'hôtel O'Balkan, Lomé - TOGO &mdash; Contact@togolesegroup.com
@@ -704,6 +774,41 @@ const statusLabel: Record<string, string> = {
       )}
 
     </div>
+
+    {order && (
+      <>
+        <p class="page-label">— Verso : Conditions générales —</p>
+
+        <!-- Back page: conditions générales -->
+        <div class="page-back">
+          <div class="back-title">Conditions Générales de Vente</div>
+          <div class="back-subtitle">TOGOLESE — Vente et distribution — Lomé, TOGO</div>
+
+          <div class="conditions-back">
+            <ol>
+              <li>Acompte de 70% exigé à la commande. Le solde (30%) est dû à la livraison avant remise des articles.</li>
+              <li>Une fois la commande passée et l'acompte versé, aucun remboursement n'est possible.</li>
+              <li>Délai de réclamation : 1 mois à compter de la date de livraison. Passé ce délai, aucune réclamation ne sera prise en compte.</li>
+              <li>Tout produit est vérifié et testé en présence du client lors de la remise de commande. Aucune réclamation relative à l'état du produit ne sera acceptée après cette vérification contradictoire.</li>
+              <li>TOGOLESE ne peut être tenu responsable des retards de livraison involontaires liés aux transporteurs, aux douanes ou à tout événement indépendant de sa volonté.</li>
+              <li>Les produits bénéficient d'une garantie constructeur selon les termes définis par le fabricant. Tout défaut constaté après réception doit être signalé dans le délai de réclamation. Aucune garantie ne couvre les dommages causés par une mauvaise utilisation, une chute, une infiltration d'eau ou une modification non autorisée.</li>
+              <li>Le client s'engage à fournir des informations exactes lors de la commande. TOGOLESE ne saurait être tenu responsable des erreurs de livraison dues à des informations incorrectes.</li>
+              <li>Tout litige relatif à la présente commande sera soumis à la juridiction compétente de Lomé, TOGO.</li>
+            </ol>
+
+            <div class="privacy">
+              <strong>Protection des données personnelles :</strong> Les informations collectées lors de votre commande (nom, téléphone) sont utilisées exclusivement pour le traitement et le suivi de votre commande. Elles ne sont ni vendues ni transmises à des tiers.
+            </div>
+          </div>
+
+          <div class="back-footer">
+            <strong>TOGOLESE</strong>
+            Kégué derrière l'hôtel O'Balkan, Lomé - TOGO &mdash; Tél : +228 90 22 64 91 &mdash; Contact@togolesegroup.com
+          </div>
+        </div>
+      </>
+    )}
+
   </div>
 
 </body>
