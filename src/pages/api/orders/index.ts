@@ -20,7 +20,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const body = await request.json();
-    const { client_name, client_phone, delivery_type, total_amount, deposit, remaining_balance, notes, products } = body;
+    const { client_name, client_phone, delivery_type, total_amount, deposit, remaining_balance, notes, payment_method, products } = body;
 
     // Required fields
     if (!client_name?.trim()) {
@@ -75,6 +75,7 @@ export const POST: APIRoute = async ({ request }) => {
       deposit: depositNum,
       remaining_balance: Math.max(0, totalNum - depositNum),
       notes: notes?.trim() ?? '',
+      deposit_payment_method: payment_method?.trim() ?? '',
       products: products.map((p: any) => ({
         name: p.name.trim(),
         condition: p.condition.trim(),

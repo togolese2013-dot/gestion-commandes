@@ -42,6 +42,7 @@ function initSchema(db: Database.Database) {
       remaining_balance REAL NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'en_attente' CHECK(status IN ('en_attente', 'disponible', 'recupere')),
       notes TEXT DEFAULT '',
+      deposit_payment_method TEXT DEFAULT '',
       created_by TEXT DEFAULT '',
       marked_available_by TEXT DEFAULT '',
       picked_up_by TEXT DEFAULT '',
@@ -83,6 +84,7 @@ function runMigrations(db: Database.Database) {
     `ALTER TABLE orders ADD COLUMN marked_available_by TEXT DEFAULT ''`,
     `ALTER TABLE orders ADD COLUMN picked_up_by TEXT DEFAULT ''`,
     `ALTER TABLE payments ADD COLUMN performed_by TEXT DEFAULT ''`,
+    `ALTER TABLE orders ADD COLUMN deposit_payment_method TEXT DEFAULT ''`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* column already exists */ }

@@ -190,9 +190,14 @@ const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? status
               <span class="text-gray-500">Montant total</span>
               <span class="font-semibold text-gray-900">{order.total_amount.toLocaleString('fr-FR')} FCFA</span>
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between items-start">
               <span class="text-gray-500">Total versé</span>
-              <span class="text-green-600 font-medium">− {order.deposit.toLocaleString('fr-FR')} FCFA</span>
+              <div class="text-right">
+                <span class="text-green-600 font-medium">− {order.deposit.toLocaleString('fr-FR')} FCFA</span>
+                {order.deposit_payment_method && (
+                  <span class="block text-xs text-gray-400 mt-0.5">{order.deposit_payment_method}</span>
+                )}
+              </div>
             </div>
             <div class="flex justify-between items-center pt-3 border-t border-gray-100">
               <span class="font-bold text-gray-900">Reste à payer</span>

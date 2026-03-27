@@ -355,6 +355,7 @@ document.getElementById('order-form')!.addEventListener('submit', async (e) => {
     deposit: parseFloat(depositInput.value) || 0,
     remaining_balance: parseFloat(remainingInput.value) || 0,
     notes: data.get('notes'),
+    payment_method: data.get('payment_method'),
     products,
   };
 

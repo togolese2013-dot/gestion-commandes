@@ -29,6 +29,7 @@ export interface Order {
   remaining_balance: number;
   status?: 'en_attente' | 'disponible' | 'recupere';
   notes?: string;
+  deposit_payment_method?: string;
   created_by?: string;
   marked_available_by?: string;
   picked_up_by?: string;
@@ -77,8 +78,8 @@ export function createOrder(data: Order, performedBy = ''): Order {
 
   const insertOrder = db.prepare(`
     INSERT INTO orders (order_number, client_name, client_phone, delivery_type,
-      total_amount, deposit, remaining_balance, notes, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      total_amount, deposit, remaining_balance, notes, deposit_payment_method, created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const insertProduct = db.prepare(`
@@ -96,6 +97,7 @@ export function createOrder(data: Order, performedBy = ''): Order {
       data.deposit,
       data.remaining_balance,
       data.notes ?? '',
+      data.deposit_payment_method ?? '',
       performedBy
     );
     const orderId = result.lastInsertRowid as number;
