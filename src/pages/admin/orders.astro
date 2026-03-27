@@ -192,7 +192,7 @@ const statusColor: Record<string, string> = {
                     </button>
                   )}
                   {order.status === 'disponible' && (
-                    <button class="confirm-pickup-btn p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} title="Confirmer récupération">
+                    <button class="confirm-pickup-btn p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} data-number={order.order_number} title="Confirmer récupération">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     </button>
                   )}
@@ -297,7 +297,7 @@ const statusColor: Record<string, string> = {
                         </button>
                       )}
                       {order.status === 'disponible' && (
-                        <button class="confirm-pickup-btn p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} title="Confirmer récupération et paiement">
+                        <button class="confirm-pickup-btn p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" data-id={order.id} data-name={order.client_name} data-number={order.order_number} title="Confirmer récupération et paiement">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         </button>
                       )}
@@ -911,6 +911,7 @@ document.querySelectorAll('.confirm-pickup-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const id = btn.getAttribute('data-id')!;
     const name = btn.getAttribute('data-name')!;
+    const number = btn.getAttribute('data-number')!;
     showConfirm({
       title: 'Confirmer la récupération',
       msg: `Confirmer que ${name} a récupéré sa commande et effectué le paiement ?`,
@@ -924,8 +925,12 @@ document.querySelectorAll('.confirm-pickup-btn').forEach(btn => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'picked_up' }),
         });
-        if (res.ok) window.location.reload();
-        else alert('Erreur lors de la confirmation.');
+        if (res.ok) {
+          window.open(`/admin/delivery/${number}`, '_blank');
+          window.location.reload();
+        } else {
+          alert('Erreur lors de la confirmation.');
+        }
       },
     });
   });
