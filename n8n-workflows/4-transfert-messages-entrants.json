@@ -21,7 +21,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const msg = $input.first().json;\nconst type = msg.type || 'unknown';\n\nconst typeMap = {\n  text:     () => msg.text?.body || '',\n  image:    () => '[Le client a envoyé une image]',\n  audio:    () => '[Le client a envoyé un message vocal]',\n  video:    () => '[Le client a envoyé une vidéo]',\n  document: () => '[Le client a envoyé un document : ' + (msg.document?.filename || '') + ']',\n  sticker:  () => '[Le client a envoyé un sticker]',\n  location: () => '[Le client a partagé sa localisation]',\n  reaction: () => null,\n};\n\nconst texte = (typeMap[type] || (() => `[${type}]`))();\nif (!texte) return [];\n\nconst from = msg.from;\nconst name = msg.profileName || ('+' + from);\n\nreturn [{ json: { from, name, texte, type } }];"
+        "jsCode": "// WhatsApp sends status updates (read receipts, delivery) that have no messages[]\n// We need to ignore those and only process actual client messages\nconst raw = $input.first().json;\n\n// The trigger may give us the full webhook body or the parsed message\n// Try both formats\nconst msg = raw.type ? raw : null;\n\n// If no message type, it's a status update — skip silently\nif (!msg || !msg.type || !msg.from) {\n  return [];\n}\n\nconst type = msg.type;\n\n// Skip status/reaction events\nif (['reaction', 'status'].includes(type)) return [];\n\nconst typeMap = {\n  text:     () => msg.text?.body || '',\n  image:    () => '[Le client a envoyé une image]',\n  audio:    () => '[Le client a envoyé un message vocal]',\n  video:    () => '[Le client a envoyé une vidéo]',\n  document: () => '[Le client a envoyé un document' + (msg.document?.filename ? ' : ' + msg.document.filename : '') + ']',\n  sticker:  () => '[Le client a envoyé un sticker]',\n  location: () => '[Le client a partagé sa localisation]',\n};\n\nconst texte = (typeMap[type] || (() => `[${type}]`))();\nif (!texte || !texte.trim()) return [];\n\nconst from = String(msg.from).trim();\nif (!from) return [];\n\nconst name = msg.profileName || ('+' + from);\n\nreturn [{ json: { from, name, texte, type } }];"
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000002",
       "name": "Extraire message",
@@ -31,34 +31,60 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "check-from",
+              "leftValue": "={{ $json.from }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000008",
+      "name": "Est un vrai message ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
         "method": "GET",
         "url": "=https://app.togolese.fr/api/orders/by-phone?phone={{ $json.from }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "x-api-secret",
-              "value": "togolese_n8n_secret_2026"
-            }
+            { "name": "x-api-secret", "value": "togolese_n8n_secret_2026" }
           ]
         },
-        "options": {}
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000003",
       "name": "Récupérer commandes client",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [700, 300]
+      "position": [940, 220]
     },
     {
       "parameters": {
-        "jsCode": "const data   = $input.first().json;\nconst msg    = $('Extraire message').first().json;\nconst orders = data.orders || [];\n\nconst statusLabel = { en_attente: 'En attente', disponible: 'Disponible (prêt à récupérer)', recupere: 'Récupéré' };\nconst modeLabel   = { avion: 'EXPRESS ✈️', bateau: 'ECO 🚢' };\n\nlet contexteCommandes = '';\n\nif (!data.found || orders.length === 0) {\n  contexteCommandes = 'Ce client n\\'a aucune commande enregistrée dans notre système.';\n} else {\n  const lignes = orders.map((o, i) => {\n    const produits = (o.products || []).map(p => `  • ${p.quantity}x ${p.name} (${p.condition})`).join('\\n');\n    const date = o.created_at ? new Date(o.created_at).toLocaleDateString('fr-FR') : '?';\n    return `Commande ${i+1} : ${o.order_number}\n  Date : ${date}\n  Statut : ${statusLabel[o.status] || o.status}\n  Mode : ${modeLabel[o.delivery_type] || o.delivery_type}\n  Total : ${o.total_amount?.toLocaleString('fr-FR')} FCFA\n  Acompte payé : ${o.deposit?.toLocaleString('fr-FR')} FCFA\n  Reste à payer : ${o.remaining_balance?.toLocaleString('fr-FR')} FCFA\n  Produits :\n${produits}`;\n  });\n  contexteCommandes = lignes.join('\\n\\n');\n}\n\nreturn [{ json: {\n  from: msg.from,\n  name: msg.name,\n  texte: msg.texte,\n  contexteCommandes\n} }];"
+        "jsCode": "const data   = $input.first().json;\nconst msg    = $('Extraire message').first().json;\nconst orders = Array.isArray(data.orders) ? data.orders : [];\n\nconst statusLabel = {\n  en_attente: 'En attente (en cours de traitement)',\n  disponible: 'Disponible — prêt à récupérer ✅',\n  recupere:   'Récupéré 📦'\n};\nconst modeLabel = { avion: 'EXPRESS ✈️ (4-14 jours)', bateau: 'ECO 🚢 (30-45 jours)' };\n\nlet contexteCommandes = '';\n\nif (!data.found || orders.length === 0) {\n  contexteCommandes = 'Ce numéro WhatsApp n\\'a aucune commande enregistrée dans notre système.';\n} else {\n  const lignes = orders.map((o, i) => {\n    const produits = (o.products || []).map(p =>\n      `    • ${p.quantity}x ${p.name} — état : ${p.condition}`\n    ).join('\\n');\n    const date = o.created_at\n      ? new Date(o.created_at).toLocaleDateString('fr-FR')\n      : '?';\n    const fmt = n => typeof n === 'number' ? n.toLocaleString('fr-FR') + ' FCFA' : '—';\n    return [\n      `[Commande ${i+1}]`,\n      `  Référence : ${o.order_number}`,\n      `  Date : ${date}`,\n      `  Statut : ${statusLabel[o.status] || o.status}`,\n      `  Mode : ${modeLabel[o.delivery_type] || o.delivery_type}`,\n      `  Total : ${fmt(o.total_amount)}`,\n      `  Payé : ${fmt(o.deposit)}`,\n      `  Reste : ${fmt(o.remaining_balance)}`,\n      produits ? `  Produits :\\n${produits}` : ''\n    ].filter(Boolean).join('\\n');\n  });\n  contexteCommandes = lignes.join('\\n\\n');\n}\n\nreturn [{ json: { from: msg.from, name: msg.name, texte: msg.texte, contexteCommandes } }];"
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000004",
       "name": "Préparer contexte",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [940, 300]
+      "position": [1180, 220]
     },
     {
       "parameters": {
@@ -73,24 +99,24 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 350,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es l'assistant WhatsApp officiel de TOGOLESE, une entreprise d'importation et distribution à Lomé, Togo (Kégué, derrière l'hôtel O'Balkan).\\n\\n━━━ INFORMATIONS ENTREPRISE ━━━\\n- Téléphone : +228 90 22 64 91\\n- Email : Contact@togolesegroup.com\\n- Livraison EXPRESS ✈️ (avion) : 4 à 14 jours\\n- Livraison ECO 🚢 (bateau) : 30 à 45 jours\\n- Acompte : 70% à la commande, solde 30% à la livraison\\n- Réclamations : 1 mois après livraison\\n\\n━━━ RÈGLES STRICTES ━━━\\n- Réponds toujours en français, ton chaleureux et professionnel\\n- Maximum 5 lignes par réponse\\n- Termine chaque message par : — *TOGOLESE* 🛒\\n- Si tu ne sais pas, invite à appeler le +228 90 22 64 91\\n- Ne promets jamais de dates exactes de livraison\\n- Ne donne jamais d'informations qui ne sont pas dans les données ci-dessous\\n\\n━━━ COMMANDES DU CLIENT ━━━\\n{{ $json.contexteCommandes }}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.name }} a envoyé : {{ $json.texte }}\"\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 350,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es l'assistant WhatsApp officiel de TOGOLESE, entreprise d'importation et distribution à Lomé, Togo (Kégué, derrière l'hôtel O'Balkan).\\n\\n━━━ ENTREPRISE ━━━\\n- Tél : +228 90 22 64 91 | Email : Contact@togolesegroup.com\\n- EXPRESS ✈️ : 4-14 jours | ECO 🚢 : 30-45 jours\\n- Paiement : 70% à la commande, 30% à la livraison\\n- Réclamations : sous 1 mois après livraison\\n\\n━━━ RÈGLES ━━━\\n- Réponds en français, ton chaleureux et professionnel\\n- 3 à 5 lignes max\\n- Termine par : — *TOGOLESE* 🛒\\n- Si tu ne peux pas répondre → +228 90 22 64 91\\n- Ne promets pas de dates exactes\\n- Utilise UNIQUEMENT les infos commandes ci-dessous, n'invente rien\\n\\n━━━ COMMANDES DU CLIENT ━━━\\n{{ $json.contexteCommandes }}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.name }} a écrit : {{ $json.texte }}\"\n    }\n  ]\n}",
         "options": {}
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000005",
       "name": "Agent IA OpenAI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1180, 300]
+      "position": [1420, 220]
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst reponse = data.choices?.[0]?.message?.content?.trim()\n  || 'Bonjour ! Notre équipe revient vers vous très vite. Pour une urgence : *+228 90 22 64 91* — *TOGOLESE* 🛒';\nconst from = $('Extraire message').first().json.from;\nreturn [{ json: { from, reponse } }];"
+        "jsCode": "const data = $input.first().json;\nconst reponse = data.choices?.[0]?.message?.content?.trim()\n  || 'Bonjour ! Notre équipe revient vers vous très vite. Pour toute urgence : *+228 90 22 64 91* — *TOGOLESE* 🛒';\nconst from = $('Extraire message').first().json.from;\nreturn [{ json: { from, reponse } }];"
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000006",
       "name": "Extraire réponse IA",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1420, 300]
+      "position": [1660, 220]
     },
     {
       "parameters": {
@@ -115,7 +141,7 @@
       "name": "Répondre au client",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1660, 300]
+      "position": [1900, 220]
     }
   ],
   "connections": {
@@ -123,7 +149,13 @@
       "main": [[{ "node": "Extraire message", "type": "main", "index": 0 }]]
     },
     "Extraire message": {
-      "main": [[{ "node": "Récupérer commandes client", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Est un vrai message ?", "type": "main", "index": 0 }]]
+    },
+    "Est un vrai message ?": {
+      "main": [
+        [{ "node": "Récupérer commandes client", "type": "main", "index": 0 }],
+        []
+      ]
     },
     "Récupérer commandes client": {
       "main": [[{ "node": "Préparer contexte", "type": "main", "index": 0 }]]
