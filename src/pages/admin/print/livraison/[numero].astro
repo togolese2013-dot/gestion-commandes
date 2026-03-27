@@ -260,8 +260,9 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
       text-transform: uppercase;
       letter-spacing: 0.8px;
     }
-    thead th:last-child, thead th:nth-child(3) { text-align: center; }
     thead th:nth-child(1) { text-align: center; width: 44px; }
+    thead th:nth-child(2) { text-align: left; }
+    thead th:nth-child(3), thead th:nth-child(4) { text-align: center; }
     tbody tr:nth-child(even) { background: #f8fafc; }
     tbody tr:nth-child(odd)  { background: #fff; }
     tbody td {
@@ -271,7 +272,7 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
       color: #111;
     }
     tbody td:first-child { text-align: center; color: #111; font-weight: 600; }
-    tbody td:nth-child(3), tbody td:last-child { text-align: center; vertical-align: middle; font-weight: 600; color: #111; }
+    tbody td:nth-child(3), tbody td:nth-child(4) { text-align: center; vertical-align: middle; font-weight: 600; color: #111; }
     tfoot tr { background: #f0fdf4; }
     tfoot td {
       padding: 9px 12px;
@@ -283,6 +284,7 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
     }
     tfoot td:first-child { text-align: center; }
     tfoot td:nth-child(2) { text-align: left; }
+    tfoot td:nth-child(3) { text-align: center; }
     tfoot td:last-child { text-align: center; }
     .product-name { font-weight: 600; color: #111; }
     .product-condition { font-size: 10.5px; color: #111; margin-top: 1px; }
@@ -469,18 +471,19 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
       table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 20px !important; font-size: 12.5px !important; }
       thead tr { background: #15803d !important; color: #fff !important; }
       thead th { padding: 9px 12px !important; text-align: left !important; font-size: 11px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 0.8px !important; color: #fff !important; }
-      thead th:last-child, thead th:nth-child(3) { text-align: center !important; }
       thead th:nth-child(1) { text-align: center !important; width: 44px !important; }
       thead th:nth-child(2) { text-align: left !important; }
+      thead th:nth-child(3), thead th:nth-child(4) { text-align: center !important; }
       tbody tr:nth-child(even) { background: #f8fafc !important; }
       tbody tr:nth-child(odd)  { background: #fff !important; }
       tbody td { padding: 9px 12px !important; border-bottom: 1px solid #111 !important; vertical-align: middle !important; color: #111 !important; }
       tbody td:first-child { text-align: center !important; color: #111 !important; font-weight: 600 !important; }
-      tbody td:nth-child(3), tbody td:last-child { text-align: center !important; vertical-align: middle !important; font-weight: 600 !important; color: #111 !important; }
+      tbody td:nth-child(3), tbody td:nth-child(4) { text-align: center !important; vertical-align: middle !important; font-weight: 600 !important; color: #111 !important; }
       tfoot tr { background: #f0fdf4 !important; }
       tfoot td { padding: 9px 12px !important; font-weight: 700 !important; color: #15803d !important; text-align: right !important; font-size: 13px !important; border-top: 2px solid #bbf7d0 !important; }
       tfoot td:first-child { text-align: center !important; }
       tfoot td:nth-child(2) { text-align: left !important; }
+      tfoot td:nth-child(3) { text-align: center !important; }
       tfoot td:last-child { text-align: center !important; }
       .product-name { font-weight: 600 !important; color: #111 !important; }
       .product-condition { font-size: 10.5px !important; color: #111 !important; margin-top: 1px !important; }
@@ -635,13 +638,14 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
               <tr>
                 <th>Qté</th>
                 <th>Description / Produit</th>
+                <th style="text-align:center;">Prix unitaire</th>
                 <th style="text-align:center;">Total</th>
               </tr>
             </thead>
             <tbody>
               {(order.products ?? []).length === 0 ? (
                 <tr>
-                  <td colspan="3" style="text-align:center; color:#111; font-style:italic; padding:20px;">
+                  <td colspan="4" style="text-align:center; color:#111; font-style:italic; padding:20px;">
                     Aucun produit enregistré
                   </td>
                 </tr>
@@ -653,6 +657,7 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
                       <div class="product-name">{p.name}</div>
                       {p.condition && <div class="product-condition">{p.condition}</div>}
                     </td>
+                    <td>{fmt(p.price)} FCFA</td>
                     <td>{fmt(p.price * p.quantity)} FCFA</td>
                   </tr>
                 ))
@@ -663,6 +668,7 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
                 <tr>
                   <td></td>
                   <td>TOTAL</td>
+                  <td></td>
                   <td>{fmt(order.total_amount)} FCFA</td>
                 </tr>
               </tfoot>
