@@ -22,15 +22,21 @@ const currentUser = isAdmin ? getCurrentUser(Astro.request) : null;
   <body class="bg-gray-50 min-h-screen text-gray-900 overflow-x-hidden">
     {isAdmin && (
       <header class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-3 py-2">
-          <!-- Row 1: logo + logout -->
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-base text-blue-700">Gestion Commandes</span>
-            <div class="flex flex-col items-end gap-0.5">
+        <div class="max-w-7xl mx-auto px-4 py-0">
+          <div class="flex items-center justify-between h-12">
+            <!-- Logo -->
+            <span class="font-bold text-base text-blue-700 shrink-0">Gestion Commandes</span>
+            <!-- Nav -->
+            <nav class="hidden sm:flex items-center gap-4 text-sm font-medium">
+              <a href="/admin/dashboard" class="text-gray-600 hover:text-blue-700 transition-colors">Dashboard</a>
+              <a href="/admin" class="text-gray-600 hover:text-blue-700 transition-colors">+ Nouvelle commande</a>
+              <a href="/admin/orders" class="text-gray-600 hover:text-blue-700 transition-colors">Commandes</a>
+              <a href="/admin/users" class="text-gray-600 hover:text-blue-700 transition-colors">Utilisateurs</a>
+            </nav>
+            <!-- User + logout -->
+            <div class="flex items-center gap-3 shrink-0">
               {currentUser && (
-                <span class="text-xs font-medium text-gray-700">
-                  👤 {currentUser.full_name}
-                </span>
+                <span class="text-xs font-medium text-gray-700">👤 {currentUser.full_name}</span>
               )}
               <form action="/api/auth/logout" method="POST">
                 <button type="submit" class="text-xs text-gray-400 hover:text-red-600 transition-colors">
@@ -39,12 +45,12 @@ const currentUser = isAdmin ? getCurrentUser(Astro.request) : null;
               </form>
             </div>
           </div>
-          <!-- Row 2: nav -->
-          <nav class="flex flex-wrap gap-x-3 gap-y-1 text-sm font-medium mt-1.5 pb-1">
-            <a href="/admin/dashboard" class="text-gray-600 hover:text-blue-700 transition-colors">Dashboard</a>
-            <a href="/admin" class="text-gray-600 hover:text-blue-700 transition-colors">+ Nouvelle commande</a>
-            <a href="/admin/orders" class="text-gray-600 hover:text-blue-700 transition-colors">Commandes</a>
-            <a href="/admin/users" class="text-gray-600 hover:text-blue-700 transition-colors">Utilisateurs</a>
+          <!-- Mobile nav -->
+          <nav class="flex sm:hidden items-center gap-3 text-sm font-medium pb-2 overflow-x-auto">
+            <a href="/admin/dashboard" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Dashboard</a>
+            <a href="/admin" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">+ Nouvelle</a>
+            <a href="/admin/orders" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Commandes</a>
+            <a href="/admin/users" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Utilisateurs</a>
           </nav>
         </div>
       </header>
