@@ -1,5 +1,5 @@
 {
-  "name": "4 - Réponse automatique clients WhatsApp (IA + commandes)",
+  "name": "4 - Agent IA Réponses WhatsApp Clients",
   "nodes": [
     {
       "parameters": {
@@ -21,35 +21,13 @@
     },
     {
       "parameters": {
-        "jsCode": "// WhatsApp sends status updates (read receipts, delivery) that have no messages[]\n// We need to ignore those and only process actual client messages\nconst raw = $input.first().json;\n\n// The trigger may give us the full webhook body or the parsed message\n// Try both formats\nconst msg = raw.type ? raw : null;\n\n// If no message type, it's a status update — skip silently\nif (!msg || !msg.type || !msg.from) {\n  return [];\n}\n\nconst type = msg.type;\n\n// Skip status/reaction events\nif (['reaction', 'status'].includes(type)) return [];\n\nconst typeMap = {\n  text:     () => msg.text?.body || '',\n  image:    () => '[Le client a envoyé une image]',\n  audio:    () => '[Le client a envoyé un message vocal]',\n  video:    () => '[Le client a envoyé une vidéo]',\n  document: () => '[Le client a envoyé un document' + (msg.document?.filename ? ' : ' + msg.document.filename : '') + ']',\n  sticker:  () => '[Le client a envoyé un sticker]',\n  location: () => '[Le client a partagé sa localisation]',\n};\n\nconst texte = (typeMap[type] || (() => `[${type}]`))();\nif (!texte || !texte.trim()) return [];\n\nconst from = String(msg.from).trim();\nif (!from) return [];\n\nconst name = msg.profileName || ('+' + from);\n\nreturn [{ json: { from, name, texte, type } }];"
+        "jsCode": "try {\n  const raw = $input.first().json;\n\n  let msg  = null;\n  let name = null;\n\n  // --- Format A: n8n parsed message at root level ---\n  if (raw.from && raw.type) {\n    msg  = raw;\n    name = raw.profileName || raw.name || null;\n  }\n\n  // --- Format B: raw WhatsApp Cloud API webhook ---\n  if (!msg) {\n    const val = raw?.entry?.[0]?.changes?.[0]?.value;\n    if (val?.messages?.[0]) {\n      msg  = val.messages[0];\n      name = val.contacts?.[0]?.profile?.name || null;\n    }\n  }\n\n  // --- Format C: message wrapped under a key ---\n  if (!msg && raw.message?.from && raw.message?.type) {\n    msg  = raw.message;\n    name = raw.contact?.name || null;\n  }\n\n  // Nothing found or it's a status/delivery receipt\n  if (!msg) return [];\n  if (!msg.from) return [];\n  if (msg.status) return [];           // delivery/read receipt\n  if (!msg.type) return [];\n  if (msg.type === 'reaction') return [];\n\n  const typeMap = {\n    text:     () => msg.text?.body || '',\n    image:    () => '[Le client a envoyé une image]',\n    audio:    () => '[Le client a envoyé un message vocal]',\n    video:    () => '[Le client a envoyé une vidéo]',\n    document: () => '[Le client a envoyé un document' + (msg.document?.filename ? ' : ' + msg.document.filename : '') + ']',\n    sticker:  () => '[Le client a envoyé un sticker]',\n    location: () => '[Le client a partagé sa localisation]',\n  };\n\n  const texte = (typeMap[msg.type] || (() => `[${msg.type}]`))();\n  if (!texte || !texte.trim()) return [];\n\n  const from = String(msg.from).trim();\n  name = name || ('+' + from);\n\n  return [{ json: { from, name, texte, type: msg.type } }];\n\n} catch (e) {\n  console.error('Extraire message error:', e.message);\n  return [];\n}"
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000002",
       "name": "Extraire message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [460, 300]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
-          "conditions": [
-            {
-              "id": "check-from",
-              "leftValue": "={{ $json.from }}",
-              "rightValue": "",
-              "operator": { "type": "string", "operation": "notEmpty" }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "a1b2c3d4-0004-0001-0001-000000000008",
-      "name": "Est un vrai message ?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [700, 300]
     },
     {
       "parameters": {
@@ -64,9 +42,7 @@
         "options": {
           "timeout": 10000,
           "response": {
-            "response": {
-              "neverError": true
-            }
+            "response": { "neverError": true }
           }
         }
       },
@@ -78,10 +54,10 @@
     },
     {
       "parameters": {
-        "jsCode": "const data   = $input.first().json;\nconst msg    = $('Extraire message').first().json;\nconst orders = Array.isArray(data.orders) ? data.orders : [];\n\nconst statusLabel = {\n  en_attente: 'En attente (en cours de traitement)',\n  disponible: 'Disponible — prêt à récupérer ✅',\n  recupere:   'Récupéré 📦'\n};\nconst modeLabel = { avion: 'EXPRESS ✈️ (4-14 jours)', bateau: 'ECO 🚢 (30-45 jours)' };\n\nlet contexteCommandes = '';\n\nif (!data.found || orders.length === 0) {\n  contexteCommandes = 'Ce numéro WhatsApp n\\'a aucune commande enregistrée dans notre système.';\n} else {\n  const lignes = orders.map((o, i) => {\n    const produits = (o.products || []).map(p =>\n      `    • ${p.quantity}x ${p.name} — état : ${p.condition}`\n    ).join('\\n');\n    const date = o.created_at\n      ? new Date(o.created_at).toLocaleDateString('fr-FR')\n      : '?';\n    const fmt = n => typeof n === 'number' ? n.toLocaleString('fr-FR') + ' FCFA' : '—';\n    return [\n      `[Commande ${i+1}]`,\n      `  Référence : ${o.order_number}`,\n      `  Date : ${date}`,\n      `  Statut : ${statusLabel[o.status] || o.status}`,\n      `  Mode : ${modeLabel[o.delivery_type] || o.delivery_type}`,\n      `  Total : ${fmt(o.total_amount)}`,\n      `  Payé : ${fmt(o.deposit)}`,\n      `  Reste : ${fmt(o.remaining_balance)}`,\n      produits ? `  Produits :\\n${produits}` : ''\n    ].filter(Boolean).join('\\n');\n  });\n  contexteCommandes = lignes.join('\\n\\n');\n}\n\nreturn [{ json: { from: msg.from, name: msg.name, texte: msg.texte, contexteCommandes } }];"
+        "jsCode": "const data   = $input.first().json;\nconst msg    = $('Extraire message').first().json;\nconst orders = Array.isArray(data.orders) ? data.orders : [];\n\nconst statusLabel = {\n  en_attente: 'En attente — traitement en cours',\n  disponible: 'DISPONIBLE — prêt à récupérer ✅',\n  recupere:   'Récupéré ✅'\n};\nconst modeLabel = {\n  avion:  'EXPRESS ✈️ (4–14 jours ouvrés)',\n  bateau: 'ECO 🚢 (30–45 jours ouvrés)'\n};\n\nconst fmt = n => typeof n === 'number' && n > 0\n  ? n.toLocaleString('fr-FR') + ' FCFA'\n  : (n === 0 ? '0 FCFA' : '—');\n\nlet contexteCommandes = '';\n\nif (!data.found || orders.length === 0) {\n  contexteCommandes = 'AUCUNE COMMANDE — ce numéro WhatsApp ne correspond à aucune commande enregistrée dans notre base de données.';\n} else {\n  const lignes = orders.map((o, i) => {\n    const produits = (o.products || []).map(p =>\n      `    • ${p.quantity}x ${p.name} (${p.condition})`\n    ).join('\\n');\n    const date = o.created_at\n      ? new Date(o.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' })\n      : 'inconnue';\n    return [\n      `--- Commande ${i+1} / ${orders.length} ---`,\n      `Référence  : ${o.order_number}`,\n      `Date       : ${date}`,\n      `Statut     : ${statusLabel[o.status] || o.status}`,\n      `Transport  : ${modeLabel[o.delivery_type] || o.delivery_type}`,\n      `Total      : ${fmt(o.total_amount)}`,\n      `Versé      : ${fmt(o.deposit)}`,\n      `Solde dû   : ${fmt(o.remaining_balance)}`,\n      produits ? `Produits   :\\n${produits}` : 'Produits   : —'\n    ].join('\\n');\n  });\n  contexteCommandes = lignes.join('\\n\\n');\n}\n\n// Detect intent from message text\nconst t = msg.texte.toLowerCase();\nlet intention = 'general';\nif (/statut|état|où en|avancée|commande|colis|suivi|livr|récup|récupér/.test(t)) intention = 'suivi';\nelse if (/pay|acompte|versem|solde|reste|règlem|prix|factur|reçu/.test(t)) intention = 'paiement';\nelse if (/problème|réclamation|erreur|défectu|cassé|abîmé|manquan|mauvais|plainte/.test(t)) intention = 'reclamation';\nelse if (/bonjour|bonsoir|salut|hello|bonne journée|bonne soirée/.test(t)) intention = 'salutation';\nelse if (/merci|super|parfait|excellent|bien reçu|ok merci/.test(t)) intention = 'remerciement';\nelse if (/délai|quand|combien de temps|date|arrive|arriver|durée/.test(t)) intention = 'delai';\n\nreturn [{\n  json: {\n    from: msg.from,\n    name: msg.name,\n    texte: msg.texte,\n    type: msg.type,\n    intention,\n    contexteCommandes,\n    hasOrders: data.found && orders.length > 0\n  }\n}];"
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000004",
-      "name": "Préparer contexte",
+      "name": "Préparer contexte + intention",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1180, 220]
@@ -99,7 +75,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 350,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es l'assistant WhatsApp officiel de TOGOLESE, entreprise d'importation et distribution à Lomé, Togo (Kégué, derrière l'hôtel O'Balkan).\\n\\n━━━ ENTREPRISE ━━━\\n- Tél : +228 90 22 64 91 | Email : Contact@togolesegroup.com\\n- EXPRESS ✈️ : 4-14 jours | ECO 🚢 : 30-45 jours\\n- Paiement : 70% à la commande, 30% à la livraison\\n- Réclamations : sous 1 mois après livraison\\n\\n━━━ RÈGLES ━━━\\n- Réponds en français, ton chaleureux et professionnel\\n- 3 à 5 lignes max\\n- Termine par : — *TOGOLESE* 🛒\\n- Si tu ne peux pas répondre → +228 90 22 64 91\\n- Ne promets pas de dates exactes\\n- Utilise UNIQUEMENT les infos commandes ci-dessous, n'invente rien\\n\\n━━━ COMMANDES DU CLIENT ━━━\\n{{ $json.contexteCommandes }}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.name }} a écrit : {{ $json.texte }}\"\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 400,\n  \"temperature\": 0.4,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es l'assistant WhatsApp officiel de TOGOLESE, entreprise togolaise d'importation et distribution de matériel photo et vidéo à Lomé.\\n\\n═══ IDENTITÉ ═══\\n• Boutique : Kégué, derrière l'hôtel O'Balkan, Lomé, Togo\\n• Téléphone : +228 90 22 64 91\\n• Email : Contact@togolesegroup.com\\n• Site : app.togolese.fr\\n\\n═══ SERVICES ═══\\n• EXPRESS ✈️ : livraison 4–14 jours ouvrés\\n• ECO 🚢 : livraison 30–45 jours ouvrés\\n• Paiement : 70% à la commande + 30% à la livraison\\n• Réclamation acceptable sous 30 jours après réception\\n• Retrait en boutique disponible à la réception de la commande\\n\\n═══ RÈGLES STRICTES ═══\\n1. Réponds UNIQUEMENT en français, tu vouvoies toujours le client\\n2. Sois chaleureux, professionnel, rassurant et concis (3–5 lignes max)\\n3. Utilise UNIQUEMENT les données commandes ci-dessous — n'invente jamais d'information\\n4. Ne donne JAMAIS de date exacte de livraison — utilise les fourchettes officielles\\n5. Pour tout problème complexe ou réclamation → renvoyer vers +228 90 22 64 91\\n6. Termine TOUJOURS par une ligne de signature : — *TOGOLESE* 🛒\\n7. Utilise les emojis avec modération pour rendre la lecture plus agréable\\n8. Si le client est inconnu (pas de commande), propose-lui de créer une commande ou de contacter le +228 90 22 64 91\\n\\n═══ GUIDE PAR INTENTION ═══\\n• SUIVI → donne le statut exact, le transport choisi, et le délai restant estimé\\n• PAIEMENT → rappelle le montant versé, le solde restant et comment régler (virement / en boutique)\\n• RÉCLAMATION → rassure, empathie, escalade vers +228 90 22 64 91 si besoin\\n• DÉLAI → donne les fourchettes officielles selon le mode de transport choisi\\n• SALUTATION → réponds chaleureusement et propose de l'aide\\n• REMERCIEMENT → réponds avec enthousiasme et propose de l'aide future\\n• GÉNÉRAL → réponds avec pertinence, reste ouvert\\n\\n═══ INTENTION DÉTECTÉE ═══\\n{{ $json.intention }}\\n\\n═══ COMMANDES DE CE CLIENT ═══\\n{{ $json.contexteCommandes }}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Le client {{ $json.name }} a écrit : {{ $json.texte }}\"\n    }\n  ]\n}",
         "options": {}
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000005",
@@ -110,7 +86,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst reponse = data.choices?.[0]?.message?.content?.trim()\n  || 'Bonjour ! Notre équipe revient vers vous très vite. Pour toute urgence : *+228 90 22 64 91* — *TOGOLESE* 🛒';\nconst from = $('Extraire message').first().json.from;\nreturn [{ json: { from, reponse } }];"
+        "jsCode": "const data = $input.first().json;\nconst ctx  = $('Préparer contexte + intention').first().json;\n\n// Use AI response or fallback\nconst reponse = data.choices?.[0]?.message?.content?.trim()\n  || 'Bonjour ! Merci pour votre message. Notre équipe vous répond dans les plus brefs délais. Pour toute urgence, contactez-nous directement au *+228 90 22 64 91* — *TOGOLESE* 🛒';\n\n// Log usage for monitoring\nconst usage = data.usage || {};\nconsole.log(`[IA] ${ctx.name} | intention: ${ctx.intention} | tokens: ${usage.total_tokens || '?'}`);\n\nreturn [{ json: { from: ctx.from, reponse, intention: ctx.intention } }];"
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000006",
       "name": "Extraire réponse IA",
@@ -149,18 +125,12 @@
       "main": [[{ "node": "Extraire message", "type": "main", "index": 0 }]]
     },
     "Extraire message": {
-      "main": [[{ "node": "Est un vrai message ?", "type": "main", "index": 0 }]]
-    },
-    "Est un vrai message ?": {
-      "main": [
-        [{ "node": "Récupérer commandes client", "type": "main", "index": 0 }],
-        []
-      ]
+      "main": [[{ "node": "Récupérer commandes client", "type": "main", "index": 0 }]]
     },
     "Récupérer commandes client": {
-      "main": [[{ "node": "Préparer contexte", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Préparer contexte + intention", "type": "main", "index": 0 }]]
     },
-    "Préparer contexte": {
+    "Préparer contexte + intention": {
       "main": [[{ "node": "Agent IA OpenAI", "type": "main", "index": 0 }]]
     },
     "Agent IA OpenAI": {
@@ -173,5 +143,5 @@
   "pinData": {},
   "active": false,
   "settings": { "executionOrder": "v1" },
-  "tags": [{ "name": "WhatsApp" }, { "name": "IA" }]
+  "tags": [{ "name": "WhatsApp" }, { "name": "IA" }, { "name": "Agent" }]
 }
