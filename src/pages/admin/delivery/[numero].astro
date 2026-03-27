@@ -79,9 +79,16 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
       background: #fff;
       width: 100%;
       max-width: 800px;
+      min-height: 1050px;
       padding: 28px 40px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.10);
       border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-content {
+      flex: 1;
     }
 
     /* Header */
@@ -332,6 +339,7 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
     .footer {
       text-align: center;
       padding-top: 10px;
+      margin-top: auto;
       border-top: 1px solid #e5e7eb;
       color: #9ca3af;
       font-size: 11px;
@@ -394,7 +402,15 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
       .signature-section { margin-top: 12px; margin-bottom: 10px; gap: 12px; }
       .signature-box { min-height: 65px; padding: 8px 10px; }
       .signature-line { margin-top: 20px; }
-      .footer { padding-top: 8px; font-size: 9.5px; }
+      .footer {
+        position: fixed;
+        bottom: 14mm;
+        left: 16mm;
+        right: 16mm;
+        padding-top: 8px;
+        font-size: 9.5px;
+        background: #fff;
+      }
       .footer strong { font-size: 11px; }
 
       @page {
@@ -433,6 +449,7 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
         </div>
       ) : (
         <>
+          <div class="page-content">
           <!-- Header -->
           <div class="header">
             <div>
@@ -557,7 +574,9 @@ const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month:
             </div>
           </div>
 
-          <!-- Footer -->
+          </div><!-- end page-content -->
+
+          <!-- Footer (always pinned to bottom) -->
           <div class="footer">
             <strong>Merci pour votre confiance !</strong>
             TOGOLESE &mdash; Kégué derrière l'hôtel O'Balkan, Lomé - TOGO &mdash; Contact@togolesegroup.com
