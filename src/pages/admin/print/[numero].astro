@@ -657,7 +657,7 @@ const statusLabel: Record<string, string> = {
                 <div class="label">Mode de livraison</div>
                 <div class="value" style="margin-top:2px;">
                   <span class={`delivery-badge ${order.delivery_type === 'avion' ? 'delivery-avion' : 'delivery-bateau'}`}>
-                    {order.delivery_type === 'avion' ? '✈️ EXPRESS (avion)' : '🚢 ECONOMIQUE (bateau)'}
+                    {order.delivery_type === 'avion' ? 'EXPRESS' : 'ECO'}
                   </span>
                 </div>
                 <div style="margin-top:10px;">
