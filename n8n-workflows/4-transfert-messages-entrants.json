@@ -3,85 +3,53 @@
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "ALL",
+        "httpMethod": "GET",
         "path": "whatsapp-inbox",
         "responseMode": "responseNode",
         "options": {}
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000001",
-      "name": "Webhook WhatsApp",
+      "name": "Vérification Meta (GET)",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
-      "webhookId": "whatsapp-inbox-001"
-    },
-    {
-      "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst query = data.query || {};\nconst body  = data.body  || {};\n\n// ── 1. Meta verification (GET) ──────────────────────────\nif (query['hub.mode'] === 'subscribe' && query['hub.challenge']) {\n  return [{ json: { type: 'verify', challenge: String(query['hub.challenge']) } }];\n}\n\n// ── 2. Incoming message (POST) ──────────────────────────\nconst message = body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];\nconst value   = body?.entry?.[0]?.changes?.[0]?.value;\n\nif (!message) {\n  return [{ json: { type: 'skip' } }];\n}\n\nconst from = message.from;\nconst name = value?.contacts?.[0]?.profile?.name || ('+' + from);\nconst ts   = new Date(parseInt(message.timestamp) * 1000)\n  .toLocaleString('fr-FR', {\n    timeZone: 'Africa/Lome',\n    day: '2-digit', month: '2-digit', year: 'numeric',\n    hour: '2-digit', minute: '2-digit'\n  });\n\nconst typeMap = {\n  text:     () => message.text?.body || '',\n  image:    () => '[📷 Image reçue]',\n  audio:    () => '[🎤 Message vocal reçu]',\n  video:    () => '[🎥 Vidéo reçue]',\n  document: () => '[📄 Document reçu]',\n  sticker:  () => '[Sticker reçu]',\n};\nconst texte = (typeMap[message.type] || (() => `[${message.type}]`))();\n\nconst forwarded =\n  `📩 *Message client*\\n` +\n  `👤 *${name}*  |  📞 +${from}\\n` +\n  `🕐 ${ts}\\n\\n` +\n  `💬 ${texte}`;\n\nreturn [{ json: { type: 'message', from, name, texte, forwarded } }];"
-      },
-      "id": "a1b2c3d4-0004-0001-0001-000000000002",
-      "name": "Router",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [460, 300]
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": { "caseSensitive": true, "typeValidation": "strict" },
-                "conditions": [
-                  {
-                    "id": "cond-verify",
-                    "leftValue": "={{ $json.type }}",
-                    "rightValue": "verify",
-                    "operator": { "type": "string", "operation": "equals" }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Vérification"
-            },
-            {
-              "conditions": {
-                "options": { "caseSensitive": true, "typeValidation": "strict" },
-                "conditions": [
-                  {
-                    "id": "cond-msg",
-                    "leftValue": "={{ $json.type }}",
-                    "rightValue": "message",
-                    "operator": { "type": "string", "operation": "equals" }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Message"
-            }
-          ]
-        },
-        "options": { "fallbackOutput": "extra" }
-      },
-      "id": "a1b2c3d4-0004-0001-0001-000000000003",
-      "name": "Switch",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3,
-      "position": [680, 300]
+      "position": [240, 160],
+      "webhookId": "whatsapp-inbox-get"
     },
     {
       "parameters": {
         "respondWith": "text",
-        "responseBody": "={{ $json.challenge }}",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
         "options": { "responseCode": 200 }
       },
-      "id": "a1b2c3d4-0004-0001-0001-000000000004",
+      "id": "a1b2c3d4-0004-0001-0001-000000000002",
       "name": "Répondre challenge",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [900, 160]
+      "position": [460, 160]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-inbox",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000003",
+      "name": "Messages entrants (POST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 440],
+      "webhookId": "whatsapp-inbox-post"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\n\nconst message = body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];\nconst value   = body?.entry?.[0]?.changes?.[0]?.value;\n\nif (!message) return [];\n\nconst from = message.from;\nconst name = value?.contacts?.[0]?.profile?.name || ('+' + from);\nconst ts   = new Date(parseInt(message.timestamp) * 1000)\n  .toLocaleString('fr-FR', {\n    timeZone: 'Africa/Lome',\n    day: '2-digit', month: '2-digit', year: 'numeric',\n    hour: '2-digit', minute: '2-digit'\n  });\n\nconst typeMap = {\n  text:     () => message.text?.body || '',\n  image:    () => '[📷 Image reçue]',\n  audio:    () => '[🎤 Message vocal reçu]',\n  video:    () => '[🎥 Vidéo reçue]',\n  document: () => '[📄 Document reçu]',\n  sticker:  () => '[Sticker reçu]',\n};\nconst texte = (typeMap[message.type] || (() => `[${message.type}]`))();\n\nconst forwarded =\n  `📩 *Message client*\\n` +\n  `👤 *${name}*  |  📞 +${from}\\n` +\n  `🕐 ${ts}\\n\\n` +\n  `💬 ${texte}`;\n\nreturn [{ json: { from, name, texte, forwarded } }];"
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000004",
+      "name": "Extraire message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 440]
     },
     {
       "parameters": {
@@ -109,7 +77,7 @@
       "name": "Transférer à Kent",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [900, 380]
+      "position": [700, 440]
     },
     {
       "parameters": {
@@ -121,37 +89,23 @@
       "name": "Répondre OK",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1120, 380]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={ \"status\": \"ignored\" }",
-        "options": { "responseCode": 200 }
-      },
-      "id": "a1b2c3d4-0004-0001-0001-000000000007",
-      "name": "Répondre ignoré",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [900, 540]
+      "position": [940, 440]
     }
   ],
   "connections": {
-    "Webhook WhatsApp": {
+    "Vérification Meta (GET)": {
       "main": [
-        [{ "node": "Router", "type": "main", "index": 0 }]
+        [{ "node": "Répondre challenge", "type": "main", "index": 0 }]
       ]
     },
-    "Router": {
+    "Messages entrants (POST)": {
       "main": [
-        [{ "node": "Switch", "type": "main", "index": 0 }]
+        [{ "node": "Extraire message", "type": "main", "index": 0 }]
       ]
     },
-    "Switch": {
+    "Extraire message": {
       "main": [
-        [{ "node": "Répondre challenge", "type": "main", "index": 0 }],
-        [{ "node": "Transférer à Kent", "type": "main", "index": 0 }],
-        [{ "node": "Répondre ignoré", "type": "main", "index": 0 }]
+        [{ "node": "Transférer à Kent", "type": "main", "index": 0 }]
       ]
     },
     "Transférer à Kent": {
