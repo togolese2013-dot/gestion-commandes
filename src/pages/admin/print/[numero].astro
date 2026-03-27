@@ -503,6 +503,8 @@ const estimatedDeliveryStr = order
         border-radius: 0 !important;
         margin: 0 !important;
       }
+      /* Page 1 must be a positioned container so footer/signature stay on page 1 only */
+      .page { position: relative !important; height: 297mm !important; overflow: hidden !important; }
       .page-back { page-break-before: always !important; }
 
       /* ══ HEADER ══ */
@@ -596,7 +598,7 @@ const estimatedDeliveryStr = order
 
       /* ══ SIGNATURE ══ */
       .signature-section {
-        position: fixed !important; bottom: 38mm !important;
+        position: absolute !important; bottom: 38mm !important;
         left: 18mm !important; right: 18mm !important;
         padding-top: 0 !important; margin-top: 0 !important; background: #fff !important;
       }
@@ -608,7 +610,7 @@ const estimatedDeliveryStr = order
 
       /* ══ FOOTER ══ */
       .footer {
-        position: fixed !important; bottom: 14mm !important;
+        position: absolute !important; bottom: 14mm !important;
         left: 18mm !important; right: 18mm !important;
         text-align: center !important; border-top: 1px solid #111 !important;
         color: #111 !important; font-size: 10px !important;
