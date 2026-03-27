@@ -2,9 +2,9 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Use DB_PATH env var for Railway volume, fallback to project root for local dev
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', '..', '..', 'orders.db');
+// process.cwd() always points to the project root during npm run dev
+const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'orders.db');
 
 let db: Database.Database;
 
