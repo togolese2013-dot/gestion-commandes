@@ -3,53 +3,31 @@
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "GET",
-        "path": "whatsapp-inbox",
-        "responseMode": "responseNode",
+        "updates": ["messages"],
         "options": {}
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000001",
-      "name": "Vérification Meta (GET)",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [240, 160],
-      "webhookId": "whatsapp-inbox-get"
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "whatsapp-cloud-trigger",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "1",
+          "name": "WhatsApp Business Cloud"
+        }
+      }
     },
     {
       "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ $json.query['hub.challenge'] }}",
-        "options": { "responseCode": 200 }
+        "jsCode": "const msg = $input.first().json;\n\n// Type du message\nconst type = msg.type || 'unknown';\n\n// Récupérer le texte selon le type\nconst typeMap = {\n  text:     () => msg.text?.body || '',\n  image:    () => '[Le client a envoyé une image]',\n  audio:    () => '[Le client a envoyé un message vocal]',\n  video:    () => '[Le client a envoyé une vidéo]',\n  document: () => '[Le client a envoyé un document : ' + (msg.document?.filename || '') + ']',\n  sticker:  () => '[Le client a envoyé un sticker]',\n  location: () => '[Le client a partagé sa localisation]',\n  reaction: () => null,\n};\n\nconst texte = (typeMap[type] || (() => `[${type}]`))();\n\n// Ignorer si réaction ou vide\nif (!texte) return [];\n\nconst from = msg.from;\nconst name = msg.profileName || ('+' + from);\n\nreturn [{ json: { from, name, texte, type } }];"
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000002",
-      "name": "Répondre challenge",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [460, 160]
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "whatsapp-inbox",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "id": "a1b2c3d4-0004-0001-0001-000000000003",
-      "name": "Messages entrants (POST)",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [240, 440],
-      "webhookId": "whatsapp-inbox-post"
-    },
-    {
-      "parameters": {
-        "jsCode": "const body = $input.first().json.body || {};\n\nconst message = body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];\nconst value   = body?.entry?.[0]?.changes?.[0]?.value;\n\nif (!message) return [];\n\nconst from = message.from;\nconst name = value?.contacts?.[0]?.profile?.name || ('+' + from);\n\nconst typeMap = {\n  text:     () => message.text?.body || '',\n  image:    () => '[Le client a envoyé une image]',\n  audio:    () => '[Le client a envoyé un message vocal]',\n  video:    () => '[Le client a envoyé une vidéo]',\n  document: () => '[Le client a envoyé un document]',\n  sticker:  () => '[Le client a envoyé un sticker]',\n};\nconst texte = (typeMap[message.type] || (() => `[${message.type}]`))();\n\nreturn [{ json: { from, name, texte } }];"
-      },
-      "id": "a1b2c3d4-0004-0001-0001-000000000004",
       "name": "Extraire message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 440]
+      "position": [460, 300]
     },
     {
       "parameters": {
@@ -58,36 +36,30 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer YOUR_OPENAI_API_KEY"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
+            { "name": "Authorization", "value": "Bearer YOUR_OPENAI_API_KEY" },
+            { "name": "Content-Type",  "value": "application/json" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 300,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es l'assistant WhatsApp de TOGOLESE, une entreprise de vente et distribution de produits importés basée à Lomé au Togo (Kégué, derrière l'hôtel O'Balkan). Ton rôle est de répondre aux clients de façon professionnelle, chaleureuse et concise.\\n\\nInformations importantes à connaître :\\n- Livraison EXPRESS (avion) : 4 à 14 jours\\n- Livraison ECO (bateau) : 30 à 45 jours\\n- Acompte de 70% exigé à la commande, solde de 30% à la livraison\\n- Délai de réclamation : 1 mois après livraison\\n- Téléphone : +228 90 22 64 91\\n- Email : Contact@togolesegroup.com\\n\\nRègles :\\n- Réponds toujours en français\\n- Sois bref (max 5 lignes)\\n- Termine toujours par : — *TOGOLESE*\\n- Si tu ne sais pas répondre, demande poliment au client de rappeler le +228 90 22 64 91\\n- Ne promets jamais de dates exactes de livraison\\n- N'invente pas d'informations sur des commandes spécifiques\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Le client {{ $json.name }} (+{{ $json.from }}) a envoyé : {{ $json.texte }}\"\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 300,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es l'assistant WhatsApp de TOGOLESE, une entreprise de vente et distribution de produits importés basée à Lomé au Togo (Kégué, derrière l'hôtel O'Balkan).\\n\\nInformations clés :\\n- Livraison EXPRESS (avion) : 4 à 14 jours\\n- Livraison ECO (bateau) : 30 à 45 jours\\n- Acompte de 70% à la commande, solde de 30% à la livraison\\n- Délai de réclamation : 1 mois après livraison\\n- Téléphone : +228 90 22 64 91\\n- Email : Contact@togolesegroup.com\\n\\nRègles strictes :\\n- Réponds toujours en français\\n- Sois bref et chaleureux (3 à 5 lignes max)\\n- Termine chaque message par : — *TOGOLESE* 🛒\\n- Si tu ne peux pas répondre précisément, invite à appeler le +228 90 22 64 91\\n- Ne promets jamais de dates exactes\\n- N'invente pas d'infos sur des commandes spécifiques\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.name }} (+{{ $json.from }}) a écrit : {{ $json.texte }}\"\n    }\n  ]\n}",
         "options": {}
       },
-      "id": "a1b2c3d4-0004-0001-0001-000000000005",
+      "id": "a1b2c3d4-0004-0001-0001-000000000003",
       "name": "Agent IA OpenAI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [700, 440]
+      "position": [700, 300]
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst reponse = data.choices?.[0]?.message?.content?.trim() || 'Bonjour ! Notre équipe vous répond très rapidement. Pour toute urgence : *+228 90 22 64 91* — *TOGOLESE*';\nconst from = $('Extraire message').first().json.from;\nreturn [{ json: { from, reponse } }];"
+        "jsCode": "const data = $input.first().json;\nconst reponse = data.choices?.[0]?.message?.content?.trim()\n  || 'Bonjour ! Notre équipe revient vers vous très vite. Pour une urgence : *+228 90 22 64 91* — *TOGOLESE* 🛒';\nconst from = $('Extraire message').first().json.from;\nreturn [{ json: { from, reponse } }];"
       },
-      "id": "a1b2c3d4-0004-0001-0001-000000000006",
+      "id": "a1b2c3d4-0004-0001-0001-000000000004",
       "name": "Extraire réponse IA",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [940, 440]
+      "position": [940, 300]
     },
     {
       "parameters": {
@@ -108,32 +80,15 @@
         "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.from }}\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.reponse }}\" }\n}",
         "options": {}
       },
-      "id": "a1b2c3d4-0004-0001-0001-000000000007",
+      "id": "a1b2c3d4-0004-0001-0001-000000000005",
       "name": "Répondre au client",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1180, 440]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={ \"status\": \"ok\" }",
-        "options": { "responseCode": 200 }
-      },
-      "id": "a1b2c3d4-0004-0001-0001-000000000008",
-      "name": "Répondre OK",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [1420, 440]
+      "position": [1180, 300]
     }
   ],
   "connections": {
-    "Vérification Meta (GET)": {
-      "main": [
-        [{ "node": "Répondre challenge", "type": "main", "index": 0 }]
-      ]
-    },
-    "Messages entrants (POST)": {
+    "WhatsApp Trigger": {
       "main": [
         [{ "node": "Extraire message", "type": "main", "index": 0 }]
       ]
@@ -151,11 +106,6 @@
     "Extraire réponse IA": {
       "main": [
         [{ "node": "Répondre au client", "type": "main", "index": 0 }]
-      ]
-    },
-    "Répondre au client": {
-      "main": [
-        [{ "node": "Répondre OK", "type": "main", "index": 0 }]
       ]
     }
   },
