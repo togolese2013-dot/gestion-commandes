@@ -22,34 +22,34 @@ const currentUser = isAdmin ? getCurrentUser(Astro.request) : null;
   <body class="bg-gray-50 min-h-screen text-gray-900">
     {isAdmin && (
       <header class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div class="flex items-center gap-6">
-            <span class="font-bold text-lg text-blue-700">Gestion Commandes</span>
-            <nav class="flex gap-4 text-sm font-medium">
-              <a href="/admin/dashboard" class="text-gray-600 hover:text-blue-700 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-y-2">
+          <div class="flex items-center gap-4 flex-wrap">
+            <span class="font-bold text-lg text-blue-700 shrink-0">Gestion Commandes</span>
+            <nav class="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
+              <a href="/admin/dashboard" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">
                 Dashboard
               </a>
-              <a href="/admin" class="text-gray-600 hover:text-blue-700 transition-colors">
+              <a href="/admin" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">
                 + Nouvelle commande
               </a>
-              <a href="/admin/orders" class="text-gray-600 hover:text-blue-700 transition-colors">
-                Toutes les commandes
+              <a href="/admin/orders" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">
+                Commandes
               </a>
-              <a href="/admin/users" class="text-gray-600 hover:text-blue-700 transition-colors">
+              <a href="/admin/users" class="text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">
                 Utilisateurs
               </a>
             </nav>
           </div>
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3 shrink-0">
             {currentUser && (
-              <span class="text-sm text-gray-500">
+              <span class="text-sm text-gray-500 hidden sm:inline">
                 👤 <span class="font-medium text-gray-700">{currentUser.full_name}</span>
               </span>
             )}
             <form action="/api/auth/logout" method="POST">
               <button
                 type="submit"
-                class="text-sm text-gray-500 hover:text-red-600 transition-colors"
+                class="text-sm text-gray-500 hover:text-red-600 transition-colors whitespace-nowrap"
               >
                 Déconnexion
               </button>
