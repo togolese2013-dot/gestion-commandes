@@ -1,5 +1,5 @@
 {
-  "name": "4 - Transfert messages clients → Kent",
+  "name": "4 - Réponse automatique clients WhatsApp",
   "nodes": [
     {
       "parameters": {
@@ -43,10 +43,10 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body || {};\n\nconst message = body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];\nconst value   = body?.entry?.[0]?.changes?.[0]?.value;\n\nif (!message) return [];\n\nconst from = message.from;\nconst name = value?.contacts?.[0]?.profile?.name || ('+' + from);\nconst ts   = new Date(parseInt(message.timestamp) * 1000)\n  .toLocaleString('fr-FR', {\n    timeZone: 'Africa/Lome',\n    day: '2-digit', month: '2-digit', year: 'numeric',\n    hour: '2-digit', minute: '2-digit'\n  });\n\nconst typeMap = {\n  text:     () => message.text?.body || '',\n  image:    () => '[📷 Image reçue]',\n  audio:    () => '[🎤 Message vocal reçu]',\n  video:    () => '[🎥 Vidéo reçue]',\n  document: () => '[📄 Document reçu]',\n  sticker:  () => '[Sticker reçu]',\n};\nconst texte = (typeMap[message.type] || (() => `[${message.type}]`))();\n\nconst forwarded =\n  `📩 *Message client*\\n` +\n  `👤 *${name}*  |  📞 +${from}\\n` +\n  `🕐 ${ts}\\n\\n` +\n  `💬 ${texte}`;\n\nreturn [{ json: { from, name, texte, forwarded } }];"
+        "jsCode": "const body = $input.first().json.body || {};\n\nconst message = body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];\nconst value   = body?.entry?.[0]?.changes?.[0]?.value;\n\n// Ignorer si pas de message\nif (!message) return [];\n\nconst from = message.from;\nconst name = value?.contacts?.[0]?.profile?.name || ('+' + from);\nconst ts   = new Date(parseInt(message.timestamp) * 1000)\n  .toLocaleString('fr-FR', {\n    timeZone: 'Africa/Lome',\n    day: '2-digit', month: '2-digit', year: 'numeric',\n    hour: '2-digit', minute: '2-digit'\n  });\n\nconst typeMap = {\n  text:     () => message.text?.body || '',\n  image:    () => '[Image]',\n  audio:    () => '[Message vocal]',\n  video:    () => '[Vidéo]',\n  document: () => '[Document]',\n  sticker:  () => '[Sticker]',\n};\nconst texte = (typeMap[message.type] || (() => `[${message.type}]`))();\nconst texteLower = texte.toLowerCase();\n\n// ── Réponse automatique selon mots-clés ─────────────────\nlet reponse = '';\n\nif (/commande|numéro|numero|cmd/.test(texteLower)) {\n  reponse =\n    `Bonjour ${name} 👋\\n\\n` +\n    `Merci pour votre message concernant votre commande.\\n\\n` +\n    `Notre équipe vérifie votre dossier et vous répond très rapidement. ` +\n    `Si vous avez votre numéro de commande (ex: CMD-...), n'hésitez pas à le partager pour accélérer le traitement.\\n\\n` +\n    `À très vite ! 🙏\\n— *TOGOLESE*`;\n\n} else if (/livraison|délai|delai|expédition|expedition|arrivée|arrivee|quand/.test(texteLower)) {\n  reponse =\n    `Bonjour ${name} 👋\\n\\n` +\n    `Concernant les délais de livraison :\\n\\n` +\n    `✈️ *EXPRESS (avion)* : 4 à 14 jours\\n` +\n    `🚢 *ECO (bateau)* : 30 à 45 jours\\n\\n` +\n    `Dès que votre colis arrive, vous recevrez une notification. ` +\n    `Pour plus d'informations, notre équipe est disponible.\\n\\n` +\n    `— *TOGOLESE*`;\n\n} else if (/prix|tarif|coût|cout|combien|payer|paiement|acompte/.test(texteLower)) {\n  reponse =\n    `Bonjour ${name} 👋\\n\\n` +\n    `Merci pour votre intérêt ! 😊\\n\\n` +\n    `Pour toute question tarifaire ou concernant votre paiement, ` +\n    `notre équipe vous répondra dans les plus brefs délais.\\n\\n` +\n    `— *TOGOLESE*`;\n\n} else if (/merci|thank|super|parfait|ok|reçu|recu|bien reçu/.test(texteLower)) {\n  reponse =\n    `Merci à vous ${name} ! 🙏\\n\\n` +\n    `C'est toujours un plaisir de vous servir. ` +\n    `N'hésitez pas à nous contacter pour toute question.\\n\\n` +\n    `— *TOGOLESE*`;\n\n} else {\n  reponse =\n    `Bonjour ${name} 👋\\n\\n` +\n    `Merci pour votre message, nous l'avons bien reçu ! ✅\\n\\n` +\n    `Notre équipe vous répondra dans les plus brefs délais.\\n\\n` +\n    `Pour toute urgence, vous pouvez nous appeler directement au *+228 90 22 64 91*.\\n\\n` +\n    `— *TOGOLESE*`;\n}\n\n// Notification Kent\nconst notifKent =\n  `📩 *Réponse client*\\n` +\n  `👤 *${name}*  |  📞 +${from}\\n` +\n  `🕐 ${ts}\\n\\n` +\n  `💬 ${texte}`;\n\nreturn [{ json: { from, name, texte, reponse, notifKent } }];"
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000004",
-      "name": "Extraire message",
+      "name": "Préparer réponse",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [460, 440]
@@ -62,22 +62,44 @@
               "name": "Authorization",
               "value": "Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
             },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
+            { "name": "Content-Type", "value": "application/json" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"22890226491\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.forwarded }}\" }\n}",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.from }}\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.reponse }}\" }\n}",
         "options": {}
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000005",
-      "name": "Transférer à Kent",
+      "name": "Répondre au client",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [700, 440]
+      "position": [700, 340]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1108545832334279/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
+            },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"22890226491\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.notifKent }}\" }\n}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-0001-0001-000000000006",
+      "name": "Notifier Kent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 540]
     },
     {
       "parameters": {
@@ -85,7 +107,7 @@
         "responseBody": "={ \"status\": \"ok\" }",
         "options": { "responseCode": 200 }
       },
-      "id": "a1b2c3d4-0004-0001-0001-000000000006",
+      "id": "a1b2c3d4-0004-0001-0001-000000000007",
       "name": "Répondre OK",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
@@ -100,15 +122,18 @@
     },
     "Messages entrants (POST)": {
       "main": [
-        [{ "node": "Extraire message", "type": "main", "index": 0 }]
+        [{ "node": "Préparer réponse", "type": "main", "index": 0 }]
       ]
     },
-    "Extraire message": {
+    "Préparer réponse": {
       "main": [
-        [{ "node": "Transférer à Kent", "type": "main", "index": 0 }]
+        [
+          { "node": "Répondre au client", "type": "main", "index": 0 },
+          { "node": "Notifier Kent", "type": "main", "index": 0 }
+        ]
       ]
     },
-    "Transférer à Kent": {
+    "Répondre au client": {
       "main": [
         [{ "node": "Répondre OK", "type": "main", "index": 0 }]
       ]
