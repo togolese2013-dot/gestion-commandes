@@ -40,8 +40,8 @@ const currentUser = isAdmin ? getCurrentUser(Astro.request) : null;
               {currentUser && (
                 <span class="text-xs font-medium text-gray-700 whitespace-nowrap">👤 {currentUser.full_name}</span>
               )}
-              <form action="/api/auth/logout" method="POST">
-                <button type="submit" class="text-xs text-gray-400 hover:text-red-600 transition-colors whitespace-nowrap">
+              <form action="/api/auth/logout" method="POST" style="display:flex;align-items:center;">
+                <button type="submit" class="text-xs text-gray-400 hover:text-red-600 transition-colors whitespace-nowrap" style="line-height:1;">
                   Déconnexion
                 </button>
               </form>
