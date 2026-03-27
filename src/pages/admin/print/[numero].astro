@@ -13,6 +13,12 @@ const deliveryLabel = order?.delivery_type === 'avion' ? 'EXPRESS (avion)' : 'EC
 const fmt = (n: number) => n.toLocaleString('fr-FR');
 const dateStr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
+// Estimated delivery: 14 days for air, 45 days for sea
+const deliveryDays = order?.delivery_type === 'avion' ? 14 : 45;
+const estimatedDeliveryStr = order
+  ? dateStr(new Date(new Date(order.created_at!).getTime() + deliveryDays * 24 * 60 * 60 * 1000).toISOString())
+  : '';
+
 const statusLabel: Record<string, string> = {
   en_attente: 'En attente',
   disponible: 'Disponible',
@@ -651,8 +657,20 @@ const statusLabel: Record<string, string> = {
                 <div class="label">Mode de livraison</div>
                 <div class="value" style="margin-top:2px;">
                   <span class={`delivery-badge ${order.delivery_type === 'avion' ? 'delivery-avion' : 'delivery-bateau'}`}>
-                    {order.delivery_type === 'avion' ? 'EXPRESS (avion)' : 'ECONOMIQUE (bateau)'}
+                    {order.delivery_type === 'avion' ? '✈️ EXPRESS (avion)' : '🚢 ECONOMIQUE (bateau)'}
                   </span>
+                </div>
+                <div style="margin-top:10px;">
+                  <div class="label">Délai estimé</div>
+                  <div class="value" style="font-size:12px; color:#6b7280;">
+                    {order.delivery_type === 'avion' ? '~14 jours' : '~45 jours'}
+                  </div>
+                </div>
+                <div style="margin-top:10px;">
+                  <div class="label">Livraison prévue</div>
+                  <div class="value" style="font-size:13px; font-weight:700; color:#1e40af;">
+                    {estimatedDeliveryStr}
+                  </div>
                 </div>
                 <div style="margin-top:10px;">
                   <div class="label">Statut commande</div>
