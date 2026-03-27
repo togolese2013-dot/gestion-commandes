@@ -1,6 +1,6 @@
 ---
-import { requireAuth } from '../../../lib/auth';
-import { getOrderByNumber, getPaymentsByOrderId } from '../../../lib/orders';
+import { requireAuth } from '../../../../lib/auth';
+import { getOrderByNumber, getPaymentsByOrderId } from '../../../../lib/orders';
 
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
@@ -30,7 +30,7 @@ const estimatedDeliveryStr = order
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Bon de commande {order?.order_number ?? 'introuvable'}</title>
+  <title>Bon de livraison {order?.order_number ?? 'introuvable'}</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -230,7 +230,7 @@ const estimatedDeliveryStr = order
       font-size: 11px;
       font-weight: 700;
     }
-    .delivery-avion { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .delivery-avion  { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
     .delivery-bateau { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
     .status-badge {
       display: inline-block;
@@ -405,82 +405,13 @@ const estimatedDeliveryStr = order
       justify-content: center;
       min-height: 300px;
       gap: 12px;
-      color: #6b7280;
-    }
-    .error-page h2 { font-size: 20px; color: #374151; font-weight: 700; }
-
-    /* Back page */
-    .page-label {
-      text-align: center;
-      font-size: 11px;
-      color: #9ca3af;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin: 20px 0 8px;
-    }
-    .page-back {
-      background: #fff;
-      width: 100%;
-      max-width: 800px;
-      min-height: 1100px;
-      padding: 40px 48px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-      border-radius: 4px;
-      display: flex;
-      flex-direction: column;
-    }
-    .back-title {
-      font-size: 13px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: #1e40af;
-      text-align: center;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #1e40af;
-      margin-bottom: 6px;
-    }
-    .back-subtitle {
-      font-size: 10px;
       color: #111;
-      text-align: center;
-      margin-bottom: 28px;
-      font-style: italic;
     }
-    .conditions-back { flex: 1; }
-    .conditions-back ol {
-      padding-left: 20px;
-      font-size: 12.5px;
-      color: #111;
-      line-height: 1.9;
-    }
-    .conditions-back ol li { margin-bottom: 12px; padding-left: 4px; }
-    .conditions-back ol li::marker { font-weight: 700; color: #1e40af; }
-    .conditions-back .privacy {
-      margin-top: 24px;
-      padding: 12px 16px;
-      background: #eff6ff;
-      border-left: 3px solid #3b82f6;
-      border-radius: 0 6px 6px 0;
-      font-size: 11.5px;
-      color: #111;
-      font-style: italic;
-    }
-    .back-footer {
-      text-align: center;
-      padding-top: 20px;
-      border-top: 1px solid #111;
-      color: #111;
-      font-size: 11px;
-      margin-top: auto;
-    }
-    .back-footer strong { display: block; font-size: 12px; color: #111; font-weight: 700; margin-bottom: 3px; }
+    .error-page h2 { font-size: 20px; color: #111; font-weight: 700; }
 
     /* ===== PRINT STYLES ===== */
     @media print {
       .no-print  { display: none !important; }
-      .page-label { display: none !important; }
 
       /* ══════════════════════════════════════════
          RÈGLE GLOBALE : tout s'imprime fidèlement
@@ -494,7 +425,7 @@ const estimatedDeliveryStr = order
       body { background: #fff !important; color: #111 !important; }
       .page-wrapper { padding: 0 !important; gap: 0 !important; }
 
-      .page, .page-back {
+      .page {
         max-width: 100% !important;
         width: 100% !important;
         min-height: auto !important;
@@ -502,10 +433,15 @@ const estimatedDeliveryStr = order
         padding: 15mm 18mm !important;
         border-radius: 0 !important;
         margin: 0 !important;
+        position: relative !important;
+        height: 297mm !important;
+        overflow: hidden !important;
       }
-      /* Page 1 must be a positioned container so footer/signature stay on page 1 only */
-      .page { position: relative !important; height: 297mm !important; overflow: hidden !important; }
-      .page-back { page-break-before: always !important; position: relative !important; height: 297mm !important; overflow: hidden !important; }
+
+      /* ══ LAYOUT ══ */
+      .header { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; margin-bottom: 6px !important; }
+      .doc-title-row { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 14px !important; }
+      .page-content { flex: 1 !important; }
 
       /* ══ HEADER ══ */
       .company-name {
@@ -596,11 +532,6 @@ const estimatedDeliveryStr = order
       .summary-row.remaining-row { background: #fef2f2 !important; }
       .summary-row.remaining-zero-row { background: #f0fdf4 !important; }
 
-      /* ══ LAYOUT ══ */
-      .header { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; margin-bottom: 6px !important; }
-      .doc-title-row { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 14px !important; }
-      .page-content { flex: 1 !important; }
-
       /* ══ PAIEMENTS ══ */
       .payments-section { margin-bottom: 14px !important; }
       .payments-table { width: 100% !important; border-collapse: collapse !important; font-size: 10.5px !important; }
@@ -631,24 +562,6 @@ const estimatedDeliveryStr = order
       }
       .footer strong { display: block !important; font-size: 11px !important; color: #111 !important; font-weight: 700 !important; margin-bottom: 2px !important; }
 
-      /* ══ PAGE VERSO ══ */
-      .back-title { color: #1e40af !important; font-size: 13px !important; font-weight: 800 !important; text-transform: uppercase !important; text-align: center !important; border-bottom: 2px solid #1e40af !important; margin-bottom: 6px !important; }
-      .back-subtitle { color: #111 !important; font-size: 10px !important; text-align: center !important; margin-bottom: 28px !important; font-style: italic !important; }
-      .conditions-back { color: #111 !important; flex: 1 !important; }
-      .conditions-back ol { font-size: 11.5px !important; color: #111 !important; line-height: 1.9 !important; padding-left: 20px !important; }
-      .conditions-back ol li { color: #111 !important; margin-bottom: 12px !important; padding-left: 4px !important; }
-      .conditions-back ol li::marker { font-weight: 700 !important; color: #1e40af !important; }
-      .conditions-back .privacy { margin-top: 24px !important; padding: 12px 16px !important; background: #eff6ff !important; border-left: 3px solid #3b82f6 !important; border-radius: 4px !important; font-size: 11.5px !important; color: #111 !important; font-style: italic !important; }
-      .conditions-back .privacy strong { color: #111 !important; font-weight: 700 !important; font-style: normal !important; }
-      .back-footer {
-        position: absolute !important; bottom: 14mm !important;
-        left: 18mm !important; right: 18mm !important;
-        text-align: center !important; padding-top: 8px !important;
-        border-top: 1px solid #111 !important; color: #111 !important;
-        font-size: 11px !important; background: #fff !important;
-      }
-      .back-footer strong { display: block !important; font-size: 12px !important; color: #111 !important; font-weight: 700 !important; margin-bottom: 3px !important; }
-
       @page { size: A4; margin: 0; }
     }
   </style>
@@ -664,19 +577,13 @@ const estimatedDeliveryStr = order
       Imprimer
     </button>
     <a href="/admin/orders">← Retour aux commandes</a>
-    {order && (
-      <a href={`/admin/print/livraison/${order.order_number}`} style="background:#fff; color:#1e40af; border-radius:6px; padding:8px 14px; font-size:13px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:6px;">
-        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12a2 2 0 002 2h8a2 2 0 002-2L19 8"/></svg>
-        Bon de livraison
-      </a>
-    )}
     <span class="spacer"></span>
     {order && <span class="hint">Commande {order.order_number}</span>}
   </div>
 
   <div class="page-wrapper">
 
-    <!-- ===== RECTO ===== -->
+    <!-- ===== PAGE UNIQUE ===== -->
     <div class="page">
 
       {!order ? (
@@ -708,7 +615,7 @@ const estimatedDeliveryStr = order
           <!-- Title row -->
           <div class="doc-title-row">
             <div style="display:flex; flex-direction:column; align-items:center;">
-              <span class="doc-badge">Bon de commande</span>
+              <span class="doc-badge">Bon de livraison</span>
               <span class="order-number-badge">{order.order_number}</span>
             </div>
             <div class="doc-date">
@@ -731,7 +638,7 @@ const estimatedDeliveryStr = order
                 {order.notes && (
                   <div style="margin-top:8px;">
                     <div class="label">Notes</div>
-                    <div class="value" style="font-size:12px; font-weight:500; color:#4b5563;">{order.notes}</div>
+                    <div class="value" style="font-size:12px; font-weight:500;">{order.notes}</div>
                   </div>
                 )}
               </div>
@@ -861,7 +768,23 @@ const estimatedDeliveryStr = order
             </div>
           )}
 
-          <!-- Footer recto -->
+          <!-- Signature zone -->
+          <div class="signature-section">
+            <div class="signature-box">
+              <div class="signature-box-title">Signature client</div>
+              <div class="signature-line"></div>
+              <div class="signature-date-line">Date : _______________</div>
+              <div class="signature-box-hint">Lu et approuvé</div>
+            </div>
+            <div class="signature-box">
+              <div class="signature-box-title">Cachet &amp; Signature TOGOLESE</div>
+              <div class="signature-line"></div>
+              <div class="signature-date-line">Date : _______________</div>
+              <div class="signature-box-hint">Représentant autorisé</div>
+            </div>
+          </div>
+
+          <!-- Footer -->
           <div class="footer">
             <strong>Merci pour votre confiance !</strong>
             TOGOLESE &mdash; Kégué derrière l'hôtel O'Balkan, Lomé - TOGO &mdash; Tél : +228 90 22 64 91 &mdash; Contact@togolesegroup.com
@@ -870,39 +793,6 @@ const estimatedDeliveryStr = order
       )}
 
     </div>
-
-    {order && (
-      <>
-        <p class="page-label">— Verso : Conditions générales —</p>
-
-        <!-- ===== VERSO ===== -->
-        <div class="page-back">
-          <div class="back-title">Conditions Générales de Vente</div>
-          <div class="back-subtitle">TOGOLESE — Vente et distribution — Lomé, TOGO</div>
-
-          <div class="conditions-back">
-            <ol>
-              <li>Acompte de 70% exigé à la commande. Le solde (30%) est dû à la livraison avant remise des articles.</li>
-              <li>Une fois la commande passée et l'acompte versé, aucun remboursement n'est possible.</li>
-              <li>Délai de réclamation : 1 mois à compter de la date de livraison. Passé ce délai, aucune réclamation ne sera prise en compte.</li>
-              <li>Tout produit est vérifié et testé en présence du client lors de la remise de commande. Aucune réclamation relative à l'état du produit ne sera acceptée après cette vérification contradictoire.</li>
-              <li>TOGOLESE ne peut être tenu responsable des retards de livraison involontaires liés aux transporteurs, aux douanes ou à tout événement indépendant de sa volonté.</li>
-              <li>Les produits bénéficient d'une garantie constructeur selon les termes définis par le fabricant. Tout défaut constaté après réception doit être signalé dans le délai de réclamation. Aucune garantie ne couvre les dommages causés par une mauvaise utilisation, une chute, une infiltration d'eau ou une modification non autorisée.</li>
-              <li>Le client s'engage à fournir des informations exactes lors de la commande. TOGOLESE ne saurait être tenu responsable des erreurs de livraison dues à des informations incorrectes.</li>
-              <li>Tout litige relatif à la présente commande sera soumis à la juridiction compétente de Lomé, TOGO.</li>
-            </ol>
-            <div class="privacy">
-              <strong>Protection des données personnelles :</strong> Les informations collectées lors de votre commande (nom, téléphone) sont utilisées exclusivement pour le traitement et le suivi de votre commande. Elles ne sont ni vendues ni transmises à des tiers.
-            </div>
-          </div>
-
-          <div class="back-footer">
-            <strong>Merci pour votre confiance !</strong>
-            TOGOLESE &mdash; Kégué derrière l'hôtel O'Balkan, Lomé - TOGO &mdash; Tél : +228 90 22 64 91 &mdash; Contact@togolesegroup.com
-          </div>
-        </div>
-      </>
-    )}
 
   </div>
 
