@@ -92,13 +92,18 @@ function runMigrations(db: Database.Database) {
 }
 
 // Create default admin user on first launch if no users exist
+// Also sync username/full_name from env vars on every start
 function seedInitialUser(db: Database.Database) {
   const count = (db.prepare('SELECT COUNT(*) as c FROM users').get() as { c: number }).c;
+  const username = process.env.INITIAL_ADMIN_USERNAME || 'admin';
+  const password = process.env.INITIAL_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'admin123';
+  const full_name = process.env.INITIAL_ADMIN_NAME || 'Administrateur';
+
   if (count === 0) {
-    const username = process.env.INITIAL_ADMIN_USERNAME || 'admin';
-    const password = process.env.INITIAL_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'admin123';
-    const full_name = process.env.INITIAL_ADMIN_NAME || 'Administrateur';
     db.prepare('INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)').run(username, password, full_name, 'admin');
     console.log(`[Auth] Compte admin créé : ${username}`);
+  } else {
+    // Keep the first admin in sync with env vars
+    db.prepare('UPDATE users SET username = ?, full_name = ? WHERE id = 1').run(username, full_name);
   }
 }
