@@ -491,6 +491,20 @@ const estimatedDeliveryStr = order
 
       body { background: #fff !important; font-size: 11px; color: #111 !important; }
 
+      /* Tous les traits et bordures gris → noir à l'impression */
+      .info-box, .info-box-header, .info-box-body,
+      .summary-box, .summary-row,
+      tbody td, tfoot td,
+      .payments-table td, .payments-table th,
+      .section-title, .footer, .signature-section,
+      .sig-box, .page, .page-back {
+        border-color: #000 !important;
+      }
+      tbody td { border-bottom-color: #000 !important; }
+      .info-box-header { border-bottom-color: #000 !important; }
+      .summary-row { border-bottom-color: #000 !important; }
+      tfoot td { border-top-color: #1e40af !important; }
+
       /* Tous les textes gris → noir à l'impression */
       .label, .info-box-header, .company-tagline, .doc-date,
       .section-title, .product-condition, .summary-label,
