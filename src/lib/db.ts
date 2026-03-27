@@ -103,7 +103,7 @@ function seedInitialUser(db: Database.Database) {
     db.prepare('INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)').run(username, password, full_name, 'admin');
     console.log(`[Auth] Compte admin créé : ${username}`);
   } else {
-    // Keep the first admin in sync with env vars
-    db.prepare('UPDATE users SET username = ?, full_name = ? WHERE id = 1').run(username, full_name);
+    // Keep the first admin in sync with env vars (including password)
+    db.prepare('UPDATE users SET username = ?, full_name = ?, password = ? WHERE id = 1').run(username, full_name, password);
   }
 }
