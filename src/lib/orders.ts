@@ -42,10 +42,12 @@ export interface Order {
 function generateOrderNumber(): string {
   const db = getDb();
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  // Use MAX instead of COUNT so deleted orders don't cause duplicates
   const row = db.prepare(
-    `SELECT COUNT(*) as count FROM orders WHERE order_number LIKE ?`
-  ).get(`CMD-${today}-%`) as { count: number };
-  const seq = String(row.count + 1).padStart(4, '0');
+    `SELECT MAX(CAST(SUBSTR(order_number, -4) AS INTEGER)) as max_seq
+     FROM orders WHERE order_number LIKE ?`
+  ).get(`CMD-${today}-%`) as { max_seq: number | null };
+  const seq = String((row.max_seq ?? 0) + 1).padStart(4, '0');
   return `CMD-${today}-${seq}`;
 }
 
