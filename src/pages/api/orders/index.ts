@@ -91,7 +91,8 @@ export const POST: APIRoute = async ({ request }) => {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
     console.error('[POST /api/orders]', err);
-    return new Response(JSON.stringify({ error: 'Erreur serveur' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Erreur serveur', detail: msg }), { status: 500 });
   }
 };
