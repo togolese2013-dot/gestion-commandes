@@ -687,6 +687,62 @@ const estimatedDeliveryStr = order
       .summary-row.remaining-zero-row { background: #f0fdf4 !important; }
       /* ═══ FIN SUMMARY PROTÉGÉ ═══ */
 
+      /* ═══ TABLE PRODUITS PROTÉGÉE — ne pas modifier ═══ */
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-bottom: 16px !important;
+        font-size: 10.5px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      thead tr { background: #1e40af !important; color: #fff !important; }
+      thead th {
+        padding: 7px 10px !important;
+        font-size: 9.5px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.8px !important;
+        color: #fff !important;
+      }
+      thead th:last-child, thead th:nth-child(3) { text-align: center !important; }
+      thead th:nth-child(1) { text-align: center !important; width: 40px !important; }
+      thead th:nth-child(2) { text-align: left !important; }
+      tbody tr:nth-child(even) { background: #f8fafc !important; }
+      tbody tr:nth-child(odd)  { background: #fff !important; }
+      tbody td {
+        padding: 7px 10px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        vertical-align: middle !important;
+        color: #1f2937 !important;
+      }
+      tbody td:first-child { text-align: center !important; color: #6b7280 !important; font-weight: 600 !important; }
+      tbody td:nth-child(3), tbody td:last-child { text-align: center !important; font-weight: 600 !important; color: #111 !important; }
+      tfoot tr { background: #eff6ff !important; }
+      tfoot td {
+        padding: 7px 10px !important;
+        font-weight: 700 !important;
+        color: #1e40af !important;
+        text-align: right !important;
+        font-size: 11px !important;
+        border-top: 2px solid #bfdbfe !important;
+      }
+      tfoot td:first-child { text-align: center !important; }
+      tfoot td:nth-child(2) { text-align: left !important; }
+      .product-name { font-weight: 600 !important; color: #111 !important; }
+      .product-condition { font-size: 9.5px !important; color: #9ca3af !important; margin-top: 1px !important; }
+      .section-title {
+        font-size: 9px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1.2px !important;
+        color: #6b7280 !important;
+        margin-bottom: 6px !important;
+        padding-bottom: 4px !important;
+        border-bottom: 1px solid #e5e7eb !important;
+      }
+      /* ═══ FIN TABLE PRODUITS PROTÉGÉE ═══ */
+
       /* ═══ FOOTER PROTÉGÉ — ne pas modifier ═══ */
       .footer {
         text-align: center !important;
