@@ -70,10 +70,22 @@ function initSchema(db: Database.Database) {
       FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS clients (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT UNIQUE NOT NULL,
+      email TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      notes TEXT DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
     CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
     CREATE INDEX IF NOT EXISTS idx_products_order_id ON products(order_id);
     CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+    CREATE INDEX IF NOT EXISTS idx_clients_phone ON clients(phone);
   `);
 }
 
@@ -85,6 +97,19 @@ function runMigrations(db: Database.Database) {
     `ALTER TABLE orders ADD COLUMN picked_up_by TEXT DEFAULT ''`,
     `ALTER TABLE payments ADD COLUMN performed_by TEXT DEFAULT ''`,
     `ALTER TABLE orders ADD COLUMN deposit_payment_method TEXT DEFAULT ''`,
+    `ALTER TABLE orders ADD COLUMN client_id INTEGER REFERENCES clients(id)`,
+    // Populate clients from existing orders (one client per unique phone)
+    `INSERT OR IGNORE INTO clients (name, phone, created_at)
+       SELECT client_name, client_phone, MIN(created_at)
+       FROM orders
+       GROUP BY client_phone`,
+    // Link existing orders to their client
+    `UPDATE orders SET client_id = (
+       SELECT id FROM clients WHERE clients.phone = orders.client_phone
+     ) WHERE client_id IS NULL`,
+    `ALTER TABLE clients ADD COLUMN photo_url TEXT DEFAULT ''`,
+    `ALTER TABLE clients ADD COLUMN tags TEXT DEFAULT '[]'`,
+    `ALTER TABLE orders ADD COLUMN reminder_sent_at TEXT DEFAULT NULL`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* column already exists */ }

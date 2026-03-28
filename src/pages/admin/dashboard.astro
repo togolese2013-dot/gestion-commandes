@@ -22,10 +22,32 @@ const statusColor: Record<string, string> = {
   disponible: 'bg-green-100 text-green-800',
   recupere: 'bg-gray-100 text-gray-600',
 };
+
+const topClients = stats.top_clients;
+
+// SVG bar chart dimensions
+const chartW = 700;
+const chartH = 160;
+const padL = 60; const padR = 16; const padT = 12; const padB = 28;
+const innerW = chartW - padL - padR;
+const innerH = chartH - padT - padB;
+const months = stats.monthly_revenue;
+const maxCA = Math.max(...months.map(m => m.ca), 1);
+const barW = Math.floor(innerW / months.length) - 4;
+
+function barX(i: number) { return padL + i * (innerW / months.length) + (innerW / months.length - barW) / 2; }
+function barH(ca: number) { return Math.max(2, Math.round((ca / maxCA) * innerH)); }
+function barY(ca: number) { return padT + innerH - barH(ca); }
+
+// Y-axis ticks: 5 levels
+const yTicks = [0, 0.25, 0.5, 0.75, 1].map(r => ({
+  val: Math.round(maxCA * r),
+  y: padT + innerH - Math.round(r * innerH),
+}));
 ---
 
 <Layout title="Dashboard" isAdmin={true}>
-  <div class="space-y-8">
+  <div class="space-y-6">
 
     <!-- Header -->
     <div>
@@ -34,85 +56,163 @@ const statusColor: Record<string, string> = {
     </div>
 
     <!-- KPIs financiers -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Chiffre d'affaires</p>
-        <p class="text-2xl font-bold text-gray-900">{fmt(stats.chiffre_affaires)} <span class="text-sm font-medium text-gray-400">FCFA</span></p>
-        <p class="text-xs text-gray-400 mt-2">Total de toutes les commandes</p>
+        <p class="text-xl font-bold text-gray-900">{fmt(stats.chiffre_affaires)} <span class="text-xs font-medium text-gray-400">FCFA</span></p>
+        <p class="text-xs text-gray-400 mt-1.5">Total de toutes les commandes</p>
       </div>
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total encaissé</p>
-        <p class="text-2xl font-bold text-green-600">{fmt(stats.total_encaisse)} <span class="text-sm font-medium text-gray-400">FCFA</span></p>
-        <p class="text-xs text-gray-400 mt-2">Acomptes et paiements reçus</p>
+        <p class="text-xl font-bold text-green-600">{fmt(stats.total_encaisse)} <span class="text-xs font-medium text-gray-400">FCFA</span></p>
+        <p class="text-xs text-gray-400 mt-1.5">Acomptes et paiements reçus</p>
       </div>
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 col-span-2 sm:col-span-1">
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Impayés</p>
-        <p class="text-2xl font-bold text-red-500">{fmt(stats.total_impayes)} <span class="text-sm font-medium text-gray-400">FCFA</span></p>
-        <p class="text-xs text-gray-400 mt-2">Reste à encaisser</p>
+        <p class="text-xl font-bold text-red-500">{fmt(stats.total_impayes)} <span class="text-xs font-medium text-gray-400">FCFA</span></p>
+        <p class="text-xs text-gray-400 mt-1.5">Reste à encaisser</p>
       </div>
     </div>
 
-    <!-- Statuts + Livraison -->
+    <!-- Indicateurs activité -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col gap-1">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Aujourd'hui</p>
+        <p class="text-3xl font-bold text-gray-900">{stats.commandes_aujourd_hui}</p>
+        <p class="text-xs text-gray-400">commande{stats.commandes_aujourd_hui > 1 ? 's' : ''}</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col gap-1">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">7 derniers jours</p>
+        <p class="text-3xl font-bold text-blue-600">{stats.commandes_semaine}</p>
+        <p class="text-xs text-gray-400">commande{stats.commandes_semaine > 1 ? 's' : ''}</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col gap-1">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">⏳ En attente</p>
+        <p class="text-3xl font-bold text-yellow-600">{stats.en_attente}</p>
+        <p class="text-xs text-gray-400">à traiter</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col gap-1">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">✅ Disponible</p>
+        <p class="text-3xl font-bold text-green-600">{stats.disponible}</p>
+        <p class="text-xs text-gray-400">à récupérer</p>
+      </div>
+    </div>
+
+    <!-- Graphique CA mensuel (SVG) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm font-bold text-gray-900">Chiffre d'affaires mensuel</p>
+        <p class="text-xs text-gray-400">12 derniers mois</p>
+      </div>
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} class="w-full" style="height:180px;" aria-label="Graphique CA mensuel">
+        <!-- Y-axis gridlines + labels -->
+        {yTicks.map(t => (
+          <>
+            <line x1={padL} y1={t.y} x2={chartW - padR} y2={t.y} stroke="#f3f4f6" stroke-width="1"/>
+            <text x={padL - 6} y={t.y + 4} text-anchor="end" font-size="9" fill="#9ca3af">
+              {t.val >= 1000 ? Math.round(t.val / 1000) + 'k' : t.val}
+            </text>
+          </>
+        ))}
+        <!-- Bars -->
+        {months.map((m, i) => {
+          const isMax = m.ca === maxCA && m.ca > 0;
+          const h = barH(m.ca);
+          const x = barX(i);
+          const y = barY(m.ca);
+          return (
+            <>
+              <rect x={x} y={y} width={barW} height={h}
+                rx="3" ry="3"
+                fill={isMax ? '#2563eb' : '#bfdbfe'}
+              />
+              {m.ca > 0 && (
+                <title>{m.label} : {fmt(m.ca)} FCFA</title>
+              )}
+              <text x={x + barW / 2} y={chartH - padB + 14} text-anchor="middle" font-size="9" fill="#6b7280">
+                {m.label}
+              </text>
+            </>
+          );
+        })}
+        <!-- X axis line -->
+        <line x1={padL} y1={padT + innerH} x2={chartW - padR} y2={padT + innerH} stroke="#e5e7eb" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- Top clients + Livraison -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-      <!-- Statuts commandes -->
+      <!-- Top 5 clients -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Statut des commandes</p>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-              <span class="text-sm text-gray-700">Total</span>
-            </div>
-            <span class="text-sm font-bold text-gray-900">{stats.total}</span>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Top clients</p>
+        {topClients.length === 0 ? (
+          <p class="text-sm text-gray-400">Aucune donnée</p>
+        ) : (
+          <div class="space-y-3">
+            {topClients.map((c, i) => (
+              <div class="flex items-center gap-3">
+                <span class={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-gray-100 text-gray-600' : i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-50 text-gray-400'}`}>
+                  {i + 1}
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-gray-900 truncate">{c.client_name}</p>
+                  <p class="text-xs text-gray-400 font-mono">{c.client_phone}</p>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-sm font-bold text-gray-900">{c.nb_commandes} cmd{c.nb_commandes > 1 ? 's' : ''}</p>
+                  <p class="text-xs text-gray-400">{fmt(c.total_depense)} F</p>
+                </div>
+              </div>
+            ))}
           </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span>
-              <span class="text-sm text-gray-700">En attente</span>
-            </div>
-            <span class="text-sm font-bold text-yellow-700">{stats.en_attente}</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
-              <span class="text-sm text-gray-700">Disponible</span>
-            </div>
-            <span class="text-sm font-bold text-green-700">{stats.disponible}</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-gray-400 inline-block"></span>
-              <span class="text-sm text-gray-700">Récupéré</span>
-            </div>
-            <span class="text-sm font-bold text-gray-600">{stats.recupere}</span>
-          </div>
-        </div>
+        )}
       </div>
 
-      <!-- Livraison -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Mode de livraison</p>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
-            <div class="flex items-center gap-2">
-              <span class="text-lg">✈️</span>
-              <div>
-                <p class="text-sm font-semibold text-gray-800">EXPRESS</p>
-                <p class="text-xs text-gray-400">Par avion 4–14 jours</p>
+      <!-- Statuts + Livraison -->
+      <div class="space-y-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Statut des commandes</p>
+          <div class="space-y-2.5">
+            {[
+              { label: 'Total', color: 'bg-blue-500', val: stats.total, cls: 'text-gray-900' },
+              { label: 'En attente', color: 'bg-yellow-400', val: stats.en_attente, cls: 'text-yellow-700' },
+              { label: 'Disponible', color: 'bg-green-500', val: stats.disponible, cls: 'text-green-700' },
+              { label: 'Récupéré', color: 'bg-gray-400', val: stats.recupere, cls: 'text-gray-600' },
+            ].map(s => (
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class={`w-2.5 h-2.5 rounded-full ${s.color}`}></span>
+                  <span class="text-sm text-gray-700">{s.label}</span>
+                </div>
+                <span class={`text-sm font-bold ${s.cls}`}>{s.val}</span>
               </div>
-            </div>
-            <span class="text-xl font-bold text-blue-700">{stats.express}</span>
+            ))}
           </div>
-          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-            <div class="flex items-center gap-2">
-              <span class="text-lg">🚢</span>
-              <div>
-                <p class="text-sm font-semibold text-gray-800">ECO</p>
-                <p class="text-xs text-gray-400">Par bateau 30–45 jours</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Mode de livraison</p>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+              <div class="flex items-center gap-2">
+                <span>✈️</span>
+                <div>
+                  <p class="text-sm font-semibold text-gray-800">EXPRESS</p>
+                  <p class="text-xs text-gray-400">Par avion 4–14 jours</p>
+                </div>
               </div>
+              <span class="text-xl font-bold text-blue-700">{stats.express}</span>
             </div>
-            <span class="text-xl font-bold text-gray-700">{stats.eco}</span>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+              <div class="flex items-center gap-2">
+                <span>🚢</span>
+                <div>
+                  <p class="text-sm font-semibold text-gray-800">ECO</p>
+                  <p class="text-xs text-gray-400">Par bateau 30–45 jours</p>
+                </div>
+              </div>
+              <span class="text-xl font-bold text-gray-700">{stats.eco}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -130,16 +230,14 @@ const statusColor: Record<string, string> = {
         <div class="divide-y divide-gray-50">
           {stats.commandes_recentes.map(order => (
             <div class="flex items-center justify-between px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div>
-                  <p class="text-sm font-semibold text-gray-900">{order.client_name}</p>
-                  <p class="text-xs font-mono text-blue-600">{order.order_number}</p>
-                </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900">{order.client_name}</p>
+                <p class="text-xs font-mono text-blue-600">{order.order_number}</p>
               </div>
               <div class="flex items-center gap-4">
                 <span class="text-sm font-semibold text-gray-900">{fmt(order.total_amount)} FCFA</span>
                 {order.remaining_balance > 0 && (
-                  <span class="text-xs text-red-500 font-medium">−{fmt(order.remaining_balance)} FCFA</span>
+                  <span class="text-xs text-red-500 font-medium hidden sm:inline">−{fmt(order.remaining_balance)} FCFA</span>
                 )}
                 <span class={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${statusColor[order.status ?? 'en_attente']}`}>
                   {statusLabel[order.status ?? 'en_attente']}
@@ -153,3 +251,4 @@ const statusColor: Record<string, string> = {
 
   </div>
 </Layout>
+

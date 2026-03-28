@@ -1,0 +1,595 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { requireAuth, getCurrentUser } from '../../lib/auth';
+import { getAllClients } from '../../lib/clients';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+
+const currentUser = getCurrentUser(Astro.request);
+const clients = getAllClients();
+
+const fmt = (n: number) => n.toLocaleString('fr-FR');
+const dateStr = (d: string) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+
+// Avatar initials color based on name
+function avatarColor(name: string) {
+  const colors = [
+    'bg-blue-500','bg-purple-500','bg-pink-500','bg-rose-500',
+    'bg-orange-500','bg-amber-500','bg-green-500','bg-teal-500',
+    'bg-cyan-500','bg-indigo-500',
+  ];
+  let hash = 0;
+  for (const c of name) hash = (hash * 31 + c.charCodeAt(0)) & 0xffff;
+  return colors[hash % colors.length];
+}
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  return parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+}
+
+const TAGS = [
+  { key: 'VIP',       label: '⭐ VIP',       cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  { key: 'Régulier',  label: '🔄 Régulier',  cls: 'bg-blue-100 text-blue-800 border-blue-200' },
+  { key: 'Nouveau',   label: '🆕 Nouveau',   cls: 'bg-green-100 text-green-800 border-green-200' },
+  { key: 'Inactif',   label: '💤 Inactif',   cls: 'bg-gray-100 text-gray-600 border-gray-200' },
+  { key: 'Pro',       label: '💼 Pro',       cls: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+  { key: 'À suivre',  label: '⚠️ À suivre',  cls: 'bg-orange-100 text-orange-800 border-orange-200' },
+];
+
+const tagMap = Object.fromEntries(TAGS.map(t => [t.key, t]));
+
+function parseTags(raw: string | undefined): string[] {
+  try { return JSON.parse(raw ?? '[]') ?? []; } catch { return []; }
+}
+---
+
+<Layout title="Clients" isAdmin={true}>
+  <div class="max-w-6xl mx-auto">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Base clients</h1>
+        <p class="text-gray-500 text-sm mt-1">{clients.length} client{clients.length > 1 ? 's' : ''}</p>
+      </div>
+      <button id="add-btn" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
+        + Nouveau client
+      </button>
+    </div>
+
+    <!-- Search + filter -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <div class="relative flex-1 min-w-48">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+        </svg>
+        <input id="search" type="text" placeholder="Nom, téléphone..."
+          class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+      </div>
+      <div class="flex gap-1.5 flex-wrap">
+        {TAGS.map(t => (
+          <button
+            class="tag-filter text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-blue-300 transition-colors"
+            data-tag={t.key}>
+            {t.label}
+          </button>
+        ))}
+        <button id="clear-filter" class="hidden text-xs px-2.5 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
+          ✕ Tout
+        </button>
+      </div>
+    </div>
+
+    <!-- Clients grid -->
+    <div id="clients-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {clients.map(client => {
+        const tags = parseTags(client.tags);
+        const ini  = initials(client.name);
+        const col  = avatarColor(client.name);
+        return (
+          <div
+            class="client-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md hover:border-blue-100 transition-all cursor-pointer flex flex-col gap-3"
+            data-name={client.name.toLowerCase()}
+            data-phone={client.phone}
+            data-tags={JSON.stringify(tags)}
+          >
+            <!-- Top row: avatar + name + actions -->
+            <div class="flex items-start gap-3">
+              <!-- Avatar -->
+              <div class="shrink-0">
+                {client.photo_url ? (
+                  <img src={client.photo_url} alt={ini}
+                    class="w-11 h-11 rounded-full object-cover border border-gray-200"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+                  />
+                ) : null}
+                <div class={`${client.photo_url ? 'hidden' : 'flex'} w-11 h-11 rounded-full ${col} items-center justify-center text-white text-sm font-bold`}>
+                  {ini}
+                </div>
+              </div>
+              <!-- Name + phone -->
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-900 truncate">{client.name}</p>
+                <p class="text-xs text-gray-400 font-mono mt-0.5">{client.phone}</p>
+              </div>
+              <!-- Actions -->
+              <div class="flex items-center gap-1 shrink-0">
+                <button
+                  class="view-btn p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  data-id={client.id}
+                  title="Voir fiche">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </button>
+                <button
+                  class="edit-btn p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  data-id={client.id}
+                  data-name={client.name}
+                  data-phone={client.phone}
+                  data-email={client.email ?? ''}
+                  data-address={client.address ?? ''}
+                  data-notes={client.notes ?? ''}
+                  data-photo_url={client.photo_url ?? ''}
+                  data-tags={JSON.stringify(parseTags(client.tags))}
+                  title="Modifier">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                {currentUser?.role === 'admin' && (
+                  <button
+                    class="delete-btn p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    data-id={client.id}
+                    data-name={client.name}
+                    title="Supprimer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <!-- Tags -->
+            {tags.length > 0 && (
+              <div class="flex flex-wrap gap-1.5">
+                {tags.map(tag => {
+                  const t = tagMap[tag];
+                  return t ? (
+                    <span class={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${t.cls}`}>{t.label}</span>
+                  ) : null;
+                })}
+              </div>
+            )}
+
+            <!-- Stats -->
+            <div class="flex items-center justify-between pt-2 border-t border-gray-50 text-xs text-gray-500">
+              <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-5 h-5 bg-blue-100 text-blue-700 rounded-full inline-flex items-center justify-center font-bold text-[10px]">{client.total_orders}</span>
+                  commande{(client.total_orders ?? 0) > 1 ? 's' : ''}
+                </span>
+              </div>
+              <div class="text-right">
+                <span class="font-semibold text-gray-900">{fmt(client.total_spent ?? 0)} F</span>
+                {client.last_order_at && <span class="block text-[10px] text-gray-400">{dateStr(client.last_order_at)}</span>}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    <!-- Empty state -->
+    {clients.length === 0 && (
+      <div class="text-center py-20 text-gray-400">
+        <p class="text-lg font-medium">Aucun client enregistré</p>
+        <p class="text-sm mt-1">Créez votre premier client avec le bouton ci-dessus</p>
+      </div>
+    )}
+  </div>
+
+  <!-- Add/Edit modal -->
+  <div id="form-modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 id="modal-title" class="text-base font-semibold text-gray-900">Nouveau client</h2>
+        <button id="form-close" class="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">✕</button>
+      </div>
+      <form id="client-form" class="p-6 space-y-4">
+        <input type="hidden" name="id" />
+
+        <!-- Avatar preview + photo URL -->
+        <div class="flex items-center gap-4">
+          <div id="avatar-preview" class="w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center text-white text-lg font-bold shrink-0">?</div>
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Photo (URL optionnelle)</label>
+            <input type="url" name="photo_url" id="photo_url_input" placeholder="https://..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet <span class="text-red-500">*</span></label>
+            <input type="text" name="name" required placeholder="ex: Kofi Mensah"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Téléphone <span class="text-red-500">*</span></label>
+            <input type="text" name="phone" required placeholder="ex: 22890226491"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+            <input type="email" name="email" placeholder="client@email.com"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Adresse</label>
+            <input type="text" name="address" placeholder="Lomé, Agbalépédogan"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Notes internes</label>
+            <textarea name="notes" rows="2" placeholder="Informations utiles..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-2">Étiquettes</label>
+          <div class="flex flex-wrap gap-2" id="tags-container">
+            {TAGS.map(t => (
+              <button
+                type="button"
+                class="tag-toggle text-xs px-3 py-1.5 rounded-full border transition-all"
+                data-key={t.key}
+                data-cls={t.cls}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <p id="form-error" class="text-sm text-red-600 hidden"></p>
+        <div class="flex gap-2 pt-1">
+          <button type="submit"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+            Enregistrer
+          </button>
+          <button type="button" id="form-cancel"
+            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold py-2 rounded-lg transition-colors">
+            Annuler
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detail modal -->
+  <div id="detail-modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+        <div class="flex items-center gap-3">
+          <div id="detail-avatar" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold shrink-0"></div>
+          <div>
+            <h2 id="detail-name" class="text-base font-semibold text-gray-900"></h2>
+            <div id="detail-tags" class="flex flex-wrap gap-1 mt-0.5"></div>
+          </div>
+        </div>
+        <button id="detail-close" class="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">✕</button>
+      </div>
+      <div id="detail-body" class="p-6 overflow-y-auto flex-1">
+        <p class="text-gray-400 text-sm">Chargement...</p>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+const TAGS_DEF = [
+  { key: 'VIP',      label: '⭐ VIP',      cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  { key: 'Régulier', label: '🔄 Régulier', cls: 'bg-blue-100 text-blue-800 border-blue-200' },
+  { key: 'Nouveau',  label: '🆕 Nouveau',  cls: 'bg-green-100 text-green-800 border-green-200' },
+  { key: 'Inactif',  label: '💤 Inactif',  cls: 'bg-gray-100 text-gray-600 border-gray-200' },
+  { key: 'Pro',      label: '💼 Pro',       cls: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+  { key: 'À suivre', label: '⚠️ À suivre', cls: 'bg-orange-100 text-orange-800 border-orange-200' },
+];
+const tagMap = Object.fromEntries(TAGS_DEF.map(t => [t.key, t]));
+
+// ── Search + filter ────────────────────────────────────────────────────────
+let activeTagFilter: string | null = null;
+
+function filterCards() {
+  const q = (document.getElementById('search') as HTMLInputElement).value.toLowerCase();
+  document.querySelectorAll('.client-card').forEach((card: any) => {
+    const nameMatch  = card.dataset.name.includes(q);
+    const phoneMatch = card.dataset.phone.includes(q);
+    const tags       = JSON.parse(card.dataset.tags ?? '[]') as string[];
+    const tagMatch   = !activeTagFilter || tags.includes(activeTagFilter);
+    card.style.display = ((nameMatch || phoneMatch) && tagMatch) ? '' : 'none';
+  });
+}
+
+(document.getElementById('search') as HTMLInputElement).addEventListener('input', filterCards);
+
+document.querySelectorAll('.tag-filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = (btn as HTMLElement).dataset.tag!;
+    if (activeTagFilter === key) {
+      activeTagFilter = null;
+      btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+    } else {
+      document.querySelectorAll('.tag-filter').forEach(b => b.classList.remove('bg-blue-600', 'text-white', 'border-blue-600'));
+      activeTagFilter = key;
+      btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+    }
+    document.getElementById('clear-filter')!.classList.toggle('hidden', !activeTagFilter);
+    filterCards();
+  });
+});
+
+document.getElementById('clear-filter')!.addEventListener('click', () => {
+  activeTagFilter = null;
+  document.querySelectorAll('.tag-filter').forEach(b => b.classList.remove('bg-blue-600', 'text-white', 'border-blue-600'));
+  document.getElementById('clear-filter')!.classList.add('hidden');
+  filterCards();
+});
+
+// ── Avatar helpers ─────────────────────────────────────────────────────────
+const AVATAR_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f43f5e','#f97316','#f59e0b','#10b981','#14b8a6','#06b6d4','#6366f1'];
+function avatarColor(name: string) {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function initials(name: string) {
+  const p = name.trim().split(/\s+/);
+  return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
+}
+
+// ── Modals ─────────────────────────────────────────────────────────────────
+const formModal   = document.getElementById('form-modal')!;
+const detailModal = document.getElementById('detail-modal')!;
+const form        = document.getElementById('client-form') as HTMLFormElement;
+const formError   = document.getElementById('form-error')!;
+const modalTitle  = document.getElementById('modal-title')!;
+const avatarPreview = document.getElementById('avatar-preview') as HTMLElement;
+const photoInput  = document.getElementById('photo_url_input') as HTMLInputElement;
+
+function closeForm()   { formModal.classList.add('hidden'); }
+function closeDetail() { detailModal.classList.add('hidden'); }
+
+document.getElementById('form-close')!.addEventListener('click', closeForm);
+document.getElementById('form-cancel')!.addEventListener('click', closeForm);
+document.getElementById('detail-close')!.addEventListener('click', closeDetail);
+formModal.addEventListener('click',   (e) => { if (e.target === formModal) closeForm(); });
+detailModal.addEventListener('click', (e) => { if (e.target === detailModal) closeDetail(); });
+
+// Avatar preview update
+function updateAvatarPreview(name: string, photoUrl: string) {
+  if (photoUrl) {
+    avatarPreview.innerHTML = `<img src="${photoUrl}" class="w-14 h-14 rounded-full object-cover" onerror="this.parentElement.innerHTML='${initials(name || '?')}'"/>`;
+    avatarPreview.style.background = '';
+  } else {
+    const ini = name ? initials(name) : '?';
+    avatarPreview.textContent = ini;
+    avatarPreview.style.background = name ? avatarColor(name) : '#9ca3af';
+  }
+}
+
+form.querySelector('[name=name]')!.addEventListener('input', (e) => {
+  updateAvatarPreview((e.target as HTMLInputElement).value, photoInput.value);
+});
+photoInput.addEventListener('input', () => {
+  updateAvatarPreview((form.querySelector('[name=name]') as HTMLInputElement).value, photoInput.value);
+});
+
+// ── Tags selector ──────────────────────────────────────────────────────────
+let selectedTags: string[] = [];
+
+function updateTagButtons() {
+  document.querySelectorAll('.tag-toggle').forEach((btn: any) => {
+    const key = btn.dataset.key;
+    const def = tagMap[key];
+    if (selectedTags.includes(key)) {
+      btn.className = `tag-toggle text-xs px-3 py-1.5 rounded-full border transition-all ${def.cls} font-semibold`;
+    } else {
+      btn.className = 'tag-toggle text-xs px-3 py-1.5 rounded-full border transition-all border-gray-200 text-gray-400 hover:border-gray-300';
+    }
+  });
+}
+
+document.querySelectorAll('.tag-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = (btn as HTMLElement).dataset.key!;
+    if (selectedTags.includes(key)) {
+      selectedTags = selectedTags.filter(t => t !== key);
+    } else {
+      selectedTags = [...selectedTags, key];
+    }
+    updateTagButtons();
+  });
+});
+
+// ── Open ADD modal ─────────────────────────────────────────────────────────
+document.getElementById('add-btn')!.addEventListener('click', () => {
+  form.reset();
+  (form.querySelector('[name=id]') as HTMLInputElement).value = '';
+  selectedTags = [];
+  updateTagButtons();
+  updateAvatarPreview('', '');
+  modalTitle.textContent = 'Nouveau client';
+  formError.classList.add('hidden');
+  formModal.classList.remove('hidden');
+});
+
+// ── Open EDIT modal ────────────────────────────────────────────────────────
+document.querySelectorAll('.edit-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const d = (btn as HTMLElement).dataset;
+    (form.querySelector('[name=id]') as HTMLInputElement).value       = d.id!;
+    (form.querySelector('[name=name]') as HTMLInputElement).value     = d.name!;
+    (form.querySelector('[name=phone]') as HTMLInputElement).value    = d.phone!;
+    (form.querySelector('[name=email]') as HTMLInputElement).value    = d.email!;
+    (form.querySelector('[name=address]') as HTMLInputElement).value  = d.address!;
+    (form.querySelector('[name=notes]') as HTMLTextAreaElement).value = d.notes!;
+    photoInput.value = d.photo_url!;
+    try { selectedTags = JSON.parse(d.tags ?? '[]'); } catch { selectedTags = []; }
+    updateTagButtons();
+    updateAvatarPreview(d.name!, d.photo_url!);
+    modalTitle.textContent = 'Modifier le client';
+    formError.classList.add('hidden');
+    formModal.classList.remove('hidden');
+  });
+});
+
+// ── Submit form ────────────────────────────────────────────────────────────
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  formError.classList.add('hidden');
+  const id = (form.querySelector('[name=id]') as HTMLInputElement).value;
+  const payload = {
+    name:      (form.querySelector('[name=name]') as HTMLInputElement).value.trim(),
+    phone:     (form.querySelector('[name=phone]') as HTMLInputElement).value.trim(),
+    email:     (form.querySelector('[name=email]') as HTMLInputElement).value.trim(),
+    address:   (form.querySelector('[name=address]') as HTMLInputElement).value.trim(),
+    notes:     (form.querySelector('[name=notes]') as HTMLTextAreaElement).value.trim(),
+    photo_url: photoInput.value.trim(),
+    tags:      JSON.stringify(selectedTags),
+  };
+
+  const res = await fetch(id ? `/api/clients/${id}` : '/api/clients', {
+    method: id ? 'PATCH' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (res.ok) { closeForm(); window.location.reload(); }
+  else {
+    const err = await res.json();
+    formError.textContent = err.error ?? 'Erreur';
+    formError.classList.remove('hidden');
+  }
+});
+
+// ── View detail ────────────────────────────────────────────────────────────
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const id = (btn as HTMLElement).dataset.id!;
+    detailModal.classList.remove('hidden');
+    document.getElementById('detail-body')!.innerHTML = '<p class="text-gray-400 text-sm">Chargement...</p>';
+
+    const res  = await fetch(`/api/clients/${id}`);
+    const data = await res.json();
+    const c    = data.client;
+    const orders = data.orders ?? [];
+
+    // Avatar in modal header
+    const detailAvatar = document.getElementById('detail-avatar') as HTMLElement;
+    const tags: string[] = (() => { try { return JSON.parse(c.tags ?? '[]'); } catch { return []; } })();
+
+    if (c.photo_url) {
+      detailAvatar.innerHTML = `<img src="${c.photo_url}" class="w-10 h-10 rounded-full object-cover" />`;
+      detailAvatar.style.background = '';
+    } else {
+      detailAvatar.textContent = initials(c.name);
+      detailAvatar.style.background = avatarColor(c.name);
+    }
+
+    document.getElementById('detail-name')!.textContent = c.name;
+    const tagsEl = document.getElementById('detail-tags')!;
+    tagsEl.innerHTML = tags.map(key => {
+      const def = tagMap[key];
+      return def ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${def.cls}">${def.label}</span>` : '';
+    }).join('');
+
+    const fmt = (n: number) => Number(n).toLocaleString('fr-FR');
+    const statusIcon: Record<string, string> = {
+      en_attente: '⏳ En attente',
+      disponible: '✅ Disponible',
+      recupere:   '📦 Récupéré',
+    };
+
+    document.getElementById('detail-body')!.innerHTML = `
+      <div class="grid grid-cols-2 gap-4 mb-5 text-sm">
+        <div>
+          <p class="text-xs text-gray-400 font-semibold uppercase mb-0.5">Téléphone</p>
+          <p class="font-mono">${c.phone}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400 font-semibold uppercase mb-0.5">Email</p>
+          <p>${c.email || '—'}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400 font-semibold uppercase mb-0.5">Adresse</p>
+          <p>${c.address || '—'}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400 font-semibold uppercase mb-0.5">Total dépensé</p>
+          <p class="font-bold text-gray-900">${fmt(c.total_spent)} FCFA</p>
+        </div>
+        ${c.notes ? `
+        <div class="col-span-2">
+          <p class="text-xs text-gray-400 font-semibold uppercase mb-0.5">Notes</p>
+          <p class="text-gray-600 bg-gray-50 rounded-lg px-3 py-2 text-sm">${c.notes}</p>
+        </div>` : ''}
+      </div>
+
+      <div class="flex items-center justify-between mb-3">
+        <p class="font-semibold text-gray-700 text-sm">${orders.length} commande${orders.length !== 1 ? 's' : ''}</p>
+        <p class="text-xs text-gray-400">${fmt(c.total_spent)} FCFA total</p>
+      </div>
+
+      ${orders.length === 0
+        ? '<p class="text-gray-400 text-sm text-center py-4">Aucune commande</p>'
+        : orders.map((o: any) => `
+          <div class="flex items-center justify-between py-2.5 border-b border-gray-50 text-sm last:border-0">
+            <div>
+              <span class="font-mono text-xs text-blue-600 font-bold">${o.order_number}</span>
+              <span class="ml-2 text-xs text-gray-400">${new Date(o.created_at).toLocaleDateString('fr-FR')}</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-gray-500">${statusIcon[o.status] || o.status}</span>
+              <span class="font-semibold text-gray-900">${fmt(o.total_amount)} F</span>
+              ${o.remaining_balance > 0 ? `<span class="text-xs text-red-500">-${fmt(o.remaining_balance)} F</span>` : ''}
+            </div>
+          </div>
+        `).join('')}
+    `;
+  });
+});
+
+// Also open detail on card click
+document.querySelectorAll('.client-card').forEach(card => {
+  card.addEventListener('click', (e) => {
+    // Don't trigger if clicking a button inside
+    if ((e.target as HTMLElement).closest('button')) return;
+    const viewBtn = card.querySelector('.view-btn') as HTMLElement;
+    viewBtn?.click();
+  });
+});
+
+// ── Delete ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.delete-btn').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const id   = (btn as HTMLElement).dataset.id!;
+    const name = (btn as HTMLElement).dataset.name!;
+    if (!confirm(`Supprimer le client "${name}" ?\n\nSes commandes resteront dans le système.`)) return;
+    const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
+    if (res.ok) { (btn as HTMLElement).closest('.client-card')?.remove(); }
+    else { const err = await res.json(); window.__showToast(err.error ?? 'Erreur', 'error'); }
+  });
+});
+</script>

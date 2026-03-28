@@ -1,0 +1,351 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { requireAuth, getCurrentUser } from '../../lib/auth';
+import { getDb } from '../../lib/db';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+
+const currentUser = getCurrentUser(Astro.request);
+if (currentUser?.role !== 'admin') {
+  return Astro.redirect('/admin/orders');
+}
+
+const db = getDb();
+const users = db.prepare('SELECT id, username, full_name, role, created_at FROM users ORDER BY created_at ASC').all() as any[];
+
+function fmt(bytes: number) {
+  if (bytes < 1024) return bytes + ' o';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
+}
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleString('fr-FR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+let backups: { name: string; size: number; created_at: string }[] = [];
+let backupDir = '';
+try {
+  const res = await fetch(`${Astro.url.origin}/api/admin/backup`, {
+    headers: { cookie: Astro.request.headers.get('cookie') ?? '' },
+  });
+  if (res.ok) {
+    const data = await res.json();
+    backups = data.backups;
+    backupDir = data.backup_dir;
+  }
+} catch { /* server may not be ready */ }
+---
+
+<Layout title="Paramètres" isAdmin={true}>
+  <div class="space-y-8">
+
+    <!-- Header -->
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Paramètres</h1>
+      <p class="text-sm text-gray-500 mt-1">Configuration et administration du système</p>
+    </div>
+
+    <!-- Section: Utilisateurs -->
+    <section class="space-y-4">
+      <div>
+        <h2 class="text-base font-bold text-gray-900">Utilisateurs</h2>
+        <p class="text-sm text-gray-500">{users.length} compte{users.length > 1 ? 's' : ''}</p>
+      </div>
+
+      <!-- Add user form -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-sm font-semibold text-gray-900 mb-4">Ajouter un utilisateur</h3>
+        <form id="add-user-form" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet</label>
+            <input type="text" name="full_name" required placeholder="Alice Martin"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Nom d'utilisateur</label>
+            <input type="text" name="username" required placeholder="alice"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Mot de passe</label>
+            <input type="text" name="password" required placeholder="motdepasse"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="sm:col-span-3">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
+              Ajouter
+            </button>
+            <span id="add-error" class="ml-3 text-sm text-red-600 hidden"></span>
+            <span id="add-success" class="ml-3 text-sm text-green-600 hidden">Utilisateur créé ✓</span>
+          </div>
+        </form>
+      </div>
+
+      <!-- Users list -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="text-left px-5 py-3 font-semibold text-gray-600">Nom complet</th>
+              <th class="text-left px-5 py-3 font-semibold text-gray-600">Identifiant</th>
+              <th class="text-left px-5 py-3 font-semibold text-gray-600">Créé le</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            {users.map(user => (
+              <tr class="border-b border-gray-50 hover:bg-gray-50/80 transition-colors" data-user-id={user.id}>
+                <td class="px-5 py-3 font-medium text-gray-900">
+                  {user.full_name}
+                  {user.id === currentUser?.id && (
+                    <span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Vous</span>
+                  )}
+                </td>
+                <td class="px-5 py-3 text-gray-600 font-mono">{user.username}</td>
+                <td class="px-5 py-3 text-gray-500">{new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
+                <td class="px-5 py-3 text-right flex items-center justify-end gap-2">
+                  <button class="edit-user-btn text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                    data-id={user.id} data-name={user.full_name}>Modifier</button>
+                  {user.id !== currentUser?.id && (
+                    <button class="delete-user-btn text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                      data-id={user.id} data-name={user.full_name}>Supprimer</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Edit user modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+        <h2 class="text-base font-semibold text-gray-900 mb-4">Modifier l'utilisateur</h2>
+        <form id="edit-user-form" class="space-y-3">
+          <input type="hidden" name="id" />
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet</label>
+            <input type="text" name="full_name" required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Nouveau mot de passe</label>
+            <input type="password" name="password" placeholder="Laisser vide pour ne pas changer"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <p id="edit-error" class="text-sm text-red-600 hidden"></p>
+          <div class="flex gap-2 pt-1">
+            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Enregistrer</button>
+            <button type="button" id="edit-cancel" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold py-2 rounded-lg transition-colors">Annuler</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <hr class="border-gray-100" />
+
+    <!-- Section: Sauvegardes -->
+    <section class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-gray-900">Sauvegardes</h2>
+          <p class="text-sm text-gray-500">Base de données SQLite — copie automatique quotidienne</p>
+        </div>
+        <button id="backup-now-btn"
+          class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors shadow-sm">
+          <svg id="backup-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+          </svg>
+          <svg id="backup-spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          Sauvegarder maintenant
+        </button>
+      </div>
+
+      <div class="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 flex items-start gap-3">
+        <svg class="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="text-sm text-blue-800 space-y-0.5">
+          <p class="font-semibold">Sauvegarde automatique quotidienne à 2h00</p>
+          <p class="text-blue-600 font-mono text-xs break-all">{backupDir || 'dossier backups/ à côté de la base de données'}</p>
+          <p class="text-blue-600 text-xs">Les 30 dernières sauvegardes sont conservées.</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <p class="text-sm font-bold text-gray-900">Historique des sauvegardes</p>
+          <span id="backup-count" class="text-xs text-gray-400">{backups.length} fichier{backups.length > 1 ? 's' : ''}</span>
+        </div>
+        <div id="backup-list">
+          {backups.length === 0 ? (
+            <p class="text-sm text-gray-400 text-center py-10">Aucune sauvegarde pour l'instant.<br/>Cliquez sur "Sauvegarder maintenant" pour créer la première.</p>
+          ) : (
+            <div class="divide-y divide-gray-50">
+              {backups.map((b, i) => (
+                <div class="flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors backup-row" data-name={b.name}>
+                  <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V9l-5-5H7c-2 0-3 1-3 3z M14 2v5h5"/>
+                    </svg>
+                    <div>
+                      <p class="text-sm font-medium text-gray-800 font-mono">{b.name}</p>
+                      <p class="text-xs text-gray-400">{fmtDate(b.created_at)} — {fmt(b.size)}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    {i === 0 && <span class="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Dernière</span>}
+                    <button class="delete-backup-btn text-gray-300 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50" data-name={b.name} title="Supprimer">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+
+  </div>
+</Layout>
+
+<script>
+function fmt(bytes: number): string {
+  if (bytes < 1024) return bytes + ' o';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
+}
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function renderBackups(backups: any[]) {
+  const list = document.getElementById('backup-list')!;
+  const count = document.getElementById('backup-count')!;
+  count.textContent = `${backups.length} fichier${backups.length !== 1 ? 's' : ''}`;
+  if (backups.length === 0) {
+    list.innerHTML = '<p class="text-sm text-gray-400 text-center py-10">Aucune sauvegarde pour l\'instant.<br/>Cliquez sur "Sauvegarder maintenant" pour créer la première.</p>';
+    return;
+  }
+  list.innerHTML = `<div class="divide-y divide-gray-50">${backups.map((b: any, i: number) => `
+    <div class="flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors backup-row" data-name="${b.name}">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V9l-5-5H7c-2 0-3 1-3 3z M14 2v5h5"/>
+        </svg>
+        <div>
+          <p class="text-sm font-medium text-gray-800 font-mono">${b.name}</p>
+          <p class="text-xs text-gray-400">${fmtDate(b.created_at)} — ${fmt(b.size)}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        ${i === 0 ? '<span class="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Dernière</span>' : ''}
+        <button class="delete-backup-btn text-gray-300 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50" data-name="${b.name}" title="Supprimer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `).join('')}</div>`;
+  attachDeleteListeners();
+}
+
+async function refreshList() {
+  const res = await fetch('/api/admin/backup');
+  if (res.ok) renderBackups((await res.json()).backups);
+}
+
+function attachDeleteListeners() {
+  document.querySelectorAll('.delete-backup-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const name = (btn as HTMLElement).dataset.name!;
+      if (!confirm(`Supprimer "${name}" ?`)) return;
+      const res = await fetch('/api/admin/backup', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filename: name }) });
+      if (res.ok) { await refreshList(); window.__showToast?.('Sauvegarde supprimée', 'success'); }
+      else window.__showToast?.('Erreur lors de la suppression', 'error');
+    });
+  });
+}
+
+document.getElementById('backup-now-btn')!.addEventListener('click', async () => {
+  const icon = document.getElementById('backup-icon')!;
+  const spinner = document.getElementById('backup-spinner')!;
+  icon.classList.add('hidden'); spinner.classList.remove('hidden');
+  const res = await fetch('/api/admin/backup', { method: 'POST' });
+  icon.classList.remove('hidden'); spinner.classList.add('hidden');
+  if (res.ok) { window.__showToast?.(`Sauvegarde créée — ${(await res.json()).filename}`, 'success', 4000); await refreshList(); }
+  else window.__showToast?.('Erreur lors de la sauvegarde', 'error');
+});
+
+attachDeleteListeners();
+
+// ── Utilisateurs ──────────────────────────────────────────────────────────────
+document.getElementById('add-user-form')!.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  const errorEl = document.getElementById('add-error')!;
+  const successEl = document.getElementById('add-success')!;
+  errorEl.classList.add('hidden');
+  successEl.classList.add('hidden');
+  const data = {
+    full_name: (form.querySelector('[name=full_name]') as HTMLInputElement).value.trim(),
+    username:  (form.querySelector('[name=username]')  as HTMLInputElement).value.trim(),
+    password:  (form.querySelector('[name=password]')  as HTMLInputElement).value.trim(),
+  };
+  const res = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  if (res.ok) { successEl.classList.remove('hidden'); form.reset(); setTimeout(() => window.location.reload(), 800); }
+  else { const err = await res.json(); errorEl.textContent = err.error ?? 'Erreur'; errorEl.classList.remove('hidden'); }
+});
+
+const editModal = document.getElementById('edit-modal')!;
+const editForm  = document.getElementById('edit-user-form') as HTMLFormElement;
+const editError = document.getElementById('edit-error')!;
+
+document.querySelectorAll('.edit-user-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    (editForm.querySelector('[name=id]')        as HTMLInputElement).value = btn.getAttribute('data-id')!;
+    (editForm.querySelector('[name=full_name]') as HTMLInputElement).value = btn.getAttribute('data-name')!;
+    (editForm.querySelector('[name=password]')  as HTMLInputElement).value = '';
+    editError.classList.add('hidden');
+    editModal.classList.remove('hidden');
+  });
+});
+document.getElementById('edit-cancel')!.addEventListener('click', () => editModal.classList.add('hidden'));
+editModal.addEventListener('click', (e) => { if (e.target === editModal) editModal.classList.add('hidden'); });
+
+editForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  editError.classList.add('hidden');
+  const id        = (editForm.querySelector('[name=id]')        as HTMLInputElement).value;
+  const full_name = (editForm.querySelector('[name=full_name]') as HTMLInputElement).value.trim();
+  const password  = (editForm.querySelector('[name=password]')  as HTMLInputElement).value.trim();
+  const body: Record<string, string> = { full_name };
+  if (password) body.password = password;
+  const res = await fetch(`/api/users/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (res.ok) { editModal.classList.add('hidden'); window.location.reload(); }
+  else { const err = await res.json(); editError.textContent = err.error ?? 'Erreur'; editError.classList.remove('hidden'); }
+});
+
+document.querySelectorAll('.delete-user-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = btn.getAttribute('data-id')!;
+    const name = btn.getAttribute('data-name')!;
+    if (!confirm(`Supprimer le compte de ${name} ?`)) return;
+    const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+    if (res.ok) document.querySelector(`tr[data-user-id="${id}"]`)?.remove();
+    else { const err = await res.json(); window.__showToast?.(err.error ?? 'Erreur lors de la suppression', 'error'); }
+  });
+});
+</script>

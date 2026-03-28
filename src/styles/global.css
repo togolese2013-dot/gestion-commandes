@@ -1,1 +1,99 @@
 @import "tailwindcss";
+
+/* ── Dark mode override via .dark class on <html> ─────────────────────── */
+.dark body                      { background-color: #0f172a; color: #e2e8f0; }
+.dark .bg-white                 { background-color: #1e293b !important; }
+.dark .bg-gray-50               { background-color: #0f172a !important; }
+.dark .bg-gray-100              { background-color: #1e293b !important; }
+.dark .bg-blue-50               { background-color: #1e3a5f !important; }
+.dark .bg-green-50              { background-color: #14291f !important; }
+.dark .bg-red-50                { background-color: #2d1515 !important; }
+.dark .bg-yellow-50             { background-color: #2d2508 !important; }
+
+.dark .text-gray-900            { color: #f1f5f9 !important; }
+.dark .text-gray-800            { color: #e2e8f0 !important; }
+.dark .text-gray-700            { color: #cbd5e1 !important; }
+.dark .text-gray-600            { color: #94a3b8 !important; }
+.dark .text-gray-500            { color: #64748b !important; }
+.dark .text-gray-400            { color: #475569 !important; }
+
+.dark .border-gray-200          { border-color: #334155 !important; }
+.dark .border-gray-100          { border-color: #1e293b !important; }
+.dark .border-gray-300          { border-color: #475569 !important; }
+.dark .divide-gray-100 > * + * { border-color: #1e293b !important; }
+.dark .divide-gray-50  > * + * { border-color: #1e293b !important; }
+
+.dark .shadow-sm                { box-shadow: 0 1px 2px 0 rgb(0 0 0 / .4) !important; }
+.dark .shadow-xl                { box-shadow: 0 20px 25px -5px rgb(0 0 0 / .6) !important; }
+
+/* Inputs & selects */
+.dark input:not([type=checkbox]):not([type=radio]),
+.dark textarea,
+.dark select {
+  background-color: #0f172a !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder { color: #64748b !important; }
+.dark input[readonly],
+.dark input[disabled]        { background-color: #1e293b !important; }
+
+/* Table rows */
+.dark tr:hover               { background-color: #1e293b !important; }
+.dark .hover\:bg-gray-50\/80:hover { background-color: #1e293b !important; }
+
+/* Header */
+.dark header.bg-white        { background-color: #1e293b !important; border-color: #334155 !important; }
+
+/* Modals */
+.dark .rounded-2xl           { }  /* let bg-white handle it */
+.dark .bg-gray-800           { background-color: #0f172a !important; }
+
+/* Misc */
+.dark .hover\:bg-gray-50:hover   { background-color: #1e293b !important; }
+.dark .hover\:bg-gray-100:hover  { background-color: #334155 !important; }
+.dark .hover\:bg-blue-50:hover   { background-color: #1e3a5f !important; }
+.dark .hover\:bg-red-50:hover    { background-color: #2d1515 !important; }
+
+/* ── Toast notifications ──────────────────────────────────────────────── */
+#toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgb(0 0 0 / .2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  max-width: 22rem;
+  animation: toast-in 0.25s ease;
+  color: white;
+}
+.toast.hide { animation: toast-out 0.25s ease forwards; }
+
+.toast-success  { background: #16a34a; }
+.toast-error    { background: #dc2626; }
+.toast-warning  { background: #d97706; }
+.toast-info     { background: #2563eb; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(1rem) scale(.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(0.5rem) scale(.95); }
+}

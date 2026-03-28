@@ -1,0 +1,23 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Page introuvable">
+  <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+    <div class="text-8xl font-black text-blue-100 dark:text-blue-900/40 select-none leading-none mb-2">404</div>
+    <h1 class="text-2xl font-bold text-gray-800 mb-2">Page introuvable</h1>
+    <p class="text-gray-500 mb-8 max-w-sm">
+      La page que vous recherchez n'existe pas ou a été déplacée.
+    </p>
+    <div class="flex flex-wrap gap-3 justify-center">
+      <a href="/admin/orders"
+        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+        ← Retour aux commandes
+      </a>
+      <a href="/admin/dashboard"
+        class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+        Dashboard
+      </a>
+    </div>
+  </div>
+</Layout>

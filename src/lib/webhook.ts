@@ -47,6 +47,25 @@ export async function sendPaymentWebhook(order: Order, amount_paid: number, paym
   }).catch(err => console.error('[Webhook payment_received]', err));
 }
 
+export async function sendReminderWebhook(order: Order): Promise<void> {
+  const url = getEnv('N8N_WEBHOOK_ORDER_READY');
+  if (!url || url.includes('your-n8n-instance')) return;
+
+  const siteUrl = getEnv('PUBLIC_SITE_URL');
+  await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event: 'order_reminder',
+      order_number: order.order_number,
+      client_name: order.client_name,
+      client_phone: order.client_phone,
+      remaining_balance: order.remaining_balance,
+      order_url: `${siteUrl}/commande/${order.order_number}`,
+    }),
+  }).catch(err => console.error('[Webhook order_reminder]', err));
+}
+
 export async function sendOrderReadyWebhook(order: Order): Promise<void> {
   const url = getEnv('N8N_WEBHOOK_ORDER_READY');
   console.log('[Webhook order_ready] URL:', url || 'NON DEFINIE');

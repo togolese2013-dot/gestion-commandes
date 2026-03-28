@@ -203,6 +203,19 @@ export function confirmOrderPickedUp(id: number, performedBy = ''): Order | null
   return getOrderById(id);
 }
 
+export interface MonthlyRevenue {
+  month: string; // 'YYYY-MM'
+  label: string; // 'Jan', 'Fév', etc.
+  ca: number;
+}
+
+export interface TopClient {
+  client_name: string;
+  client_phone: string;
+  nb_commandes: number;
+  total_depense: number;
+}
+
 export interface DashboardStats {
   total: number;
   en_attente: number;
@@ -213,11 +226,23 @@ export interface DashboardStats {
   total_impayes: number;
   express: number;
   eco: number;
+  commandes_aujourd_hui: number;
+  commandes_semaine: number;
+  monthly_revenue: MonthlyRevenue[];
+  top_clients: TopClient[];
   commandes_recentes: Order[];
 }
 
+const MONTH_LABELS: Record<string, string> = {
+  '01': 'Jan', '02': 'Fév', '03': 'Mar', '04': 'Avr',
+  '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Aoû',
+  '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Déc',
+};
+
 export function getDashboardStats(): DashboardStats {
   const db = getDb();
+
+  // Global KPIs
   const row = db.prepare(`
     SELECT
       COUNT(*) as total,
@@ -232,6 +257,49 @@ export function getDashboardStats(): DashboardStats {
     FROM orders
   `).get() as any;
 
+  // Today / this week
+  const todayRow = db.prepare(
+    `SELECT COUNT(*) as cnt FROM orders WHERE date(created_at) = date('now')`
+  ).get() as { cnt: number };
+  const weekRow = db.prepare(
+    `SELECT COUNT(*) as cnt FROM orders WHERE created_at >= date('now', '-6 days')`
+  ).get() as { cnt: number };
+
+  // Monthly revenue: last 12 months
+  const dbMonths = db.prepare(`
+    SELECT strftime('%Y-%m', created_at) as month, SUM(total_amount) as ca
+    FROM orders
+    WHERE created_at >= date('now', 'start of month', '-11 months')
+    GROUP BY month
+    ORDER BY month
+  `).all() as { month: string; ca: number }[];
+
+  const monthMap = new Map(dbMonths.map(r => [r.month, r.ca]));
+  const monthly_revenue: MonthlyRevenue[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    monthly_revenue.push({
+      month: key,
+      label: MONTH_LABELS[key.slice(5)] ?? key.slice(5),
+      ca: monthMap.get(key) ?? 0,
+    });
+  }
+
+  // Top 5 clients
+  const top_clients = db.prepare(`
+    SELECT client_name, client_phone,
+           COUNT(*) as nb_commandes,
+           SUM(total_amount) as total_depense
+    FROM orders
+    GROUP BY client_phone
+    ORDER BY nb_commandes DESC, total_depense DESC
+    LIMIT 5
+  `).all() as TopClient[];
+
+  // Recent orders
   const recents = db.prepare(
     `SELECT * FROM orders ORDER BY created_at DESC LIMIT 5`
   ).all() as Order[];
@@ -246,6 +314,10 @@ export function getDashboardStats(): DashboardStats {
     total_impayes: row.total_impayes ?? 0,
     express: row.express ?? 0,
     eco: row.eco ?? 0,
+    commandes_aujourd_hui: todayRow.cnt ?? 0,
+    commandes_semaine: weekRow.cnt ?? 0,
+    monthly_revenue,
+    top_clients,
     commandes_recentes: attachProducts(recents),
   };
 }
