@@ -6,12 +6,14 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-  "dev": "astro dev",
-  "build": "astro build",
-  "preview": "astro preview",
-  "start": "node dist/server/entry.mjs --port $PORT --host",
-  "astro": "astro"
-},
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "start": "node dist/server/entry.mjs --port $PORT --host",
+    "astro": "astro",
+    "test": "playwright test",
+    "test:report": "playwright show-report tests/report"
+  },
   "dependencies": {
     "@astrojs/node": "^10.0.4",
     "@tailwindcss/vite": "^4.2.2",
@@ -22,6 +24,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/better-sqlite3": "^7.6.13"
   }
 }
