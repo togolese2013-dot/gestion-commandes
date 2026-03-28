@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAuthenticated, getCurrentUser } from '../../../../lib/auth';
-import { confirmOrderAvailable, confirmOrderPickedUp } from '../../../../lib/orders';
+import { confirmOrderAvailable, confirmOrderPickedUp, getOrderById } from '../../../../lib/orders';
 import { sendOrderReadyWebhook } from '../../../../lib/webhook';
 
 export const POST: APIRoute = async ({ request, params }) => {
@@ -15,6 +15,18 @@ export const POST: APIRoute = async ({ request, params }) => {
 
     const currentUser = getCurrentUser(request);
     const performedBy = currentUser?.full_name ?? '';
+
+    // Block pickup if balance is not fully paid
+    if (action === 'picked_up') {
+      const existing = getOrderById(id);
+      if (!existing) return new Response(JSON.stringify({ error: 'Commande introuvable' }), { status: 404 });
+      if (Number(existing.remaining_balance) > 0) {
+        return new Response(
+          JSON.stringify({ error: `Solde non soldé : ${existing.remaining_balance} FCFA restant.` }),
+          { status: 422, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     let order;
     if (action === 'picked_up') {
