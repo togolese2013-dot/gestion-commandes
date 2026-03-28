@@ -496,6 +496,7 @@ document.getElementById('order-form')!.addEventListener('submit', async (e) => {
     const link = document.getElementById('success-link') as HTMLAnchorElement;
     link.href = `/commande/${result.order_number}`;
     successBanner.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     window.open(`/admin/print/${result.order_number}`, '_blank');
 
