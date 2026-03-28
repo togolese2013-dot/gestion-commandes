@@ -950,7 +950,7 @@ document.querySelectorAll('.confirm-pickup-btn').forEach(btn => {
           body: JSON.stringify({ action: 'picked_up' }),
         });
         if (res.ok) {
-          window.open(`/admin/delivery/${number}`, '_blank');
+          window.open(`/admin/print/livraison/${number}`, '_blank');
           window.location.reload();
         } else {
           window.__showToast('Erreur lors de la confirmation.', 'error');
