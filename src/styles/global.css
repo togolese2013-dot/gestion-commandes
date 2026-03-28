@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+html { overflow-x: hidden; }
+
 /* ── Dark mode override via .dark class on <html> ─────────────────────── */
 .dark body                      { background-color: #0f172a; color: #e2e8f0; }
 .dark .bg-white                 { background-color: #1e293b !important; }
