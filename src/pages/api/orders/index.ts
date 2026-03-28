@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { isAuthenticated, getCurrentUser } from '../../../lib/auth';
 import { createOrder, getAllOrders } from '../../../lib/orders';
 import { sendNewOrderWebhook } from '../../../lib/webhook';
+import { getDb } from '../../../lib/db';
 
 export const GET: APIRoute = async ({ request }) => {
   if (!isAuthenticated(request)) {
@@ -62,6 +63,16 @@ export const POST: APIRoute = async ({ request }) => {
       if (!Number.isInteger(Number(p.quantity)) || Number(p.quantity) < 1) {
         return new Response(JSON.stringify({ error: 'Quantité invalide' }), { status: 400 });
       }
+    }
+
+    // Check if phone already belongs to a different client
+    const db = getDb();
+    const existingClient = db.prepare(`SELECT name FROM clients WHERE phone = ?`).get(client_phone.trim()) as { name: string } | undefined;
+    if (existingClient && existingClient.name.trim().toLowerCase() !== client_name.trim().toLowerCase()) {
+      return new Response(JSON.stringify({
+        error: `Ce numéro est déjà enregistré sous le nom "${existingClient.name}". Vérifiez le nom du client.`,
+        existing_client: existingClient.name,
+      }), { status: 409 });
     }
 
     const currentUser = getCurrentUser(request);
