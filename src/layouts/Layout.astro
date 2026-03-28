@@ -27,13 +27,13 @@ const isAdminRole = currentUser?.role === 'admin';
   <body class="bg-gray-50 min-h-screen text-gray-900 overflow-x-hidden">
     {isAdmin && (
       <header class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
           <!-- Row 1: logo + search + user -->
-          <div class="flex items-center gap-3 h-11">
-            <span class="font-bold text-sm text-blue-700 shrink-0">Gestion Commandes</span>
-            <!-- Global search -->
-            <div class="flex-1 relative hidden sm:block max-w-sm">
-              <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center gap-4 h-12">
+            <span class="font-bold text-sm text-blue-700 shrink-0 tracking-tight">Gestion Commandes</span>
+            <!-- Global search: fills all available space -->
+            <div class="flex-1 relative hidden sm:block">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
               </svg>
               <input
@@ -41,24 +41,25 @@ const isAdminRole = currentUser?.role === 'admin';
                 type="text"
                 autocomplete="off"
                 placeholder="Rechercher… (commandes, clients)"
-                class="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition"
+                class="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition"
               />
               <div id="global-results" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden overflow-hidden min-w-[320px]"></div>
             </div>
             <div class="flex-1 sm:hidden"></div>
-            <div class="flex items-center gap-3 shrink-0">
+            <!-- Right actions -->
+            <div class="flex items-center gap-1 shrink-0">
               {currentUser && (
                 <button
                   id="profile-btn"
-                  class="text-xs font-medium text-gray-700 hover:text-blue-700 transition-colors whitespace-nowrap cursor-pointer"
+                  class="text-xs font-medium text-gray-700 hover:text-blue-700 transition-colors whitespace-nowrap cursor-pointer px-2 py-1.5 rounded-lg hover:bg-gray-100"
                   data-id={currentUser.id}
                   data-name={currentUser.full_name}
                 >
-                  👤 {currentUser.full_name}
+                  👤 <span class="hidden md:inline">{currentUser.full_name}</span>
                 </button>
               )}
               <button id="dark-toggle" type="button" title="Mode sombre"
-                class="text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-lg hover:bg-gray-100">
+                class="text-gray-400 hover:text-gray-700 transition-colors p-1.5 rounded-lg hover:bg-gray-100">
                 <svg id="icon-moon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>
                 </svg>
@@ -67,26 +68,26 @@ const isAdminRole = currentUser?.role === 'admin';
                 </svg>
               </button>
               <form action="/api/auth/logout" method="POST" style="display:flex;align-items:center;">
-                <button type="submit" class="text-xs text-gray-400 hover:text-red-600 transition-colors whitespace-nowrap" style="line-height:1;">
+                <button type="submit" class="text-xs text-gray-400 hover:text-red-600 transition-colors whitespace-nowrap px-2 py-1.5 rounded-lg hover:bg-gray-100">
                   Déconnexion
                 </button>
               </form>
             </div>
           </div>
           <!-- Row 2: nav -->
-          <nav class="flex justify-center items-center gap-5 text-sm font-medium overflow-x-auto pb-0.5">
-            <a href="/admin/dashboard" class="py-2 text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Dashboard</a>
-            <a href="/admin" class="py-2 text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">+ Nouvelle</a>
-            <a href="/admin/orders" class="py-2 text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap flex items-center gap-1.5">
+          <nav class="flex items-center gap-1 text-sm font-medium overflow-x-auto scrollbar-none -mx-1 px-1">
+            <a href="/admin/dashboard" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Dashboard</a>
+            <a href="/admin" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">+ Nouvelle</a>
+            <a href="/admin/orders" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
               Commandes
               <span id="pending-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full leading-none"></span>
             </a>
-            <a href="/admin/clients" class="py-2 text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Clients</a>
+            <a href="/admin/clients" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Clients</a>
             {isAdminRole && (
-              <a href="/admin/payments" class="py-2 text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Paiements</a>
+              <a href="/admin/payments" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Paiements</a>
             )}
             {isAdminRole && (
-              <a href="/admin/settings" class="py-2 text-gray-600 hover:text-blue-700 transition-colors whitespace-nowrap">Paramètres</a>
+              <a href="/admin/settings" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Paramètres</a>
             )}
           </nav>
         </div>
@@ -136,6 +137,18 @@ const isAdminRole = currentUser?.role === 'admin';
 
     <!-- Dark mode toggle + global toast function -->
     <script is:inline>
+      // ── Active nav link ───────────────────────────────────────────────────
+      (function () {
+        var path = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(function (a) {
+          var href = a.getAttribute('href');
+          if (!href) return;
+          // exact match or sub-path (but /admin must be exact to avoid matching everything)
+          var active = href === '/admin' ? path === '/admin' : path === href || path.startsWith(href + '/');
+          if (active) a.classList.add('active');
+        });
+      })();
+
       // ── Dark mode icons ───────────────────────────────────────────────────
       (function () {
         const moonIcon = document.getElementById('icon-moon');

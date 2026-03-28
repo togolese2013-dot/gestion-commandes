@@ -56,6 +56,13 @@
 .dark .hover\:bg-blue-50:hover   { background-color: #1e3a5f !important; }
 .dark .hover\:bg-red-50:hover    { background-color: #2d1515 !important; }
 
+/* ── Nav scrollbar hidden ─────────────────────────────────────────────── */
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* ── Active nav link ──────────────────────────────────────────────────── */
+.nav-link.active { color: #2563eb; background-color: #eff6ff; font-weight: 600; }
+
 /* ── Toast notifications ──────────────────────────────────────────────── */
 #toast-container {
   position: fixed;
