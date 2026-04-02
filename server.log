@@ -1,0 +1,27 @@
+
+> gestion-commandes@0.0.1 dev
+> astro dev
+
+23:54:53 [@astrojs/node] Enabling sessions with filesystem storage
+[vite] connected.
+23:54:53 [types] Generated 0ms
+23:54:53 [WARN] [content] Content config not loaded
+ astro  v6.0.8 ready in 704 ms
+┃ Local    http://localhost:4321/
+┃ Network  http://192.168.0.104:4321/
+23:54:53 watching for file changes...
+Error updating devis status: SqliteError: no such column: "now" - should this be a string literal in single-quotes?
+    at Database.prepare (/Volumes/LOCAL/CLAUDE CODE/gestion-commandes/node_modules/better-sqlite3/lib/methods/wrappers.js:5:21)
+    at updateInquiry (eval at runInlinedModule (file:///Volumes/LOCAL/CLAUDE%20CODE/gestion-commandes/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:85:6)
+    at Module.PATCH (eval at runInlinedModule (file:///Volumes/LOCAL/CLAUDE%20CODE/gestion-commandes/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:50:48)
+    at async renderEndpoint (eval at runInlinedModule (file:///Volumes/LOCAL/CLAUDE%20CODE/gestion-commandes/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:44:18)
+    at async lastNext (eval at runInlinedModule (file:///Volumes/LOCAL/CLAUDE%20CODE/gestion-commandes/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:262:23)
+    at async callMiddleware (eval at runInlinedModule (file:///Volumes/LOCAL/CLAUDE%20CODE/gestion-commandes/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:15:10)
+    at async RenderContext.render (eval at runInlinedModule (file:///Volumes/LOCAL/CLAUDE%20CODE/gestion-commandes/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:309:73)
+    at async AstroServerApp.render (eval at runInlinedModule (file:///Volumes/LOCAL/CLAUDE%20CODE/gestion-commandes/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:347:20)
+    at async run (eval at runInlinedModule (file:///Volumes/LOCAL/CLAUDE%20CODE/gestion-commandes/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:154:26)
+    at async runWithErrorHandling (eval at runInlinedModule (file:///Volumes/LOCAL/CLAUDE%20CODE/gestion-commandes/node_modules/vite/dist/node/module-runner.js:913:9), <anonymous>:64:5) {
+  code: 'SQLITE_ERROR'
+}
+23:54:59 [500] PATCH /api/devis/3 41ms
+23:55:18 [200] PATCH /api/devis/3 8ms

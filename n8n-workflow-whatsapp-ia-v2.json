@@ -1,0 +1,255 @@
+{
+  "name": "Agent IA WhatsApp - Réponses Commandes V2",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["messages"],
+        "options": {}
+      },
+      "id": "node-wha-trigger",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "webhookId": "whatsapp-ia-commandes"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ============================================================\n// EXTRAIRE MESSAGE WhatsApp (CORRIGÉ - plus d'auto-référence)\n// ============================================================\nconst data = $input.first().json;\n\n// Structure WhatsApp Cloud API\nconst messages  = data?.messages  || [];\nconst contacts  = data?.contacts  || [];\nconst message   = messages[0]     || {};\nconst contact   = contacts[0]     || {};\n\n// Ignorer les messages non-texte (images, audio, stickers...)\nconst msgType = message?.type || '';\nif (msgType && msgType !== 'text') {\n  // Retourner une instruction de réponse générique\n  return [{\n    json: {\n      skip: true,\n      msg: '',\n      phoneFrom: message?.from || '',\n      clientName: contact?.profile?.name || message?.from || '',\n      waId: contact?.wa_id || message?.from || '',\n      messageId: message?.id || '',\n      msgType\n    }\n  }];\n}\n\n// Texte du message\nconst msg = message?.text?.body?.trim() || '';\n\n// Ignorer si message vide\nif (!msg) return [];\n\n// Ignorer les accusés de réception (ok, d'accord, merci, etc.)\nconst ACK_PATTERNS = [\n  /^(ok|okay|oké|oke)$/i,\n  /^(d'?accord|daccord|dacord)$/i,\n  /^(merci|merci\\s+beaucoup|thanks|thx)$/i,\n  /^(bien|bien\\s+reçu|bien\\s+recu|reçu|recu)$/i,\n  /^(👍|🙏|✅|😊|🫡)+$/,\n  /^(super|parfait|nickel|top|bonne?)$/i,\n  /^(yes|yep|oui|ouii|ouais)$/i,\n  /^(compris|c'est\\s+noté|noté|note)$/i\n];\nconst isAck = ACK_PATTERNS.some(p => p.test(msg));\nif (isAck) return [];\n\n// Infos client\nconst phoneFrom  = message?.from || '';\nconst clientName = contact?.profile?.name || phoneFrom;\nconst waId       = contact?.wa_id || phoneFrom;\nconst messageId  = message?.id || '';\n\nreturn [{\n  json: {\n    skip: false,\n    msg,\n    phoneFrom,\n    clientName,\n    waId,\n    messageId,\n    msgType: 'text'\n  }\n}];"
+      },
+      "id": "node-extract-msg",
+      "name": "Extraire message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-skip",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-text",
+      "name": "Est un message texte ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://app.togolese.fr/api/orders/by-phone?phone={{ encodeURIComponent($json.phoneFrom) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-secret",
+              "value": "togolese_n8n_secret_2026"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "node-get-orders",
+      "name": "Récupérer commandes client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ============================================================\n// PRÉPARER CONTEXTE + INTENTION\n// ============================================================\nconst msgData  = $('Extraire message').first().json;\nconst apiResp  = $input.first().json;\n\nconst msg        = msgData.msg        || '';\nconst clientName = msgData.clientName || 'Client';\nconst phoneFrom  = msgData.phoneFrom  || '';\nconst waId       = msgData.waId       || phoneFrom;\n\n// Commandes récupérées\nconst orders = Array.isArray(apiResp?.orders)\n  ? apiResp.orders\n  : Array.isArray(apiResp)\n    ? apiResp\n    : [];\n\n// Traduction des statuts\nconst statusLabels = {\n  'en_attente' : '⏳ En préparation',\n  'disponible' : '✅ Prête à récupérer',\n  'retiree'    : '📦 Récupérée',\n  'annulee'    : '❌ Annulée'\n};\n\nlet ordersContext = '';\nif (orders.length === 0) {\n  ordersContext = 'Aucune commande trouvée pour ce numéro de téléphone.';\n} else {\n  ordersContext = orders.slice(0, 5).map(o => {\n    const status  = statusLabels[o.status] || o.status || 'Inconnu';\n    const total   = parseFloat(o.total_price || o.total || 0);\n    const deposit = parseFloat(o.deposit || 0);\n    const reste   = Math.max(0, total - deposit);\n    const items   = Array.isArray(o.products) && o.products.length\n      ? o.products.map(p => `${p.name}${p.quantity > 1 ? ' x' + p.quantity : ''}`).join(', ')\n      : (o.description || o.items || '—');\n    return `• Commande #${o.order_number}\\n  Statut  : ${status}\\n  Articles: ${items}\\n  Total   : ${total.toFixed(2)}€ | Acompte versé: ${deposit.toFixed(2)}€ | Reste à payer: ${reste.toFixed(2)}€`;\n  }).join('\\n\\n');\n}\n\nconst systemPrompt = `Tu es l'assistant automatique de notre boutique. Tu réponds aux clients en français sur WhatsApp.\\nSois concis, chaleureux et professionnel (max 3 phrases).\\n\\nClient : ${clientName}\\nTéléphone : ${phoneFrom}\\n\\n=== Commandes du client ===\\n${ordersContext}\\n===========================\\n\\nRègles importantes :\\n- Si le client demande le statut → donne le statut exact de sa commande\\n- Si la commande est \"disponible\" → dis-lui de venir récupérer et rappelle le reste à payer\\n- Si aucune commande trouvée → demande-lui son numéro de commande\\n- Ne jamais inventer d'informations non présentes ci-dessus\\n- Réponds uniquement en français\\n- Pour TOUTE autre question (prix, disponibilité produit, livraison, réclamation, ou toute demande hors commande) → réponds exactement : \"Pour toute autre demande, contactez notre support directement sur WhatsApp : +22890226491 😊\"\\n- Ne réponds JAMAIS à des questions hors commandes (politique, actualité, conseils, etc.)`;\n\nreturn [{\n  json: {\n    msg,\n    phoneFrom,\n    clientName,\n    waId,\n    systemPrompt,\n    ordersCount: orders.length\n  }\n}];"
+      },
+      "id": "node-prepare-ctx",
+      "name": "Préparer contexte + intention",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 350,\n  \"temperature\": 0.5,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": {{ JSON.stringify($json.systemPrompt) }}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.msg) }}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "node-openai",
+      "name": "Agent IA OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ============================================================\n// EXTRAIRE RÉPONSE IA\n// ============================================================\nconst openaiData  = $input.first().json;\nconst contextData = $('Préparer contexte + intention').first().json;\n\n// Réponse OpenAI\nconst aiReply = openaiData?.choices?.[0]?.message?.content?.trim()\n  || 'Désolé, je n\\'ai pas pu traiter votre demande. Veuillez nous contacter directement.';\n\n// Log tokens utilisés\nconst tokensUsed = openaiData?.usage?.total_tokens || 0;\nconsole.log(`[IA] Tokens utilisés: ${tokensUsed} | Client: ${contextData.clientName}`);\n\nreturn [{\n  json: {\n    aiReply,\n    phoneFrom  : contextData.phoneFrom,\n    waId       : contextData.waId,\n    clientName : contextData.clientName,\n    tokensUsed\n  }\n}];"
+      },
+      "id": "node-extract-reply",
+      "name": "Extraire réponse IA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1520, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1108545832334279/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.phoneFrom }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"preview_url\": false,\n    \"body\": {{ JSON.stringify($json.aiReply) }}\n  }\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-send-reply",
+      "name": "Répondre au client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1740, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Message non-texte → répondre poliment\nconst data = $('Extraire message').first().json;\nconst msgType = data?.msgType || 'inconnu';\n\nconst typeLabels = {\n  'image'    : 'image',\n  'audio'    : 'message vocal',\n  'video'    : 'vidéo',\n  'document' : 'document',\n  'sticker'  : 'sticker'\n};\nconst typeLabel = typeLabels[msgType] || 'message';\n\nreturn [{\n  json: {\n    aiReply   : `Bonjour ! Je ne peux traiter que les messages texte pour le moment. Merci d'écrire votre question en texte 🙏`,\n    phoneFrom : data.phoneFrom,\n    waId      : data.waId,\n    clientName: data.clientName\n  }\n}];"
+      },
+      "id": "node-non-text-reply",
+      "name": "Réponse message non-texte",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1108545832334279/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.phoneFrom }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"preview_url\": false,\n    \"body\": {{ JSON.stringify($json.aiReply) }}\n  }\n}",
+        "options": {}
+      },
+      "id": "node-send-nontxt",
+      "name": "Répondre (non-texte)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 460]
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [{ "node": "Extraire message", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extraire message": {
+      "main": [
+        [{ "node": "Est un message texte ?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Est un message texte ?": {
+      "main": [
+        [{ "node": "Récupérer commandes client", "type": "main", "index": 0 }],
+        [{ "node": "Réponse message non-texte", "type": "main", "index": 0 }]
+      ]
+    },
+    "Récupérer commandes client": {
+      "main": [
+        [{ "node": "Préparer contexte + intention", "type": "main", "index": 0 }]
+      ]
+    },
+    "Préparer contexte + intention": {
+      "main": [
+        [{ "node": "Agent IA OpenAI", "type": "main", "index": 0 }]
+      ]
+    },
+    "Agent IA OpenAI": {
+      "main": [
+        [{ "node": "Extraire réponse IA", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extraire réponse IA": {
+      "main": [
+        [{ "node": "Répondre au client", "type": "main", "index": 0 }]
+      ]
+    },
+    "Réponse message non-texte": {
+      "main": [
+        [{ "node": "Répondre (non-texte)", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": ["WhatsApp", "IA", "Commandes"],
+  "pinData": {}
+}

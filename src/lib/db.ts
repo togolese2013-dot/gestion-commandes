@@ -81,11 +81,57 @@ function initSchema(db: Database.Database) {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS inquiries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_name TEXT NOT NULL,
+      client_phone TEXT NOT NULL,
+      description TEXT NOT NULL,
+      quantity INTEGER DEFAULT 1,
+      desired_deadline TEXT DEFAULT '',
+      photos TEXT DEFAULT '[]',
+      external_link TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'en_attente' CHECK(status IN ('en_attente', 'contacte', 'en_cours', 'convertie', 'rejetee')),
+      notes TEXT DEFAULT '',
+      products TEXT DEFAULT '[]',
+      delivery_type TEXT DEFAULT 'avion' CHECK(delivery_type IN ('avion', 'bateau')),
+      deadline TEXT DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS devis (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      inquiry_id INTEGER NOT NULL,
+      devis_number TEXT UNIQUE NOT NULL,
+      client_name TEXT NOT NULL,
+      client_phone TEXT NOT NULL,
+      products_summary TEXT NOT NULL DEFAULT '[]',
+      total_amount REAL NOT NULL DEFAULT 0,
+      acompte_amount REAL NOT NULL DEFAULT 0,
+      solde_amount REAL NOT NULL DEFAULT 0,
+      delivery_type TEXT NOT NULL CHECK(delivery_type IN ('avion', 'bateau')),
+      estimated_delivery TEXT NOT NULL,
+      validity_days INTEGER NOT NULL DEFAULT 30,
+      validity_until TEXT NOT NULL,
+      devis_status TEXT NOT NULL DEFAULT 'en_attente' CHECK(devis_status IN ('en_attente', 'accepte', 'refuse')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      accepted_at TEXT DEFAULT NULL,
+      rejected_at TEXT DEFAULT NULL,
+      rejection_reason TEXT DEFAULT NULL,
+      FOREIGN KEY (inquiry_id) REFERENCES inquiries(id) ON DELETE CASCADE
+    );
+
     CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
     CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
     CREATE INDEX IF NOT EXISTS idx_products_order_id ON products(order_id);
     CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
     CREATE INDEX IF NOT EXISTS idx_clients_phone ON clients(phone);
+    CREATE INDEX IF NOT EXISTS idx_inquiries_phone ON inquiries(client_phone);
+    CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
+    CREATE INDEX IF NOT EXISTS idx_devis_inquiry_id ON devis(inquiry_id);
+    CREATE INDEX IF NOT EXISTS idx_devis_devis_number ON devis(devis_number);
+    CREATE INDEX IF NOT EXISTS idx_devis_status ON devis(devis_status);
   `);
 }
 
@@ -110,6 +156,10 @@ function runMigrations(db: Database.Database) {
     `ALTER TABLE clients ADD COLUMN photo_url TEXT DEFAULT ''`,
     `ALTER TABLE clients ADD COLUMN tags TEXT DEFAULT '[]'`,
     `ALTER TABLE orders ADD COLUMN reminder_sent_at TEXT DEFAULT NULL`,
+    // Add new columns to inquiries for products and delivery
+    `ALTER TABLE inquiries ADD COLUMN products TEXT DEFAULT '[]'`,
+    `ALTER TABLE inquiries ADD COLUMN delivery_type TEXT DEFAULT 'avion'`,
+    `ALTER TABLE inquiries ADD COLUMN deadline TEXT DEFAULT ''`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* column already exists */ }

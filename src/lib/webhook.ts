@@ -1,4 +1,5 @@
 import type { Order } from './orders';
+import type { Inquiry } from './inquiries';
 import { getEnv } from './env';
 
 export async function sendNewOrderWebhook(order: Order): Promise<void> {
@@ -92,4 +93,22 @@ export async function sendOrderReadyWebhook(order: Order): Promise<void> {
   } catch (err) {
     console.error('[Webhook order_ready] Erreur fetch:', err);
   }
+}
+
+export async function sendDevisWebhook(inquiry: Inquiry, devis_number: string, share_url: string): Promise<void> {
+  const url = getEnv('N8N_WEBHOOK_NEW_ORDER');
+  if (!url || url.includes('your-n8n-instance')) return;
+
+  const siteUrl = getEnv('PUBLIC_SITE_URL');
+  await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event: 'devis_sent',
+      devis_number,
+      client_name: inquiry.client_name,
+      client_phone: inquiry.client_phone,
+      share_url,
+    }),
+  }).catch(err => console.error('[Webhook devis_sent]', err));
 }

@@ -83,6 +83,10 @@ const isAdminRole = currentUser?.role === 'admin';
               Commandes
               <span id="pending-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full leading-none"></span>
             </a>
+            <a href="/admin/inquiries" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
+              Demandes
+              <span id="inquiry-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-amber-500 text-white text-[10px] font-bold rounded-full leading-none"></span>
+            </a>
             <a href="/admin/clients" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Clients</a>
             {isAdminRole && (
               <a href="/admin/payments" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Paiements</a>
@@ -252,6 +256,27 @@ const isAdminRole = currentUser?.role === 'admin';
         }
         updatePendingBadge();
         setInterval(updatePendingBadge, 30_000);
+
+        // ── Badge demandes en attente ─────────────────────────────────────────
+        async function updateInquiryBadge() {
+          try {
+            const res = await fetch('/api/inquiries/count');
+            if (!res.ok) return;
+            const { en_attente } = await res.json();
+            const badge = document.getElementById('inquiry-badge');
+            if (!badge) return;
+            if (en_attente > 0) {
+              badge.textContent = en_attente > 99 ? '99+' : String(en_attente);
+              badge.classList.remove('hidden');
+              badge.classList.add('inline-flex');
+            } else {
+              badge.classList.add('hidden');
+              badge.classList.remove('inline-flex');
+            }
+          } catch { /* silent */ }
+        }
+        updateInquiryBadge();
+        setInterval(updateInquiryBadge, 30_000);
 
         // ── Recherche globale ─────────────────────────────────────────────────
         const globalSearch  = document.getElementById('global-search') as HTMLInputElement | null;

@@ -1,0 +1,928 @@
+---
+---
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demande de Devis — TOGOLESE</title>
+  <style is:global>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      background: linear-gradient(145deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%);
+      min-height: 100vh;
+      padding: 32px 16px 80px;
+      color: #111827;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #1d4ed8;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .brand-sub {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+
+    .form-wrapper {
+      max-width: 740px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Section cards */
+    .section-card {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 2px 24px rgba(99,102,241,0.07), 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.9);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .step-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #1d4ed8;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(29,78,216,0.35);
+    }
+    .section-title-text h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1.2;
+    }
+    .section-title-text p {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    /* Fields */
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .field-row-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr 80px;
+      gap: 16px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #374151;
+    }
+    .req { color: #ef4444; }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="url"],
+    textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #111827;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    input:focus, textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    input::placeholder, textarea::placeholder { color: #9ca3af; }
+    textarea { resize: vertical; min-height: 90px; }
+
+    /* Product cards */
+    .products-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .product-card {
+      background: #f9fafb;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .product-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: white;
+      border-bottom: 1.5px solid #e5e7eb;
+    }
+    .product-number {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1d4ed8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .product-number span {
+      width: 22px;
+      height: 22px;
+      background: #eff6ff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .btn-remove-product {
+      width: 28px;
+      height: 28px;
+      background: #fff0f0;
+      border: 1.5px solid #fca5a5;
+      border-radius: 8px;
+      color: #ef4444;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-remove-product:hover {
+      background: #fee2e2;
+    }
+    .product-card-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Media tabs */
+    .media-tabs {
+      display: flex;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+      background: white;
+    }
+    .media-tab {
+      flex: 1;
+      padding: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      background: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .media-tab.active {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .media-tab:first-child { border-right: 1.5px solid #e5e7eb; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .drop-zone {
+      border: 2px dashed #c7d2fe;
+      border-radius: 10px;
+      padding: 28px 16px;
+      text-align: center;
+      background: #fafbff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #6366f1;
+      background: #f0f4ff;
+    }
+    .drop-zone-icon { font-size: 28px; margin-bottom: 8px; }
+    .drop-zone p { font-size: 13px; color: #6b7280; }
+    .drop-zone p strong { color: #4f46e5; cursor: pointer; }
+    .drop-zone small { font-size: 11px; color: #9ca3af; }
+
+    .photo-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .photo-thumb {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1.5px solid #e5e7eb;
+    }
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .photo-thumb-remove {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 18px;
+      height: 18px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Add product button */
+    .btn-add-product {
+      width: 100%;
+      padding: 14px;
+      border: 2px dashed #c7d2fe;
+      border-radius: 12px;
+      background: transparent;
+      color: #4f46e5;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-add-product:hover {
+      background: #f0f4ff;
+      border-color: #6366f1;
+    }
+
+    /* Delivery */
+    .delivery-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .delivery-card {
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 22px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+    }
+    .delivery-card:hover {
+      border-color: #a5b4fc;
+      background: #fafbff;
+    }
+    .delivery-card.selected {
+      border-color: #6366f1;
+      background: #f5f3ff;
+    }
+    .delivery-card input[type="radio"] { display: none; }
+    .delivery-icon { font-size: 32px; margin-bottom: 10px; }
+    .delivery-name {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .delivery-desc {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+
+    /* Success card */
+    .success-card {
+      display: none;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 48px 32px;
+      text-align: center;
+      box-shadow: 0 2px 24px rgba(99,102,241,0.1);
+      border: 1px solid rgba(255,255,255,0.9);
+    }
+    .success-check {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(16,185,129,0.35);
+    }
+    .success-check svg { width: 36px; height: 36px; color: white; }
+    .success-title { font-size: 22px; font-weight: 800; color: #111827; margin-bottom: 8px; }
+    .success-sub { font-size: 14px; color: #6b7280; margin-bottom: 28px; }
+    .devis-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #eff6ff, #eef2ff);
+      border: 2px solid #c7d2fe;
+      border-radius: 12px;
+      padding: 16px 32px;
+      margin-bottom: 28px;
+    }
+    .devis-badge-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
+    .devis-badge-number { font-size: 28px; font-weight: 900; color: #1d4ed8; letter-spacing: 2px; }
+    .devis-info { font-size: 13px; color: #6b7280; margin-bottom: 28px; line-height: 1.6; }
+    .btn-new-request {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: #f3f4f6;
+      color: #374151;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-new-request:hover { background: #e5e7eb; }
+
+    /* Submit */
+    .submit-area {
+      text-align: center;
+    }
+    .btn-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 48px;
+      background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 6px 24px rgba(79,70,229,0.35);
+      letter-spacing: 0.3px;
+    }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(79,70,229,0.45);
+    }
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-submit svg { width: 18px; height: 18px; }
+
+    /* Success / Error */
+    .alert {
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+      text-align: center;
+    }
+    .alert-success {
+      background: #ecfdf5;
+      border: 1.5px solid #6ee7b7;
+      color: #065f46;
+    }
+    .alert-error {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      color: #991b1b;
+    }
+
+    @media (max-width: 560px) {
+      body { padding: 20px 12px 60px; }
+      .section-card { padding: 22px 18px; }
+      .field-row { grid-template-columns: 1fr; }
+      .field-row-3 { grid-template-columns: 1fr 1fr; }
+      .field-row-3 .field-group:last-child { grid-column: span 2; }
+      .delivery-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="brand">Togolese</div>
+    <div class="brand-sub">Vente et Distribution</div>
+  </div>
+
+  <div class="form-wrapper">
+
+    <div class="section-card" style="text-align:center; padding: 28px 32px 24px;">
+      <div style="font-size:26px; font-weight:800; color:#111827; margin-bottom:6px;">Demande de Devis</div>
+      <div style="font-size:14px; color:#6b7280;">Remplissez ce formulaire pour nous faire connaître votre commande</div>
+    </div>
+
+    <!-- Step 1: Coordonnées -->
+    <div class="section-card">
+      <div class="section-title">
+        <div class="step-badge">1</div>
+        <div class="section-title-text">
+          <h2>Vos coordonnées</h2>
+          <p>Pour vous recontacter avec votre devis</p>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Nom complet <span class="req">*</span></label>
+          <input type="text" id="client-name" placeholder="Jean Dupont" required />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Téléphone <span class="req">*</span></label>
+          <input type="tel" id="client-phone" placeholder="+228 XX XX XX XX" required />
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Produits -->
+    <div class="section-card">
+      <div class="section-title">
+        <div class="step-badge">2</div>
+        <div class="section-title-text">
+          <h2>Produits recherchés</h2>
+          <p>Ajoutez un ou plusieurs articles</p>
+        </div>
+      </div>
+
+      <div class="products-list" id="products-list"></div>
+
+      <div style="margin-top:16px;">
+        <button type="button" class="btn-add-product" id="btn-add-product">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          Ajouter un produit
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Livraison -->
+    <div class="section-card">
+      <div class="section-title">
+        <div class="step-badge">3</div>
+        <div class="section-title-text">
+          <h2>Livraison &amp; Infos complémentaires</h2>
+          <p>Mode d'expédition et remarques</p>
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-bottom:20px;">
+        <label class="field-label">Mode de livraison <span class="req">*</span></label>
+        <div class="delivery-grid" id="delivery-grid">
+          <label class="delivery-card selected" data-value="avion">
+            <input type="radio" name="delivery" value="avion" checked />
+            <div class="delivery-icon">✈️</div>
+            <div class="delivery-name">Express</div>
+            <div class="delivery-desc">Livraison par avion<br>Délai réduit</div>
+          </label>
+          <label class="delivery-card" data-value="bateau">
+            <input type="radio" name="delivery" value="bateau" />
+            <div class="delivery-icon">🚢</div>
+            <div class="delivery-name">Économique</div>
+            <div class="delivery-desc">Livraison par bateau<br>Tarif réduit</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Notes / Précisions</label>
+        <textarea id="notes" placeholder="Couleur, taille, marque préférée, délai souhaité..."></textarea>
+      </div>
+    </div>
+
+    <!-- Success card -->
+    <div class="success-card" id="success-card">
+      <div class="success-check">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <div class="success-title">Demande envoyée avec succès !</div>
+      <div class="success-sub">Nous avons bien reçu votre demande de devis.</div>
+      <div class="devis-badge">
+        <div class="devis-badge-label">Numéro de devis</div>
+        <div class="devis-badge-number" id="devis-number">—</div>
+      </div>
+      <div class="devis-info">
+        Conservez ce numéro pour suivre votre demande.<br>
+        Notre équipe vous contactera dans les plus brefs délais.
+      </div>
+      <button type="button" class="btn-new-request" id="btn-new-request">
+        + Nouvelle demande
+      </button>
+    </div>
+
+    <!-- Submit -->
+    <div class="submit-area" id="submit-area">
+      <div class="alert alert-error" id="msg-error"></div>
+      <button type="button" class="btn-submit" id="btn-submit">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+        </svg>
+        Envoyer ma demande
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // ── State ────────────────────────────────────────────────────
+    let products = [];
+    let productCounter = 0;
+
+    // ── Init ─────────────────────────────────────────────────────
+    addProduct();
+
+    document.getElementById('btn-add-product').addEventListener('click', addProduct);
+    document.getElementById('btn-submit').addEventListener('click', submitForm);
+    document.getElementById('btn-new-request').addEventListener('click', resetForm);
+
+    // Delivery card toggle
+    document.getElementById('delivery-grid').addEventListener('click', (e) => {
+      const card = e.target.closest('.delivery-card');
+      if (!card) return;
+      document.querySelectorAll('.delivery-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      card.querySelector('input[type="radio"]').checked = true;
+    });
+
+    // ── Product management ────────────────────────────────────────
+    function saveCurrentValues() {
+      products.forEach(product => {
+        const card = document.querySelector(`[data-id="${product.id}"]`);
+        if (!card) return;
+        product._name = card.querySelector('.p-name')?.value || '';
+        product._state = card.querySelector('.p-state')?.value || '';
+        product._qty = card.querySelector('.p-qty')?.value || '1';
+      });
+    }
+
+    function addProduct() {
+      saveCurrentValues();
+      const id = ++productCounter;
+      const product = { id, files: [], links: [], _name: '', _state: '', _qty: '1' };
+      products.push(product);
+      renderProducts();
+    }
+
+    function removeProduct(id) {
+      if (products.length === 1) return;
+      saveCurrentValues();
+      products = products.filter(p => p.id !== id);
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const list = document.getElementById('products-list');
+      list.innerHTML = '';
+      products.forEach((product, idx) => {
+        const card = createProductCard(product, idx + 1);
+        list.appendChild(card);
+      });
+      // Update remove button opacity on all cards
+      document.querySelectorAll('.btn-remove-product').forEach(btn => {
+        btn.style.opacity = products.length === 1 ? '0.3' : '1';
+        btn.style.cursor = products.length === 1 ? 'default' : 'pointer';
+      });
+    }
+
+    function createProductCard(product, num) {
+      const div = document.createElement('div');
+      div.className = 'product-card';
+      div.dataset.id = product.id;
+
+      div.innerHTML = `
+        <div class="product-card-header">
+          <div class="product-number">
+            <span>${num}</span>
+            Produit ${num}
+          </div>
+          <button type="button" class="btn-remove-product" data-pid="${product.id}">✕</button>
+        </div>
+        <div class="product-card-body">
+          <div class="field-row-3">
+            <div class="field-group">
+              <label class="field-label">Nom du produit <span class="req">*</span></label>
+              <input type="text" class="p-name" placeholder="iPhone 15, Nike Air Max..." value="${escHtml(product._name || '')}" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">État <span class="req">*</span></label>
+              <input type="text" class="p-state" placeholder="Neuf, occasion..." value="${escHtml(product._state || '')}" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Qté <span class="req">*</span></label>
+              <input type="number" class="p-qty" min="1" value="${product._qty || 1}" />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Photo ou lien du produit <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9ca3af;">(optionnel)</span></label>
+            <div class="media-tabs">
+              <button type="button" class="media-tab active" data-tab="photo">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Photo
+              </button>
+              <button type="button" class="media-tab" data-tab="link">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+                Lien
+              </button>
+            </div>
+
+            <div class="tab-panel active" data-panel="photo">
+              <div class="drop-zone" data-pid="${product.id}">
+                <div class="drop-zone-icon">📷</div>
+                <p><strong>Cliquez</strong> ou glissez une photo ici</p>
+                <small>JPG, PNG, WEBP — max 10 Mo</small>
+                <input type="file" accept="image/*" multiple style="display:none" />
+              </div>
+              <div class="photo-grid"></div>
+            </div>
+
+            <div class="tab-panel" data-panel="link">
+              <div id="links-list-${product.id}" style="display:flex;flex-direction:column;gap:8px;"></div>
+              <button type="button" class="btn-add-link" data-pid="${product.id}" style="margin-top:8px;padding:9px 14px;border:1.5px dashed #c7d2fe;border-radius:8px;background:transparent;color:#4f46e5;font-size:13px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;">
+                + Ajouter un lien
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Remove product
+      div.querySelector('.btn-remove-product').addEventListener('click', () => {
+        if (products.length > 1) removeProduct(product.id);
+      });
+
+      // Media tabs
+      const tabs = div.querySelectorAll('.media-tab');
+      const panels = div.querySelectorAll('.tab-panel');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          panels.forEach(p => p.classList.remove('active'));
+          tab.classList.add('active');
+          div.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.add('active');
+        });
+      });
+
+      // Drop zone
+      const dropZone = div.querySelector('.drop-zone');
+      const fileInput = dropZone.querySelector('input[type="file"]');
+      const photoGrid = div.querySelector('.photo-grid');
+
+      dropZone.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', () => addPhotos(fileInput.files, product, photoGrid));
+
+      ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+      });
+      dropZone.addEventListener('drop', e => {
+        addPhotos(e.dataTransfer.files, product, photoGrid);
+      });
+
+      // Add link
+      div.querySelector('.btn-add-link').addEventListener('click', () => {
+        addLink(product, div.querySelector(`#links-list-${product.id}`));
+      });
+
+      return div;
+    }
+
+    function addPhotos(files, product, grid) {
+      Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+        product.files.push(file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const thumb = document.createElement('div');
+          thumb.className = 'photo-thumb';
+          const idx = product.files.length - 1;
+          thumb.innerHTML = `
+            <img src="${e.target.result}" alt="" />
+            <button type="button" class="photo-thumb-remove" data-idx="${idx}">✕</button>
+          `;
+          thumb.querySelector('.photo-thumb-remove').addEventListener('click', () => {
+            product.files.splice(idx, 1);
+            thumb.remove();
+          });
+          grid.appendChild(thumb);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function addLink(product, container) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+      const input = document.createElement('input');
+      input.type = 'url';
+      input.placeholder = 'https://...';
+      input.style.flex = '1';
+      const linkObj = { url: '' };
+      product.links.push(linkObj);
+      input.addEventListener('input', () => { linkObj.url = input.value; });
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '✕';
+      removeBtn.style.cssText = 'padding:10px 12px;border:1.5px solid #fca5a5;border-radius:8px;background:#fff0f0;color:#ef4444;cursor:pointer;font-size:13px;flex-shrink:0;';
+      removeBtn.addEventListener('click', () => {
+        const i = product.links.indexOf(linkObj);
+        if (i > -1) product.links.splice(i, 1);
+        row.remove();
+      });
+      row.appendChild(input);
+      row.appendChild(removeBtn);
+      container.appendChild(row);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function generateDevisNumber() {
+      const now = new Date();
+      const y = now.getFullYear().toString().slice(-2);
+      const m = String(now.getMonth()+1).padStart(2,'0');
+      const d = String(now.getDate()).padStart(2,'0');
+      const rand = Math.floor(Math.random() * 9000) + 1000;
+      return `DEV-${y}${m}${d}-${rand}`;
+    }
+
+    // ── Submit ────────────────────────────────────────────────────
+    async function submitForm() {
+      const name = document.getElementById('client-name').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+
+      if (!name || !phone) {
+        showError('Veuillez renseigner votre nom et téléphone.');
+        return;
+      }
+
+      for (let i = 0; i < products.length; i++) {
+        const card = document.querySelector(`[data-id="${products[i].id}"]`);
+        const pName = card.querySelector('.p-name').value.trim();
+        if (!pName) {
+          showError(`Veuillez renseigner le nom du produit ${i + 1}.`);
+          return;
+        }
+      }
+
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.innerHTML = '<svg style="width:18px;height:18px;animation:spin 1s linear infinite" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Envoi en cours...';
+
+      const formData = new FormData();
+      formData.append('client_name', name);
+      formData.append('client_phone', phone);
+
+      const deliveryChecked = document.querySelector('input[name="delivery"]:checked');
+      formData.append('delivery_type', deliveryChecked ? deliveryChecked.value : 'avion');
+      formData.append('desired_deadline', '');
+
+      const productsData = products.map(p => {
+        const card = document.querySelector(`[data-id="${p.id}"]`);
+        return {
+          name: card.querySelector('.p-name').value.trim(),
+          state: card.querySelector('.p-state').value.trim(),
+          quantity: parseInt(card.querySelector('.p-qty').value) || 1,
+          links: p.links.map(l => l.url).filter(Boolean),
+        };
+      });
+      formData.append('products', JSON.stringify(productsData));
+
+      products.forEach(p => {
+        p.files.forEach(f => formData.append('photos', f));
+      });
+
+      const notes = document.getElementById('notes').value.trim();
+      if (notes) formData.append('notes', notes);
+
+      try {
+        const res = await fetch('/api/inquiries', { method: 'POST', body: formData });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          const devisNum = data.id ? `DEV-${String(data.id).padStart(4,'0')}` : generateDevisNumber();
+          showSuccess(devisNum);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          showError(data.error || 'Erreur lors de l\'envoi. Réessayez.');
+          resetBtn();
+        }
+      } catch {
+        showError('Erreur réseau. Vérifiez votre connexion.');
+        resetBtn();
+      }
+    }
+
+    function resetBtn() {
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = false;
+      btn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Envoyer ma demande`;
+    }
+
+    function showSuccess(devisNum) {
+      document.getElementById('devis-number').textContent = devisNum;
+      document.getElementById('success-card').style.display = 'block';
+      document.getElementById('submit-area').style.display = 'none';
+      // Hide form sections
+      document.querySelectorAll('.section-card').forEach(c => c.style.display = 'none');
+      document.querySelector('.page-header').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      document.getElementById('success-card').style.display = 'none';
+      document.getElementById('submit-area').style.display = 'block';
+      document.getElementById('msg-error').style.display = 'none';
+      document.querySelectorAll('.section-card').forEach(c => c.style.display = 'block');
+      document.getElementById('client-name').value = '';
+      document.getElementById('client-phone').value = '';
+      document.getElementById('notes').value = '';
+      products = [];
+      productCounter = 0;
+      addProduct();
+      resetBtn();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('msg-error');
+      el.textContent = '✕ ' + msg;
+      el.style.display = 'block';
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  </script>
+  <style is:global>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</body>
+</html>

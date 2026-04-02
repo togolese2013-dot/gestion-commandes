@@ -46,8 +46,13 @@ test.describe('Navigation', () => {
     const search = page.locator('#global-search');
     if (await search.isVisible()) {
       await search.fill('CMD');
-      await page.waitForTimeout(400);
-      await expect(page.locator('#global-results')).not.toHaveClass(/hidden/);
+      await page.waitForTimeout(600);
+      // Check results container is no longer display:none (class "hidden" standalone)
+      const resultsHidden = await page.evaluate(() => {
+        const el = document.getElementById('global-results');
+        return el?.classList.contains('hidden') ?? true;
+      });
+      expect(resultsHidden).toBe(false);
     }
   });
 

@@ -1,0 +1,922 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { requireAuth } from '../../lib/auth';
+import { getAllInquiries, updateInquiry } from '../../lib/inquiries';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+
+const inquiries = getAllInquiries();
+
+const statusLabels: Record<string, { label: string; color: string }> = {
+  'en_attente': { label: 'En attente', color: 'yellow' },
+  'acceptee':   { label: 'Acceptée',   color: 'green' },
+  'refusee':    { label: 'Refusée',    color: 'red' },
+  'annulee':    { label: 'Annulée',    color: 'gray' },
+};
+
+const fmt = (n: number) => n.toLocaleString('fr-FR');
+const dateStr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+const statusColors: Record<string, string> = {
+  'yellow': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  'green':  'bg-green-50 text-green-700 border-green-200',
+  'red':    'bg-red-50 text-red-700 border-red-200',
+  'gray':   'bg-gray-50 text-gray-500 border-gray-200',
+};
+
+const statusBadgeColors: Record<string, string> = {
+  'yellow': 'bg-yellow-100 text-yellow-800',
+  'green':  'bg-green-100 text-green-800',
+  'red':    'bg-red-100 text-red-800',
+  'gray':   'bg-gray-100 text-gray-600',
+};
+
+function getDevisNumber(id: number): string {
+  return `DEV-${String(id).padStart(4, '0')}`;
+}
+---
+
+<Layout title="Demandes" isAdmin>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+    <div class="flex items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Demandes de Devis</h1>
+        <p class="text-sm text-gray-600 mt-1">{inquiries.length} demande{inquiries.length !== 1 ? 's' : ''}</p>
+      </div>
+      <a href="/demande" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium text-sm transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+        Voir formulaire
+      </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      {Object.entries(statusLabels).map(([status, { label, color }]) => {
+        const count = inquiries.filter(i => (i.status || 'en_attente') === status).length;
+        return (
+          <div class={`${statusColors[color]} border rounded-lg p-4`}>
+            <p class="text-xs font-semibold uppercase tracking-wide opacity-75">{label}</p>
+            <p class="text-2xl font-bold mt-1">{count}</p>
+          </div>
+        );
+      })}
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-200">
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">N° Devis</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Client</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Produits</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Statut</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {inquiries.length === 0 ? (
+              <tr>
+                <td colspan="6" class="px-4 py-8 text-center text-gray-500 text-sm">
+                  Aucune demande reçue
+                </td>
+              </tr>
+            ) : (
+              inquiries.map((inquiry) => {
+                const status = inquiry.status || 'en_attente';
+                const { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
+                const products = inquiry.products || [];
+                return (
+                  <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-id={inquiry.id}>
+                    <td class="px-4 py-3">
+                      <span class="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">
+                        {getDevisNumber(inquiry.id!)}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                      <div class="font-medium text-gray-900">{inquiry.client_name}</div>
+                      <div class="text-xs text-gray-500">{inquiry.client_phone}</div>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-700 max-w-xs">
+                      {products.length > 0 ? (
+                        <div class="space-y-1">
+                          {products.map((p: any, i: number) => (
+                            <div class="flex items-center gap-1.5 text-xs">
+                              <span class="w-4 h-4 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0">{i+1}</span>
+                              <span class="font-medium text-gray-800">{p.name}</span>
+                              {p.quantity > 1 && <span class="text-gray-400">×{p.quantity}</span>}
+                              {p.state && <span class="text-gray-400 italic">({p.state})</span>}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span class="text-gray-500 line-clamp-2">{inquiry.description}</span>
+                      )}
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                      <select class="status-select text-xs font-semibold px-2 py-1 rounded border-0 cursor-pointer transition-colors" data-id={inquiry.id} data-status={status} class:list={[statusBadgeColors[color]]}>
+                        <option value="en_attente" selected={status === 'en_attente'}>En attente</option>
+                        <option value="acceptee" selected={status === 'acceptee'}>Acceptée</option>
+                        <option value="refusee" selected={status === 'refusee'}>Refusée</option>
+                        <option value="annulee" selected={status === 'annulee'}>Annulée</option>
+                      </select>
+                    </td>
+                    <td class="px-4 py-3 text-xs text-gray-600">{dateStr(inquiry.created_at!)}</td>
+                    <td class="px-4 py-3 text-center">
+                      <div class="flex items-center justify-center gap-1">
+                        <!-- Confirmer -->
+                        <button class="confirm-btn inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-id={inquiry.id} title="Confirmer le devis">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                          </svg>
+                          Confirmer
+                        </button>
+                        <!-- Voir -->
+                        <button class="view-btn text-blue-600 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded" data-id={inquiry.id} title="Voir détails">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                          </svg>
+                        </button>
+                        <!-- Supprimer -->
+                        <button class="delete-btn text-red-500 hover:text-red-600 p-1.5 hover:bg-red-50 rounded" data-id={inquiry.id} title="Supprimer">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       MODAL DÉTAIL
+  ══════════════════════════════════════════════════ -->
+  <div id="detail-modal" class="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-auto">
+      <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-900">Détails de la demande</h2>
+        <button id="close-detail-modal" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div id="detail-modal-content" class="p-6 space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       LIGHTBOX
+  ══════════════════════════════════════════════════ -->
+  <div id="lightbox" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden">
+    <button id="lb-close" class="absolute top-4 right-4 text-white/70 hover:text-white p-2">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <button id="lb-prev" class="absolute left-4 text-white/70 hover:text-white p-3 bg-white/10 rounded-full">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <img id="lb-img" src="" alt="" class="max-h-[85vh] max-w-[85vw] rounded-lg object-contain shadow-2xl"/>
+    <button id="lb-next" class="absolute right-4 text-white/70 hover:text-white p-3 bg-white/10 rounded-full">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <div id="lb-counter" class="absolute bottom-5 text-white/60 text-sm font-medium"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       MODAL CONFIRMER — Proposition A : "Fiche Devis"
+       Style document propre, tableau éditable, total
+  ══════════════════════════════════════════════════ -->
+  <div id="confirm-modal-a" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-gray-900">Fiche de Devis</h2>
+            <p id="cma-devis-num" class="text-xs text-gray-500 font-mono"></p>
+          </div>
+        </div>
+        <button class="close-confirm-modal text-gray-400 hover:text-gray-600 p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="overflow-auto flex-1 px-6 py-5 space-y-5">
+        <!-- Client info -->
+        <div class="bg-gray-50 rounded-xl p-4 flex gap-6 text-sm">
+          <div><span class="text-xs font-semibold text-gray-500 uppercase">Client</span><p id="cma-client" class="font-semibold text-gray-900 mt-0.5"></p></div>
+          <div><span class="text-xs font-semibold text-gray-500 uppercase">Téléphone</span><p id="cma-phone" class="font-semibold text-gray-900 mt-0.5"></p></div>
+          <div><span class="text-xs font-semibold text-gray-500 uppercase">Livraison</span>
+            <select id="cma-delivery" class="mt-0.5 text-sm font-semibold text-gray-900 bg-white border border-gray-200 rounded-lg px-2 py-1">
+              <option value="avion">✈️ Express (avion)</option>
+              <option value="bateau">🚢 Économique (bateau)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Products table -->
+        <div>
+          <p class="text-xs font-bold text-gray-500 uppercase mb-2">Produits</p>
+          <table class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="bg-gray-50 text-xs text-gray-500 uppercase">
+                <th class="text-left px-3 py-2 rounded-tl-lg font-semibold">Produit</th>
+                <th class="text-center px-3 py-2 font-semibold w-20">Qté</th>
+                <th class="text-right px-3 py-2 rounded-tr-lg font-semibold w-28">Prix unit. (F)</th>
+              </tr>
+            </thead>
+            <tbody id="cma-products-body" class="divide-y divide-gray-100"></tbody>
+          </table>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="text-xs font-bold text-gray-500 uppercase block mb-1">Note au client (optionnel)</label>
+          <textarea id="cma-note" rows="2" placeholder="Message accompagnant le devis..." class="w-full text-sm px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 resize-none"></textarea>
+        </div>
+      </div>
+
+      <!-- Footer with total -->
+      <div class="border-t border-gray-100 px-6 py-4">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-sm font-semibold text-gray-600">Total devis</span>
+          <span id="cma-total" class="text-2xl font-black text-gray-900">0 F</span>
+        </div>
+        <button id="cma-send" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          Envoyer au client
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       MODAL CONFIRMER — Proposition B : "Confirmateur rapide"
+       Compact, inline, aperçu visuel
+  ══════════════════════════════════════════════════ -->
+  <div id="confirm-modal-b" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
+      <!-- Colored header -->
+      <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 pt-6 pb-8 text-white relative">
+        <button class="close-confirm-modal absolute top-4 right-4 text-white/70 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <p class="text-sm font-semibold text-emerald-100 mb-1">Confirmer le devis</p>
+        <h2 id="cmb-devis-num" class="text-2xl font-black font-mono tracking-wider"></h2>
+        <div class="mt-3 flex gap-4 text-sm">
+          <span>👤 <span id="cmb-client" class="font-semibold"></span></span>
+          <span>📞 <span id="cmb-phone"></span></span>
+        </div>
+      </div>
+
+      <div class="overflow-auto flex-1 px-6 py-5 -mt-4">
+        <!-- Products -->
+        <div id="cmb-products-list" class="space-y-3 mb-5"></div>
+
+        <!-- Delivery -->
+        <div class="mb-5">
+          <p class="text-xs font-bold text-gray-500 uppercase mb-2">Mode de livraison</p>
+          <div class="grid grid-cols-2 gap-2">
+            <label id="cmb-del-avion" class="flex items-center gap-2 p-3 border-2 border-emerald-400 bg-emerald-50 rounded-xl cursor-pointer text-sm font-semibold text-emerald-700">
+              <input type="radio" name="cmb-delivery" value="avion" class="accent-emerald-500" checked /> ✈️ Express
+            </label>
+            <label id="cmb-del-bateau" class="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-xl cursor-pointer text-sm font-semibold text-gray-600">
+              <input type="radio" name="cmb-delivery" value="bateau" class="accent-emerald-500" /> 🚢 Économique
+            </label>
+          </div>
+        </div>
+
+        <!-- Total pill -->
+        <div class="bg-gray-900 rounded-2xl px-5 py-4 flex items-center justify-between text-white mb-5">
+          <span class="text-sm font-semibold text-gray-300">Total</span>
+          <span id="cmb-total" class="text-3xl font-black">0 F</span>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100 px-6 pb-6 pt-4">
+        <button id="cmb-send" class="w-full py-3.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-colors text-sm tracking-wide">
+          → Envoyer au client
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       MODAL CONFIRMER — Proposition C : "Wizard 2 étapes"
+       Étape 1 = éditer | Étape 2 = aperçu + envoi
+  ══════════════════════════════════════════════════ -->
+  <div id="confirm-modal-c" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
+      <!-- Step indicator -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div class="flex items-center gap-3">
+          <div id="cmc-step1-badge" class="flex items-center gap-2 text-sm font-semibold text-blue-600">
+            <span class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+            Modifier
+          </div>
+          <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          <div id="cmc-step2-badge" class="flex items-center gap-2 text-sm font-semibold text-gray-400">
+            <span class="w-6 h-6 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+            Aperçu & Envoi
+          </div>
+        </div>
+        <button class="close-confirm-modal text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Step 1 -->
+      <div id="cmc-step1" class="overflow-auto flex-1 px-6 py-5 space-y-5">
+        <div class="flex gap-4 text-sm">
+          <div class="flex-1 bg-blue-50 rounded-xl p-3">
+            <p class="text-xs font-bold text-blue-400 uppercase">Client</p>
+            <p id="cmc-client" class="font-bold text-blue-900 mt-0.5"></p>
+            <p id="cmc-phone" class="text-blue-700 text-xs mt-0.5"></p>
+          </div>
+          <div class="flex-1 bg-blue-50 rounded-xl p-3">
+            <p class="text-xs font-bold text-blue-400 uppercase mb-1.5">Livraison</p>
+            <select id="cmc-delivery" class="w-full text-sm font-semibold bg-white border border-blue-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-400">
+              <option value="avion">✈️ Express (avion)</option>
+              <option value="bateau">🚢 Économique (bateau)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-xs font-bold text-gray-500 uppercase mb-3">Produits & Prix</p>
+          <div id="cmc-products-edit" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="cmc-step2" class="overflow-auto flex-1 px-6 py-5 hidden">
+        <!-- Preview receipt -->
+        <div class="border-2 border-dashed border-gray-200 rounded-2xl p-5 mb-4">
+          <div class="text-center mb-4">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Devis</p>
+            <p id="cmc-preview-num" class="text-xl font-black font-mono text-gray-900"></p>
+            <p id="cmc-preview-client" class="text-sm text-gray-600 mt-1"></p>
+          </div>
+          <div id="cmc-preview-products" class="space-y-2 border-t border-b border-gray-100 py-3 mb-3 text-sm"></div>
+          <div class="flex justify-between text-sm text-gray-500 mb-1">
+            <span>Livraison</span><span id="cmc-preview-delivery"></span>
+          </div>
+          <div class="flex justify-between font-black text-lg">
+            <span>Total</span><span id="cmc-preview-total" class="text-blue-700"></span>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-gray-500 uppercase block mb-1">Message au client</label>
+          <textarea id="cmc-note" rows="3" placeholder="Votre devis est prêt..." class="w-full text-sm px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 resize-none"></textarea>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="border-t border-gray-100 px-6 py-4 flex gap-3">
+        <button id="cmc-back" class="hidden px-5 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 text-sm transition-colors">
+          ← Retour
+        </button>
+        <button id="cmc-next" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
+          Continuer → Aperçu
+        </button>
+        <button id="cmc-send" class="hidden flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          Envoyer au client
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .line-clamp-2 {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+  </style>
+
+  <script define:vars={{ inquiries }}>
+    const ACTIVE_MODAL = 'a'; // 'a', 'b', ou 'c' — à changer selon le choix
+
+    function getDevisNum(id) {
+      return `DEV-${String(id).padStart(4, '0')}`;
+    }
+
+    function fmt(n) {
+      return Number(n || 0).toLocaleString('fr-FR');
+    }
+
+    // ── Status select ──────────────────────────────────────────
+    document.querySelectorAll('.status-select').forEach(select => {
+      select.value = select.getAttribute('data-status') || 'en_attente';
+      select.addEventListener('change', async (e) => {
+        const id = e.target.dataset.id;
+        const status = e.target.value;
+        try {
+          const res = await fetch(`/api/inquiries/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+          });
+          if (!res.ok) alert('Erreur lors de la mise à jour');
+        } catch (err) {
+          alert('Erreur réseau');
+        }
+      });
+    });
+
+    // ── Lightbox ───────────────────────────────────────────────
+    let lbPhotos = [];
+    let lbIndex = 0;
+
+    function openLightbox(photos, startIndex) {
+      lbPhotos = photos;
+      lbIndex = startIndex;
+      updateLightbox();
+      document.getElementById('lightbox').classList.remove('hidden');
+    }
+
+    function updateLightbox() {
+      document.getElementById('lb-img').src = lbPhotos[lbIndex];
+      document.getElementById('lb-counter').textContent = `${lbIndex + 1} / ${lbPhotos.length}`;
+      document.getElementById('lb-prev').style.display = lbPhotos.length > 1 ? '' : 'none';
+      document.getElementById('lb-next').style.display = lbPhotos.length > 1 ? '' : 'none';
+    }
+
+    document.getElementById('lb-close')?.addEventListener('click', () => {
+      document.getElementById('lightbox').classList.add('hidden');
+    });
+    document.getElementById('lightbox')?.addEventListener('click', (e) => {
+      if (e.target.id === 'lightbox' || e.target.id === 'lb-img') return;
+      if (e.target.closest('#lb-prev') || e.target.closest('#lb-next') || e.target.closest('#lb-close')) return;
+      document.getElementById('lightbox').classList.add('hidden');
+    });
+    document.getElementById('lb-prev')?.addEventListener('click', () => {
+      lbIndex = (lbIndex - 1 + lbPhotos.length) % lbPhotos.length;
+      updateLightbox();
+    });
+    document.getElementById('lb-next')?.addEventListener('click', () => {
+      lbIndex = (lbIndex + 1) % lbPhotos.length;
+      updateLightbox();
+    });
+    document.addEventListener('keydown', (e) => {
+      const lb = document.getElementById('lightbox');
+      if (lb.classList.contains('hidden')) return;
+      if (e.key === 'ArrowLeft') { lbIndex = (lbIndex - 1 + lbPhotos.length) % lbPhotos.length; updateLightbox(); }
+      if (e.key === 'ArrowRight') { lbIndex = (lbIndex + 1) % lbPhotos.length; updateLightbox(); }
+      if (e.key === 'Escape') lb.classList.add('hidden');
+    });
+
+    // ── View detail ────────────────────────────────────────────
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const inquiry = inquiries.find(i => i.id == id);
+        if (!inquiry) return;
+        const products = inquiry.products || [];
+        const globalPhotos = inquiry.photos || [];
+
+        // Build per-product photo sections
+        // Products from demande form may include photos stored globally; we show global photos attributed to the gallery
+        const productsHtml = products.length > 0 ? `
+          <div>
+            <p class="text-xs font-bold text-gray-500 uppercase mb-3">Produits</p>
+            <div class="space-y-3">
+              ${products.map((p, i) => {
+                const prodPhotos = (p.photos || []);
+                const prodLinks = (p.links || []);
+                const thumbsHtml = prodPhotos.length > 0 ? `
+                  <div class="flex flex-wrap gap-1.5 mt-2 prod-photo-row" data-photos='${JSON.stringify(prodPhotos)}'>
+                    ${prodPhotos.map((src, pi) => `
+                      <img src="${src}" data-pi="${pi}" class="lb-thumb w-14 h-14 rounded-lg object-cover border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity"/>
+                    `).join('')}
+                  </div>
+                ` : '';
+                const linksHtml = prodLinks.length > 0
+                  ? prodLinks.map(l => `<a href="${l}" target="_blank" rel="noopener" class="text-blue-600 text-xs underline break-all">🔗 ${l}</a>`).join('<br/>')
+                  : '';
+                return `
+                  <div class="bg-gray-50 rounded-xl p-3">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">${i+1}</span>
+                      <span class="font-semibold text-gray-900 text-sm">${p.name}</span>
+                      <span class="text-gray-400 text-xs">×${p.quantity || 1}</span>
+                      ${p.state ? `<span class="text-xs text-gray-500 italic bg-white px-1.5 py-0.5 rounded border border-gray-200">${p.state}</span>` : ''}
+                    </div>
+                    ${linksHtml ? `<div class="mt-1">${linksHtml}</div>` : ''}
+                    ${thumbsHtml}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        ` : `<div><p class="text-xs font-bold text-gray-500 uppercase">Description</p><p class="text-sm text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg">${inquiry.description}</p></div>`;
+
+        const globalPhotosHtml = globalPhotos.length > 0 ? `
+          <div>
+            <p class="text-xs font-bold text-gray-500 uppercase mb-2">Photos jointes</p>
+            <div class="flex flex-wrap gap-2 global-photo-row" data-photos='${JSON.stringify(globalPhotos)}'>
+              ${globalPhotos.map((src, pi) => `
+                <img src="${src}" data-pi="${pi}" class="lb-thumb w-20 h-20 rounded-xl object-cover border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity shadow-sm"/>
+              `).join('')}
+            </div>
+          </div>
+        ` : '';
+
+        const content = document.getElementById('detail-modal-content');
+        content.innerHTML = `
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-gray-50 rounded-xl p-3">
+                <p class="text-xs font-bold text-gray-400 uppercase">Client</p>
+                <p class="font-semibold text-gray-900 text-sm mt-0.5">${inquiry.client_name}</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3">
+                <p class="text-xs font-bold text-gray-400 uppercase">Téléphone</p>
+                <p class="font-semibold text-gray-900 text-sm mt-0.5">${inquiry.client_phone}</p>
+              </div>
+            </div>
+            ${productsHtml}
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-gray-50 rounded-xl p-3">
+                <p class="text-xs font-bold text-gray-400 uppercase">Livraison</p>
+                <p class="text-sm text-gray-900 mt-0.5">${inquiry.delivery_type === 'bateau' ? '🚢 Économique (bateau)' : '✈️ Express (avion)'}</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3">
+                <p class="text-xs font-bold text-gray-400 uppercase">Date</p>
+                <p class="text-sm text-gray-900 mt-0.5">${new Date(inquiry.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+              </div>
+            </div>
+            ${globalPhotosHtml}
+            ${inquiry.notes ? `<div class="bg-blue-50 rounded-xl p-3"><p class="text-xs font-bold text-blue-400 uppercase">Notes</p><p class="text-sm text-blue-900 mt-1">${inquiry.notes}</p></div>` : ''}
+          </div>
+        `;
+
+        // Wire lightbox for per-product photos
+        content.querySelectorAll('.prod-photo-row').forEach(row => {
+          const photos = JSON.parse(row.dataset.photos);
+          row.querySelectorAll('.lb-thumb').forEach(img => {
+            img.addEventListener('click', () => openLightbox(photos, parseInt(img.dataset.pi)));
+          });
+        });
+
+        // Wire lightbox for global photos
+        content.querySelectorAll('.global-photo-row').forEach(row => {
+          const photos = JSON.parse(row.dataset.photos);
+          row.querySelectorAll('.lb-thumb').forEach(img => {
+            img.addEventListener('click', () => openLightbox(photos, parseInt(img.dataset.pi)));
+          });
+        });
+
+        document.getElementById('detail-modal').classList.remove('hidden');
+      });
+    });
+
+    document.getElementById('close-detail-modal')?.addEventListener('click', () => {
+      document.getElementById('detail-modal').classList.add('hidden');
+    });
+    document.getElementById('detail-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'detail-modal') document.getElementById('detail-modal').classList.add('hidden');
+    });
+
+    // ── Delete ─────────────────────────────────────────────────
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        if (!confirm('Êtes-vous sûr ?')) return;
+        try {
+          const res = await fetch(`/api/inquiries/${id}`, { method: 'DELETE' });
+          if (res.ok) document.querySelector(`tr[data-id="${id}"]`).remove();
+          else alert('Erreur');
+        } catch { alert('Erreur réseau'); }
+      });
+    });
+
+    // ── Confirm modal helpers ──────────────────────────────────
+    function calcTotal(products) {
+      return products.reduce((sum, p) => sum + (parseFloat(p._price || 0) * parseInt(p._qty || p.quantity || 1)), 0);
+    }
+
+    function openConfirmModal(inquiry) {
+      const products = (inquiry.products || []).map(p => ({
+        ...p,
+        _price: 0,
+        _qty: p.quantity || 1,
+      }));
+      inquiry._editProducts = products;
+
+      if (ACTIVE_MODAL === 'a') openModalA(inquiry);
+      else if (ACTIVE_MODAL === 'b') openModalB(inquiry);
+      else openModalC(inquiry);
+    }
+
+    document.querySelectorAll('.confirm-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const inquiry = inquiries.find(i => i.id == id);
+        if (inquiry) openConfirmModal(inquiry);
+      });
+    });
+
+    document.querySelectorAll('.close-confirm-modal').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('confirm-modal-a').classList.add('hidden');
+        document.getElementById('confirm-modal-b').classList.add('hidden');
+        document.getElementById('confirm-modal-c').classList.add('hidden');
+      });
+    });
+
+    // ── MODAL A ────────────────────────────────────────────────
+    function openModalA(inquiry) {
+      document.getElementById('cma-devis-num').textContent = getDevisNum(inquiry.id);
+      document.getElementById('cma-client').textContent = inquiry.client_name;
+      document.getElementById('cma-phone').textContent = inquiry.client_phone;
+      document.getElementById('cma-delivery').value = inquiry.delivery_type || 'avion';
+
+      const tbody = document.getElementById('cma-products-body');
+      tbody.innerHTML = '';
+
+      // Per-product new photos storage
+      inquiry._editProducts.forEach(p => { p._newPhotos = p._newPhotos || []; });
+
+      inquiry._editProducts.forEach((p, i) => {
+        const tr = document.createElement('tr');
+        tr.className = 'align-top border-b border-gray-100';
+        tr.innerHTML = `
+          <td class="px-3 py-3">
+            <input type="text" value="${p.name.replace(/"/g,'&quot;')}" class="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm font-medium text-gray-800 focus:outline-none focus:border-blue-400 cma-name" data-idx="${i}" placeholder="Nom du produit"/>
+            <input type="text" value="${(p.state||'').replace(/"/g,'&quot;')}" class="w-full border border-gray-200 rounded-lg px-2 py-1 text-xs text-gray-500 focus:outline-none focus:border-blue-400 cma-state mt-1" data-idx="${i}" placeholder="État (neuf, occasion...)"/>
+            <!-- Photo upload zone -->
+            <div class="mt-2">
+              <label class="flex items-center gap-1.5 px-2 py-1.5 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors text-xs text-gray-500 w-fit cma-upload-label" data-idx="${i}">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Ajouter photos
+                <input type="file" accept="image/*" multiple class="hidden cma-file-input" data-idx="${i}"/>
+              </label>
+              <div class="flex flex-wrap gap-1 mt-1.5 cma-photo-grid" data-idx="${i}"></div>
+            </div>
+          </td>
+          <td class="px-3 py-3 text-center">
+            <input type="number" min="1" value="${p._qty}" class="w-16 text-center border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-blue-400 cma-qty" data-idx="${i}"/>
+          </td>
+          <td class="px-3 py-3 text-right">
+            <input type="number" min="0" value="0" placeholder="0" class="w-28 text-right border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-blue-400 cma-price" data-idx="${i}"/>
+          </td>
+        `;
+        tbody.appendChild(tr);
+
+        // Wire up file input
+        const fileInput = tr.querySelector('.cma-file-input');
+        const photoGrid = tr.querySelector('.cma-photo-grid');
+        fileInput.addEventListener('change', () => {
+          Array.from(fileInput.files).forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            p._newPhotos.push(file);
+            const reader = new FileReader();
+            reader.onload = e => {
+              const thumb = document.createElement('div');
+              thumb.className = 'relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0';
+              const fileRef = file;
+              thumb.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover"/>
+                <button type="button" class="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded text-[9px] flex items-center justify-center cma-rm-photo">✕</button>`;
+              thumb.querySelector('.cma-rm-photo').addEventListener('click', () => {
+                p._newPhotos = p._newPhotos.filter(f => f !== fileRef);
+                thumb.remove();
+              });
+              photoGrid.appendChild(thumb);
+            };
+            reader.readAsDataURL(file);
+          });
+          fileInput.value = '';
+        });
+      });
+
+      function refreshTotalA() {
+        inquiry._editProducts.forEach((p, i) => {
+          p._qty = parseInt(tbody.querySelector(`.cma-qty[data-idx="${i}"]`).value) || 1;
+          p._price = parseFloat(tbody.querySelector(`.cma-price[data-idx="${i}"]`).value) || 0;
+          const nameEl = tbody.querySelector(`.cma-name[data-idx="${i}"]`);
+          if (nameEl) p.name = nameEl.value;
+          const stateEl = tbody.querySelector(`.cma-state[data-idx="${i}"]`);
+          if (stateEl) p.state = stateEl.value;
+        });
+        document.getElementById('cma-total').textContent = fmt(calcTotal(inquiry._editProducts)) + ' F';
+      }
+
+      tbody.addEventListener('input', refreshTotalA);
+      refreshTotalA();
+
+      document.getElementById('cma-send').onclick = () => sendConfirm(inquiry, 'a');
+      document.getElementById('confirm-modal-a').classList.remove('hidden');
+    }
+
+    // ── MODAL B ────────────────────────────────────────────────
+    function openModalB(inquiry) {
+      document.getElementById('cmb-devis-num').textContent = getDevisNum(inquiry.id);
+      document.getElementById('cmb-client').textContent = inquiry.client_name;
+      document.getElementById('cmb-phone').textContent = inquiry.client_phone;
+
+      const avionLabel = document.getElementById('cmb-del-avion');
+      const bateauLabel = document.getElementById('cmb-del-bateau');
+      const delivery = inquiry.delivery_type || 'avion';
+      document.querySelector(`input[name="cmb-delivery"][value="${delivery}"]`).checked = true;
+      avionLabel.className = delivery === 'avion'
+        ? 'flex items-center gap-2 p-3 border-2 border-emerald-400 bg-emerald-50 rounded-xl cursor-pointer text-sm font-semibold text-emerald-700'
+        : 'flex items-center gap-2 p-3 border-2 border-gray-200 rounded-xl cursor-pointer text-sm font-semibold text-gray-600';
+      bateauLabel.className = delivery === 'bateau'
+        ? 'flex items-center gap-2 p-3 border-2 border-emerald-400 bg-emerald-50 rounded-xl cursor-pointer text-sm font-semibold text-emerald-700'
+        : 'flex items-center gap-2 p-3 border-2 border-gray-200 rounded-xl cursor-pointer text-sm font-semibold text-gray-600';
+
+      document.querySelectorAll('input[name="cmb-delivery"]').forEach(r => {
+        r.addEventListener('change', () => {
+          avionLabel.className = r.value === 'avion' && r.checked
+            ? 'flex items-center gap-2 p-3 border-2 border-emerald-400 bg-emerald-50 rounded-xl cursor-pointer text-sm font-semibold text-emerald-700'
+            : 'flex items-center gap-2 p-3 border-2 border-gray-200 rounded-xl cursor-pointer text-sm font-semibold text-gray-600';
+          bateauLabel.className = r.value === 'bateau' && r.checked
+            ? 'flex items-center gap-2 p-3 border-2 border-emerald-400 bg-emerald-50 rounded-xl cursor-pointer text-sm font-semibold text-emerald-700'
+            : 'flex items-center gap-2 p-3 border-2 border-gray-200 rounded-xl cursor-pointer text-sm font-semibold text-gray-600';
+        });
+      });
+
+      const list = document.getElementById('cmb-products-list');
+      list.innerHTML = '';
+      inquiry._editProducts.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'bg-gray-50 rounded-xl p-3';
+        div.innerHTML = `
+          <p class="text-sm font-semibold text-gray-800 mb-2">${p.name} ${p.state ? `<span class='text-xs text-gray-400 font-normal'>(${p.state})</span>` : ''}</p>
+          <div class="flex gap-3">
+            <div class="flex-1">
+              <p class="text-xs text-gray-500 mb-1">Qté</p>
+              <input type="number" min="1" value="${p._qty}" class="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center focus:outline-none focus:border-emerald-400 cmb-qty" data-idx="${i}"/>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-500 mb-1">Prix unit. (F)</p>
+              <input type="number" min="0" value="0" placeholder="0" class="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-right focus:outline-none focus:border-emerald-400 cmb-price" data-idx="${i}"/>
+            </div>
+            <div class="flex-1 text-right">
+              <p class="text-xs text-gray-500 mb-1">Sous-total</p>
+              <p class="text-sm font-bold text-gray-900 py-1.5 cmb-row-total" data-idx="${i}">0 F</p>
+            </div>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+
+      function refreshTotalB() {
+        inquiry._editProducts.forEach((p, i) => {
+          p._qty = parseInt(list.querySelector(`.cmb-qty[data-idx="${i}"]`).value) || 1;
+          p._price = parseFloat(list.querySelector(`.cmb-price[data-idx="${i}"]`).value) || 0;
+          list.querySelector(`.cmb-row-total[data-idx="${i}"]`).textContent = fmt(p._price * p._qty) + ' F';
+        });
+        document.getElementById('cmb-total').textContent = fmt(calcTotal(inquiry._editProducts)) + ' F';
+      }
+
+      list.addEventListener('input', refreshTotalB);
+      refreshTotalB();
+
+      document.getElementById('cmb-send').onclick = () => sendConfirm(inquiry, 'b');
+      document.getElementById('confirm-modal-b').classList.remove('hidden');
+    }
+
+    // ── MODAL C ────────────────────────────────────────────────
+    function openModalC(inquiry) {
+      // Reset to step 1
+      document.getElementById('cmc-step1').classList.remove('hidden');
+      document.getElementById('cmc-step2').classList.add('hidden');
+      document.getElementById('cmc-next').classList.remove('hidden');
+      document.getElementById('cmc-send').classList.add('hidden');
+      document.getElementById('cmc-back').classList.add('hidden');
+      document.getElementById('cmc-step1-badge').className = 'flex items-center gap-2 text-sm font-semibold text-blue-600';
+      document.getElementById('cmc-step1-badge').querySelector('span').className = 'w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold';
+      document.getElementById('cmc-step2-badge').className = 'flex items-center gap-2 text-sm font-semibold text-gray-400';
+      document.getElementById('cmc-step2-badge').querySelector('span').className = 'w-6 h-6 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-xs font-bold';
+
+      document.getElementById('cmc-client').textContent = inquiry.client_name;
+      document.getElementById('cmc-phone').textContent = inquiry.client_phone;
+      document.getElementById('cmc-delivery').value = inquiry.delivery_type || 'avion';
+
+      const editContainer = document.getElementById('cmc-products-edit');
+      editContainer.innerHTML = '';
+      inquiry._editProducts.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5';
+        div.innerHTML = `
+          <div class="flex-1 text-sm font-medium text-gray-800">${p.name} ${p.state ? `<span class='text-xs text-gray-400'>(${p.state})</span>` : ''}</div>
+          <div>
+            <p class="text-xs text-gray-400 mb-0.5 text-center">Qté</p>
+            <input type="number" min="1" value="${p._qty}" class="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:border-blue-400 cmc-qty" data-idx="${i}"/>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 mb-0.5 text-center">Prix (F)</p>
+            <input type="number" min="0" value="0" placeholder="0" class="w-28 border border-gray-200 rounded-lg px-2 py-1 text-sm text-right focus:outline-none focus:border-blue-400 cmc-price" data-idx="${i}"/>
+          </div>
+        `;
+        editContainer.appendChild(div);
+      });
+
+      // Next → step 2
+      document.getElementById('cmc-next').onclick = () => {
+        // Save values
+        inquiry._editProducts.forEach((p, i) => {
+          p._qty = parseInt(editContainer.querySelector(`.cmc-qty[data-idx="${i}"]`).value) || 1;
+          p._price = parseFloat(editContainer.querySelector(`.cmc-price[data-idx="${i}"]`).value) || 0;
+        });
+
+        // Build preview
+        const deliveryVal = document.getElementById('cmc-delivery').value;
+        document.getElementById('cmc-preview-num').textContent = getDevisNum(inquiry.id);
+        document.getElementById('cmc-preview-client').textContent = `${inquiry.client_name} · ${inquiry.client_phone}`;
+        document.getElementById('cmc-preview-delivery').textContent = deliveryVal === 'bateau' ? '🚢 Bateau' : '✈️ Avion';
+        document.getElementById('cmc-preview-total').textContent = fmt(calcTotal(inquiry._editProducts)) + ' F';
+
+        const preview = document.getElementById('cmc-preview-products');
+        preview.innerHTML = inquiry._editProducts.map(p => `
+          <div class="flex justify-between">
+            <span class="text-gray-700">${p.name} ×${p._qty}</span>
+            <span class="font-semibold text-gray-900">${fmt(p._price * p._qty)} F</span>
+          </div>
+        `).join('');
+
+        document.getElementById('cmc-step1').classList.add('hidden');
+        document.getElementById('cmc-step2').classList.remove('hidden');
+        document.getElementById('cmc-next').classList.add('hidden');
+        document.getElementById('cmc-send').classList.remove('hidden');
+        document.getElementById('cmc-back').classList.remove('hidden');
+        document.getElementById('cmc-step1-badge').className = 'flex items-center gap-2 text-sm font-semibold text-gray-400';
+        document.getElementById('cmc-step1-badge').querySelector('span').className = 'w-6 h-6 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-xs font-bold';
+        document.getElementById('cmc-step2-badge').className = 'flex items-center gap-2 text-sm font-semibold text-blue-600';
+        document.getElementById('cmc-step2-badge').querySelector('span').className = 'w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold';
+      };
+
+      document.getElementById('cmc-back').onclick = () => {
+        document.getElementById('cmc-step1').classList.remove('hidden');
+        document.getElementById('cmc-step2').classList.add('hidden');
+        document.getElementById('cmc-next').classList.remove('hidden');
+        document.getElementById('cmc-send').classList.add('hidden');
+        document.getElementById('cmc-back').classList.add('hidden');
+      };
+
+      document.getElementById('cmc-send').onclick = () => sendConfirm(inquiry, 'c');
+      document.getElementById('confirm-modal-c').classList.remove('hidden');
+    }
+
+    // ── Send confirm (shared) ──────────────────────────────────
+    async function sendConfirm(inquiry, modalId) {
+      const delivery = modalId === 'a'
+        ? document.getElementById('cma-delivery').value
+        : modalId === 'b'
+        ? document.querySelector('input[name="cmb-delivery"]:checked')?.value || 'avion'
+        : document.getElementById('cmc-delivery').value;
+
+      const note = modalId === 'a'
+        ? document.getElementById('cma-note').value
+        : modalId === 'c'
+        ? document.getElementById('cmc-note').value
+        : '';
+
+      try {
+        const res = await fetch(`/api/inquiries/${inquiry.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'acceptee' }),
+        });
+
+        if (res.ok) {
+          ['a','b','c'].forEach(id => document.getElementById(`confirm-modal-${id}`).classList.add('hidden'));
+          // Update status select in row
+          const select = document.querySelector(`.status-select[data-id="${inquiry.id}"]`);
+          if (select) {
+            select.value = 'acceptee';
+            select.className = select.className.replace(/bg-\w+-100|text-\w+-800/g, '');
+            select.classList.add('bg-green-100', 'text-green-800');
+          }
+          alert(`✓ Devis ${getDevisNum(inquiry.id)} confirmé !`);
+        } else {
+          alert('Erreur lors de la confirmation');
+        }
+      } catch {
+        alert('Erreur réseau');
+      }
+    }
+  </script>
+</Layout>

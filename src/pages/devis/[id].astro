@@ -1,0 +1,678 @@
+---
+import { getDevisById } from '../../lib/devis';
+import { getInquiryById } from '../../lib/inquiries';
+
+const { id } = Astro.params;
+const devis = id ? getDevisById(parseInt(id)) : null;
+const inquiry = devis ? getInquiryById(devis.inquiry_id) : null;
+
+if (!devis || !inquiry) {
+  return new Response('Devis non trouvé', { status: 404 });
+}
+
+const isAccepted = devis.devis_status === 'accepte';
+const isRejected = devis.devis_status === 'refuse';
+
+const fmt = (n: number) => n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const dateStr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+---
+
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Devis {devis.devis_number} — TOGOLESE</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .tagline {
+      font-size: 12px;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .devis-meta {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      font-size: 13px;
+      opacity: 0.95;
+    }
+
+    .devis-meta div {
+      text-align: center;
+    }
+
+    .meta-label {
+      opacity: 0.8;
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e0e7ff;
+    }
+
+    .client-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .info-block {
+      padding: 12px 0;
+    }
+
+    .info-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 15px;
+      font-weight: 500;
+      color: #111;
+    }
+
+    .products-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+
+    .products-table thead {
+      background: #f3f4f6;
+    }
+
+    .products-table th {
+      padding: 12px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .products-table td {
+      padding: 16px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+    }
+
+    .product-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      background: #f3f4f6;
+    }
+
+    .product-name {
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 4px;
+    }
+
+    .product-details {
+      font-size: 13px;
+      color: #666;
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 12px;
+    }
+
+    .product-details span {
+      display: inline;
+    }
+
+    .product-link {
+      color: #1e40af;
+      text-decoration: none;
+      word-break: break-all;
+      font-size: 12px;
+      margin-top: 4px;
+      display: block;
+    }
+
+    .product-link:hover {
+      text-decoration: underline;
+    }
+
+    .amount-column {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    .totals-section {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .total-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      align-items: center;
+    }
+
+    .total-row.grand-total {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1e40af;
+      padding-top: 12px;
+      border-top: 2px solid #e5e7eb;
+      margin-bottom: 0;
+    }
+
+    .total-amount {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    .acompte-highlight {
+      background: #fff7ed;
+      border-left: 4px solid #f97316;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 12px;
+    }
+
+    .acompte-highlight .total-row {
+      margin-bottom: 4px;
+    }
+
+    .acompte-label {
+      color: #ea580c;
+      font-weight: 700;
+    }
+
+    .conditions {
+      background: #f0f7ff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .conditions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .condition-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .condition-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #0c4a6e;
+      text-transform: uppercase;
+    }
+
+    .condition-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: #111;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    button {
+      padding: 14px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+
+    .btn-accept {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-accept:hover:not(:disabled) {
+      background: #059669;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-reject {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-reject:hover:not(:disabled) {
+      background: #dc2626;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status-message {
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 24px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .status-accepted {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .status-rejected {
+      background: #fee2e2;
+      color: #7f1d1d;
+      border: 1px solid #fca5a5;
+    }
+
+    .print-section {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-print {
+      background: #6b7280;
+      color: white;
+      display: inline-block;
+    }
+
+    .btn-print:hover {
+      background: #4b5563;
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        padding: 24px;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .devis-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .client-info {
+        grid-template-columns: 1fr;
+      }
+
+      .conditions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .products-table th,
+      .products-table td {
+        padding: 8px;
+        font-size: 12px;
+      }
+
+      .product-image {
+        width: 60px;
+        height: 60px;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .container {
+        box-shadow: none;
+        border-radius: 0;
+      }
+
+      .actions,
+      .print-section {
+        display: none;
+      }
+
+      .status-message {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">TOGOLESE</div>
+      <div class="tagline">Vente et distribution</div>
+      <h1>Devis Commercial</h1>
+      <div class="devis-meta">
+        <div>
+          <div class="meta-label">Numéro</div>
+          <div>{devis.devis_number}</div>
+        </div>
+        <div>
+          <div class="meta-label">Date</div>
+          <div>{dateStr(devis.created_at!)}</div>
+        </div>
+        <div>
+          <div class="meta-label">Validité</div>
+          <div>{dateStr(devis.validity_until)}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Status Message -->
+      {isAccepted && (
+        <div class="status-message status-accepted">
+          ✓ Devis accepté le {dateStr(devis.accepted_at!)}
+        </div>
+      )}
+      {isRejected && (
+        <div class="status-message status-rejected">
+          ✗ Devis refusé le {dateStr(devis.rejected_at!)}
+          {devis.rejection_reason && (
+            <div style="margin-top: 4px; font-size: 13px;">Raison: {devis.rejection_reason}</div>
+          )}
+        </div>
+      )}
+
+      <!-- Client Info -->
+      <div class="section">
+        <div class="section-title">Informations Client</div>
+        <div class="client-info">
+          <div class="info-block">
+            <div class="info-label">Nom</div>
+            <div class="info-value">{devis.client_name}</div>
+          </div>
+          <div class="info-block">
+            <div class="info-label">Téléphone</div>
+            <div class="info-value">{devis.client_phone}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products -->
+      <div class="section">
+        <div class="section-title">Produits Demandés</div>
+        <table class="products-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Produit</th>
+              <th>Budget/unité</th>
+              <th class="amount-column">Sous-total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {devis.products_summary.map((product: any) => {
+              const subtotal = (product.quantity || 1) * (product.budget || 0);
+              return (
+                <tr>
+                  <td>
+                    {inquiry.photos && inquiry.photos.length > 0 && product.photo_indices ? (
+                      <img
+                        src={inquiry.photos[product.photo_indices[0]] || '/placeholder.jpg'}
+                        alt={product.name}
+                        class="product-image"
+                      />
+                    ) : (
+                      <div class="product-image" style="display: flex; align-items: center; justify-content: center; color: #999;">
+                        Sans image
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <div class="product-name">{product.name}</div>
+                    <div class="product-details">
+                      <span><strong>État:</strong> {product.condition || 'N/A'}</span>
+                      <span><strong>Qté:</strong> {product.quantity || 1}</span>
+                    </div>
+                    {product.description && (
+                      <div style="margin-top: 8px; font-size: 13px; color: #666; font-style: italic;">
+                        {product.description}
+                      </div>
+                    )}
+                    {product.link && (
+                      <a href={product.link} target="_blank" rel="noopener noreferrer" class="product-link">
+                        {product.link}
+                      </a>
+                    )}
+                  </td>
+                  <td class="amount-column">
+                    {fmt(product.budget || 0)} F
+                  </td>
+                  <td class="amount-column">
+                    {fmt(subtotal)} F
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Totals -->
+      <div class="section">
+        <div class="totals-section">
+          <div class="total-row">
+            <span>Montant Total</span>
+            <div class="total-amount">{fmt(devis.total_amount)} F</div>
+          </div>
+
+          <div class="acompte-highlight">
+            <div class="total-row acompte-label">
+              <span>✓ Acompte à verser (70%)</span>
+              <div class="total-amount">{fmt(devis.acompte_amount)} F</div>
+            </div>
+            <div class="total-row">
+              <span>Solde restant (30%)</span>
+              <div class="total-amount">{fmt(devis.solde_amount)} F</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conditions -->
+      <div class="section">
+        <div class="section-title">Conditions du Devis</div>
+        <div class="conditions">
+          <div class="conditions-grid">
+            <div class="condition-item">
+              <div class="condition-label">Validité du Devis</div>
+              <div class="condition-value">Valide jusqu'au {dateStr(devis.validity_until)}</div>
+            </div>
+            <div class="condition-item">
+              <div class="condition-label">Mode de Transport</div>
+              <div class="condition-value">
+                {devis.delivery_type === 'avion' ? '✈️ EXPRESS (4-14 jours)' : '🚢 ECO (45-60 jours)'}
+              </div>
+            </div>
+            <div class="condition-item">
+              <div class="condition-label">Délai de Livraison</div>
+              <div class="condition-value">Estimé: {dateStr(devis.estimated_delivery)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      {!isAccepted && !isRejected && (
+        <div class="section">
+          <div class="section-title">Votre Décision</div>
+          <div class="actions">
+            <button class="btn-accept" id="accept-btn">✓ Accepter le Devis</button>
+            <button class="btn-reject" id="reject-btn">✗ Refuser le Devis</button>
+          </div>
+        </div>
+      )}
+
+      <!-- Print -->
+      <div class="print-section">
+        <button class="btn-print" onclick="window.print()">🖨️ Imprimer le Devis</button>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ devisId: devis.id, status: devis.devis_status }}>
+    const acceptBtn = document.getElementById('accept-btn');
+    const rejectBtn = document.getElementById('reject-btn');
+
+    if (acceptBtn) {
+      acceptBtn.addEventListener('click', async () => {
+        acceptBtn.disabled = true;
+        rejectBtn.disabled = true;
+
+        try {
+          const res = await fetch(`/api/devis/${devisId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'accepte' }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.order) {
+              // Show success message with order number
+              alert(`✓ Devis accepté!\n\nVotre commande a été créée:\n${data.order.order_number}`);
+            }
+            // Reload page to show acceptance message
+            window.location.reload();
+          } else {
+            alert('Erreur lors de l\'acceptation du devis');
+            acceptBtn.disabled = false;
+            rejectBtn.disabled = false;
+          }
+        } catch (err) {
+          alert('Erreur réseau');
+          acceptBtn.disabled = false;
+          rejectBtn.disabled = false;
+        }
+      });
+    }
+
+    if (rejectBtn) {
+      rejectBtn.addEventListener('click', async () => {
+        const reason = prompt('Pouvez-vous nous indiquer la raison du refus ? (optionnel)');
+
+        acceptBtn.disabled = true;
+        rejectBtn.disabled = true;
+
+        try {
+          const res = await fetch(`/api/devis/${devisId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: 'refuse',
+              reason: reason || undefined,
+            }),
+          });
+
+          if (res.ok) {
+            // Reload page to show rejection message
+            window.location.reload();
+          } else {
+            alert('Erreur lors du refus du devis');
+            acceptBtn.disabled = false;
+            rejectBtn.disabled = false;
+          }
+        } catch (err) {
+          alert('Erreur réseau');
+          acceptBtn.disabled = false;
+          rejectBtn.disabled = false;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
