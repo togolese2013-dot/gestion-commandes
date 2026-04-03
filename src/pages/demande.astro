@@ -11,29 +11,79 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-      background: linear-gradient(145deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%);
+      background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%);
       min-height: 100vh;
       padding: 32px 16px 80px;
       color: #111827;
     }
 
-    .page-header {
-      text-align: center;
-      margin-bottom: 36px;
+    /* ── Header (identique à l'accueil) ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #047857;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      margin: -32px -16px 32px;
     }
-    .brand {
-      font-size: 13px;
+    .header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      position: relative;
+    }
+    .logo {
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-size: 22px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: -0.03em;
+    }
+    .nav-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .nav-center a {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.88);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    .nav-center a:hover {
+      color: #ffffff;
+      background: rgba(255,255,255,0.12);
+    }
+    @media (max-width: 900px) { .nav-center { display: none; } }
+    .btn-nav-header {
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 20px;
+      background: #ffffff;
+      color: #047857;
+      border: none;
+      border-radius: 50px;
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: 3px;
-      color: #1d4ed8;
-      text-transform: uppercase;
-      margin-bottom: 4px;
+      text-decoration: none;
+      transition: all 0.2s;
     }
-    .brand-sub {
-      font-size: 11px;
-      letter-spacing: 2px;
-      color: #6b7280;
-      text-transform: uppercase;
+    .btn-nav-header:hover {
+      background: #f0fdf4;
+      transform: translateY(-1px);
     }
 
     .form-wrapper {
@@ -64,7 +114,7 @@
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: #1d4ed8;
+      background: #047857;
       color: white;
       font-size: 14px;
       font-weight: 700;
@@ -72,7 +122,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(29,78,216,0.35);
+      box-shadow: 0 4px 12px rgba(4,120,87,0.35);
     }
     .section-title-text h2 {
       font-size: 17px;
@@ -129,8 +179,8 @@
       outline: none;
     }
     input:focus, textarea:focus, select:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
     }
     input::placeholder, textarea::placeholder { color: #9ca3af; }
     textarea { resize: vertical; min-height: 90px; }
@@ -159,7 +209,7 @@
     .product-number {
       font-size: 13px;
       font-weight: 700;
-      color: #1d4ed8;
+      color: #047857;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -167,7 +217,7 @@
     .product-number span {
       width: 22px;
       height: 22px;
-      background: #eff6ff;
+      background: #ecfdf5;
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -223,8 +273,8 @@
       transition: all 0.15s;
     }
     .media-tab.active {
-      background: #eff6ff;
-      color: #1d4ed8;
+      background: #ecfdf5;
+      color: #047857;
     }
     .media-tab:first-child { border-right: 1.5px solid #e5e7eb; }
 
@@ -232,21 +282,21 @@
     .tab-panel.active { display: block; }
 
     .drop-zone {
-      border: 2px dashed #c7d2fe;
+      border: 2px dashed #6ee7b7;
       border-radius: 10px;
       padding: 28px 16px;
       text-align: center;
-      background: #fafbff;
+      background: #f0fdf4;
       cursor: pointer;
       transition: all 0.2s;
     }
     .drop-zone:hover, .drop-zone.dragover {
-      border-color: #6366f1;
-      background: #f0f4ff;
+      border-color: #059669;
+      background: #ecfdf5;
     }
     .drop-zone-icon { font-size: 28px; margin-bottom: 8px; }
     .drop-zone p { font-size: 13px; color: #6b7280; }
-    .drop-zone p strong { color: #4f46e5; cursor: pointer; }
+    .drop-zone p strong { color: #047857; cursor: pointer; }
     .drop-zone small { font-size: 11px; color: #9ca3af; }
 
     .photo-grid {
@@ -289,10 +339,10 @@
     .btn-add-product {
       width: 100%;
       padding: 14px;
-      border: 2px dashed #c7d2fe;
+      border: 2px dashed #6ee7b7;
       border-radius: 12px;
       background: transparent;
-      color: #4f46e5;
+      color: #047857;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
@@ -303,8 +353,8 @@
       gap: 8px;
     }
     .btn-add-product:hover {
-      background: #f0f4ff;
-      border-color: #6366f1;
+      background: #ecfdf5;
+      border-color: #059669;
     }
 
     /* Delivery */
@@ -323,12 +373,12 @@
       background: white;
     }
     .delivery-card:hover {
-      border-color: #a5b4fc;
-      background: #fafbff;
+      border-color: #6ee7b7;
+      background: #f0fdf4;
     }
     .delivery-card.selected {
-      border-color: #6366f1;
-      background: #f5f3ff;
+      border-color: #059669;
+      background: #ecfdf5;
     }
     .delivery-card input[type="radio"] { display: none; }
     .delivery-icon { font-size: 32px; margin-bottom: 10px; }
@@ -357,7 +407,7 @@
       border-radius: 20px;
       padding: 48px 32px;
       text-align: center;
-      box-shadow: 0 2px 24px rgba(99,102,241,0.1);
+      box-shadow: 0 2px 24px rgba(5,150,105,0.1);
       border: 1px solid rgba(255,255,255,0.9);
     }
     .success-check {
@@ -376,14 +426,14 @@
     .success-sub { font-size: 14px; color: #6b7280; margin-bottom: 28px; }
     .devis-badge {
       display: inline-block;
-      background: linear-gradient(135deg, #eff6ff, #eef2ff);
-      border: 2px solid #c7d2fe;
+      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+      border: 2px solid #6ee7b7;
       border-radius: 12px;
       padding: 16px 32px;
       margin-bottom: 28px;
     }
     .devis-badge-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
-    .devis-badge-number { font-size: 28px; font-weight: 900; color: #1d4ed8; letter-spacing: 2px; }
+    .devis-badge-number { font-size: 28px; font-weight: 900; color: #047857; letter-spacing: 2px; }
     .devis-info { font-size: 13px; color: #6b7280; margin-bottom: 28px; line-height: 1.6; }
     .btn-new-request {
       display: inline-flex;
@@ -410,7 +460,7 @@
       align-items: center;
       gap: 10px;
       padding: 16px 48px;
-      background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%);
+      background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
       color: white;
       border: none;
       border-radius: 50px;
@@ -418,12 +468,12 @@
       font-weight: 700;
       cursor: pointer;
       transition: all 0.25s;
-      box-shadow: 0 6px 24px rgba(79,70,229,0.35);
+      box-shadow: 0 6px 24px rgba(4,120,87,0.35);
       letter-spacing: 0.3px;
     }
     .btn-submit:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 32px rgba(79,70,229,0.45);
+      box-shadow: 0 10px 32px rgba(4,120,87,0.45);
     }
     .btn-submit:disabled {
       opacity: 0.6;
@@ -464,10 +514,18 @@
 </head>
 <body>
 
-  <div class="page-header">
-    <div class="brand">Togolese</div>
-    <div class="brand-sub">Vente et Distribution</div>
-  </div>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo"><span class="logo-text">Togolese.</span></a>
+      <nav class="nav-center">
+        <a href="/#fonctionnement">Comment ça marche</a>
+        <a href="/#avantages">Avantages</a>
+        <a href="/#livraison">Livraison</a>
+        <a href="/#faq">FAQ</a>
+      </nav>
+      <a href="/demande" class="btn-nav-header">Faire une demande</a>
+    </div>
+  </header>
 
   <div class="form-wrapper">
 
