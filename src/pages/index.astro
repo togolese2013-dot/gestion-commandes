@@ -303,6 +303,14 @@ if (isAuthenticated(Astro.request)) {
       line-height: 1.08;
       color: var(--green-dark);
       margin-bottom: 22px;
+    }
+    .hero-title-sub {
+      display: block;
+      font-size: clamp(16px, 2.2vw, 24px);
+      font-weight: 700;
+      color: var(--green);
+      margin-top: 14px;
+      letter-spacing: -0.01em;
       letter-spacing: -0.03em;
     }
     /* Rotating word — block centered on its own line */
@@ -1167,11 +1175,7 @@ if (isAuthenticated(Astro.request)) {
 
         <!-- Actions — right -->
         <div class="header-actions">
-          <a href="/commande" class="btn-ghost">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            Suivre ma commande
-          </a>
-          <a href="/demande" class="btn-nav">Faire une demande →</a>
+          <a href="/demande" class="btn-nav">Faire une demande</a>
           <button class="burger" aria-label="Menu">
             <span></span><span></span><span></span>
           </button>
