@@ -91,6 +91,7 @@ const isAdminRole = currentUser?.role === 'admin';
             {isAdminRole && (
               <a href="/admin/payments" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Paiements</a>
             )}
+            <a href="/admin/analytics" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">📊 Statistiques</a>
             {isAdminRole && (
               <a href="/admin/settings" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Paramètres</a>
             )}
