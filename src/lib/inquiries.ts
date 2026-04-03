@@ -97,6 +97,14 @@ export function updateInquiry(id: number, data: Partial<Inquiry>): Inquiry | nul
     updates.push('quantity = ?');
     values.push(data.quantity);
   }
+  if (data.products !== undefined) {
+    updates.push('products = ?');
+    values.push(JSON.stringify(data.products));
+  }
+  if (data.delivery_type !== undefined) {
+    updates.push('delivery_type = ?');
+    values.push(data.delivery_type);
+  }
 
   if (updates.length === 0) return inquiry;
 

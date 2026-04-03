@@ -1,5 +1,6 @@
 import { getDb } from './db';
 import { getInquiryById } from './inquiries';
+import crypto from 'crypto';
 
 export interface Devis {
   id?: number;
@@ -16,11 +17,17 @@ export interface Devis {
   validity_days: number;
   validity_until: string;
   devis_status: 'en_attente' | 'accepte' | 'refuse';
+  access_token?: string;
   created_at?: string;
   updated_at?: string;
   accepted_at?: string;
   rejected_at?: string;
   rejection_reason?: string;
+}
+
+// Generate secure access token for client
+export function generateAccessToken(): string {
+  return crypto.randomBytes(24).toString('hex');
 }
 
 // Generate devis number format: DEV-2026-001, DEV-2026-002, etc.
@@ -60,6 +67,47 @@ function calculateValidityUntil(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+export function createDevisFromData(
+  inquiryId: number,
+  clientName: string,
+  clientPhone: string,
+  products: any[],
+  totalAmount: number,
+  deliveryType: 'avion' | 'bateau'
+): Devis {
+  const db = getDb();
+
+  const acompteAmount = totalAmount * 0.70;
+  const soldeAmount = totalAmount * 0.30;
+  const validityUntil = calculateValidityUntil();
+  const estimatedDelivery = calculateDeliveryDate(deliveryType);
+  const devisNumber = generateDevisNumber();
+  const accessToken = generateAccessToken();
+  const productsSummary = JSON.stringify(products);
+
+  // Delete + insert atomically so no race condition leaves orphans
+  const run = db.transaction(() => {
+    db.prepare('DELETE FROM devis WHERE inquiry_id = ?').run(inquiryId);
+    const result = db.prepare(`
+      INSERT INTO devis (
+        inquiry_id, devis_number, client_name, client_phone,
+        products_summary, total_amount, acompte_amount, solde_amount,
+        delivery_type, estimated_delivery, validity_days, validity_until,
+        devis_status, access_token
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      inquiryId, devisNumber, clientName, clientPhone,
+      productsSummary, totalAmount, acompteAmount, soldeAmount,
+      deliveryType, estimatedDelivery, 30, validityUntil,
+      'en_attente', accessToken
+    );
+    return result.lastInsertRowid as number;
+  });
+
+  const newId = run();
+  return getDevisById(newId)!;
+}
+
 export function createDevis(inquiryId: number): Devis {
   const db = getDb();
   const inquiry = getInquiryById(inquiryId);
@@ -68,13 +116,7 @@ export function createDevis(inquiryId: number): Devis {
     throw new Error('Inquiry not found');
   }
 
-  // Check if devis already exists
-  const existing = (db.prepare('SELECT id FROM devis WHERE inquiry_id = ?').get(inquiryId) as any);
-  if (existing) {
-    throw new Error('Devis already exists for this inquiry');
-  }
-
-  // Calculate amounts
+  // Calculate amounts from products
   const products = inquiry.products || [];
   let totalAmount = 0;
 
@@ -84,45 +126,26 @@ export function createDevis(inquiryId: number): Devis {
     totalAmount += qty * budget;
   });
 
-  const acompteAmount = totalAmount * 0.70;
-  const soldeAmount = totalAmount * 0.30;
-  const validityUntil = calculateValidityUntil();
-  const estimatedDelivery = calculateDeliveryDate(inquiry.delivery_type || 'avion');
-  const devisNumber = generateDevisNumber();
-
-  // Prepare products summary JSON
-  const productsSummary = JSON.stringify(products);
-
-  const stmt = db.prepare(`
-    INSERT INTO devis (
-      inquiry_id, devis_number, client_name, client_phone,
-      products_summary, total_amount, acompte_amount, solde_amount,
-      delivery_type, estimated_delivery, validity_days, validity_until, devis_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  const result = stmt.run(
+  return createDevisFromData(
     inquiryId,
-    devisNumber,
     inquiry.client_name,
     inquiry.client_phone,
-    productsSummary,
+    products,
     totalAmount,
-    acompteAmount,
-    soldeAmount,
-    inquiry.delivery_type || 'avion',
-    estimatedDelivery,
-    30,
-    validityUntil,
-    'en_attente'
+    inquiry.delivery_type || 'avion'
   );
-
-  return getDevisById(result.lastInsertRowid as number)!;
 }
 
 export function getDevisById(id: number): Devis | null {
   const db = getDb();
   const row = db.prepare('SELECT * FROM devis WHERE id = ?').get(id) as any;
+  if (!row) return null;
+  return parseDevis(row);
+}
+
+export function getDevisByToken(token: string): Devis | null {
+  const db = getDb();
+  const row = db.prepare('SELECT * FROM devis WHERE access_token = ?').get(token) as any;
   if (!row) return null;
   return parseDevis(row);
 }

@@ -1,0 +1,897 @@
+---
+import { getDevisByToken, updateDevisStatus } from '../../../lib/devis';
+import type { Devis } from '../../../lib/devis';
+import '../../../styles/global.css';
+
+const { token } = Astro.params;
+let devis: Devis | null = null;
+let error = '';
+let success = '';
+let successType = '';
+
+if (!token) {
+  error = 'Token invalide';
+} else {
+  devis = getDevisByToken(token);
+  if (!devis) {
+    error = 'Devis introuvable';
+  }
+}
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const action = formData.get('action');
+
+  if (devis && action) {
+    if (action === 'accept') {
+      const updated = updateDevisStatus(devis.id!, 'accepte');
+      if (updated) {
+        devis = updated;
+        success = 'Devis accepté ! Nous vous contactons très prochainement pour confirmer les détails.';
+        successType = 'accept';
+      }
+    } else if (action === 'reject') {
+      const reason = formData.get('reason') as string;
+      const updated = updateDevisStatus(devis.id!, 'refuse', reason || '');
+      if (updated) {
+        devis = updated;
+        success = 'Votre retour a bien été enregistré. Nous vous recontacterons pour explorer d\'autres options.';
+        successType = 'reject';
+      }
+    }
+  }
+}
+
+const fmt = (n: number) => n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const dateStr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{devis ? `Devis ${devis.devis_number}` : 'Votre Devis'} — TOGOLESE</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      background: linear-gradient(145deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%);
+      min-height: 100vh;
+      padding: 32px 16px 80px;
+      color: #111827;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #1d4ed8;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .brand-sub {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.9);
+      box-shadow: 0 2px 24px rgba(99,102,241,0.08), 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .card-body {
+      padding: 28px 28px;
+    }
+    @media (max-width: 480px) {
+      .card-body { padding: 22px 18px; }
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 18px;
+    }
+
+    /* ── Devis number hero ── */
+    .devis-hero {
+      text-align: center;
+      padding: 36px 28px 28px;
+    }
+    .devis-number-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #eff6ff, #eef2ff);
+      border: 2px solid #c7d2fe;
+      border-radius: 14px;
+      padding: 14px 32px;
+      margin-bottom: 16px;
+    }
+    .devis-number-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .devis-number {
+      font-size: 28px;
+      font-weight: 900;
+      color: #1d4ed8;
+      letter-spacing: 2px;
+    }
+    .devis-date {
+      font-size: 13px;
+      color: #9ca3af;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Client info ── */
+    .client-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .client-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1d4ed8, #4f46e5);
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(29,78,216,0.3);
+    }
+    .client-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .client-phone {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 2px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Products ── */
+    .product-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .product-item:last-child { border-bottom: none; }
+    .product-left { flex: 1; min-width: 0; }
+    .product-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 5px;
+    }
+    .product-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 6px;
+      border: 1.5px solid;
+    }
+    .tag-state {
+      background: #f0f4ff;
+      border-color: #c7d2fe;
+      color: #4338ca;
+    }
+    .tag-qty {
+      background: #f9fafb;
+      border-color: #e5e7eb;
+      color: #6b7280;
+    }
+    .product-right {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .product-unit {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 2px;
+    }
+    .product-price {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .product-price-unit {
+      font-size: 11px;
+      font-weight: 500;
+      color: #9ca3af;
+      margin-left: 2px;
+    }
+
+    /* ── Delivery ── */
+    .delivery-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #f9fafb;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+    .delivery-icon-wrap {
+      width: 42px;
+      height: 42px;
+      background: white;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .delivery-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .delivery-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    /* ── Total card ── */
+    .total-card {
+      background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%);
+      border-radius: 20px;
+      padding: 28px;
+      color: white;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(79,70,229,0.3);
+    }
+    .total-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      opacity: 0.65;
+      margin-bottom: 8px;
+    }
+    .total-amount {
+      font-size: clamp(38px, 10vw, 54px);
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .total-currency {
+      font-size: 18px;
+      font-weight: 600;
+      opacity: 0.75;
+      margin-left: 4px;
+    }
+    .total-sub {
+      font-size: 12px;
+      opacity: 0.5;
+      margin-bottom: 20px;
+    }
+    .total-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.15);
+      margin: 20px 0;
+    }
+    .breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .breakdown-item {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .breakdown-key {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-bottom: 4px;
+    }
+    .breakdown-pct {
+      display: inline-block;
+      background: rgba(255,255,255,0.18);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+    .breakdown-val {
+      font-size: 17px;
+      font-weight: 800;
+    }
+    .breakdown-unit {
+      font-size: 11px;
+      font-weight: 500;
+      opacity: 0.6;
+      margin-left: 2px;
+    }
+
+    /* ── Validity ── */
+    .validity-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 50px;
+      padding: 10px 20px;
+      margin-bottom: 16px;
+    }
+    .validity-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #1d4ed8;
+      flex-shrink: 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .validity-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1d4ed8;
+    }
+
+    /* ── Status banners ── */
+    .status-banner {
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .status-banner-accepted {
+      background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+      border: 1.5px solid #6ee7b7;
+    }
+    .status-banner-rejected {
+      background: #fff1f2;
+      border: 1.5px solid #fca5a5;
+    }
+    .status-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .status-banner-accepted .status-icon {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16,185,129,0.35);
+    }
+    .status-banner-rejected .status-icon {
+      background: #ef4444;
+      color: white;
+      box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+    }
+    .status-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .status-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+
+    /* ── Alert flash ── */
+    .flash {
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .flash-success {
+      background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+      border: 1.5px solid #6ee7b7;
+      color: #065f46;
+    }
+    .flash-error {
+      background: #fff1f2;
+      border: 1.5px solid #fca5a5;
+      color: #9f1239;
+    }
+    .flash-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── CTA buttons ── */
+    .cta-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-accept {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 16px 28px;
+      background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 6px 24px rgba(79,70,229,0.35);
+    }
+    .btn-accept:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(79,70,229,0.45);
+    }
+    .btn-accept:active { transform: translateY(0); }
+    .btn-reject {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 28px;
+      background: rgba(255,255,255,0.7);
+      color: #6b7280;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reject:hover {
+      background: white;
+      border-color: #d1d5db;
+      color: #374151;
+    }
+
+    /* ── Error page ── */
+    .error-page {
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .error-icon {
+      width: 64px;
+      height: 64px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    .error-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    .error-sub { font-size: 14px; color: #6b7280; }
+
+    /* ── Modal ── */
+    #reject-modal { display: none; }
+    #reject-modal.is-open { display: flex; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(17,24,39,0.5);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 20px;
+    }
+    @media (min-width: 480px) {
+      .modal-overlay { align-items: center; }
+    }
+    .modal-box {
+      background: white;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 440px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)   scale(1); }
+    }
+    .modal-header {
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .modal-sub {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .modal-body {
+      padding: 20px 24px 24px;
+    }
+    .modal-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: #111827;
+      resize: none;
+      outline: none;
+      background: #f9fafb;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      line-height: 1.5;
+    }
+    .modal-textarea::placeholder { color: #9ca3af; }
+    .modal-textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+      background: white;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn-modal-cancel {
+      flex: 1;
+      padding: 12px;
+      background: #f9fafb;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-modal-cancel:hover { background: #f3f4f6; }
+    .btn-modal-confirm {
+      flex: 1.5;
+      padding: 12px;
+      background: #ef4444;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+    }
+    .btn-modal-confirm:hover { background: #dc2626; }
+
+    /* ── Footer ── */
+    .page-footer {
+      text-align: center;
+      padding-top: 4px;
+      font-size: 12px;
+      color: #9ca3af;
+      line-height: 1.8;
+      letter-spacing: 0.2px;
+    }
+    .page-footer a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+
+    <!-- Header -->
+    <header class="page-header">
+      <div class="brand">Togolese</div>
+      <div class="brand-sub">Vente &amp; Distribution</div>
+    </header>
+
+    <!-- Error state -->
+    {error && (
+      <div class="error-page">
+        <div class="error-icon">🔍</div>
+        <h1 class="error-title">Devis introuvable</h1>
+        <p class="error-sub">Ce lien est invalide ou a expiré.<br/>Contactez-nous pour obtenir un nouveau lien.</p>
+      </div>
+    )}
+
+    {/* Flash message */}
+    {success && (
+      <div class={`flash ${successType === 'accept' ? 'flash-success' : 'flash-error'}`}>
+        <span class="flash-icon">{successType === 'accept' ? '✓' : '○'}</span>
+        <span>{success}</span>
+      </div>
+    )}
+
+    {devis && (
+      <>
+        {/* Devis number hero */}
+        <div class="card">
+          <div class="devis-hero">
+            <div class="devis-number-badge">
+              <div class="devis-number-label">Proposition commerciale</div>
+              <div class="devis-number">{devis.devis_number}</div>
+            </div>
+            <div class="devis-date">{devis.created_at ? dateStr(devis.created_at) : ''}</div>
+          </div>
+        </div>
+
+        {/* Client card */}
+        <div class="card">
+          <div class="card-body">
+            <div class="section-label">Client</div>
+            <div class="client-row">
+              <div class="client-avatar">
+                {devis.client_name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div class="client-name">{devis.client_name}</div>
+                <div class="client-phone">{devis.client_phone}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Products card */}
+        <div class="card">
+          <div class="card-body">
+            <div class="section-label">Articles commandés</div>
+            {devis.products_summary && devis.products_summary.length > 0 ? (
+              devis.products_summary.map((p: any, i: number) => {
+                const qty = p.quantity || p._qty || 1;
+                const price = p.price || p._price || 0;
+                const subtotal = qty * price;
+                return (
+                  <div class="product-item" key={i}>
+                    <div class="product-left">
+                      <div class="product-name">{p.name}</div>
+                      <div class="product-tags">
+                        {p.state && <span class="tag tag-state">{p.state}</span>}
+                        {qty > 1 && <span class="tag tag-qty">× {qty}</span>}
+                      </div>
+                    </div>
+                    <div class="product-right">
+                      {qty > 1 && (
+                        <div class="product-unit">{fmt(price)} F / u</div>
+                      )}
+                      <div class="product-price">
+                        {fmt(subtotal)}<span class="product-price-unit">FCFA</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p style="font-size:14px; color:#9ca3af; font-style:italic;">Aucun article renseigné</p>
+            )}
+          </div>
+        </div>
+
+        {/* Delivery card */}
+        <div class="card">
+          <div class="card-body">
+            <div class="section-label">Mode de livraison</div>
+            <div class="delivery-box">
+              <div class="delivery-icon-wrap">
+                {devis.delivery_type === 'bateau' ? '🚢' : '✈️'}
+              </div>
+              <div>
+                <div class="delivery-title">
+                  {devis.delivery_type === 'bateau' ? 'Économique — Bateau' : 'Express — Avion'}
+                </div>
+                <div class="delivery-sub">
+                  {devis.delivery_type === 'bateau' ? 'Délai estimé : 45 – 60 jours' : 'Délai estimé : 4 – 14 jours'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Total card */}
+        <div class="total-card">
+          <div class="total-label">Total estimé</div>
+          <div>
+            <span class="total-amount">{fmt(devis.total_amount)}</span>
+            <span class="total-currency">FCFA</span>
+          </div>
+          <div class="total-sub">Toutes taxes comprises — prix indicatifs</div>
+          <div class="total-divider"></div>
+          <div class="breakdown">
+            <div class="breakdown-item">
+              <div class="breakdown-key">Acompte <span class="breakdown-pct">70%</span></div>
+              <div class="breakdown-val">
+                {fmt(devis.acompte_amount)}<span class="breakdown-unit">F</span>
+              </div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-key">Solde livraison</div>
+              <div class="breakdown-val">
+                {fmt(devis.solde_amount)}<span class="breakdown-unit">F</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Validity */}
+        <div class="validity-strip">
+          <span class="validity-dot"></span>
+          <span class="validity-text">
+            Offre valable jusqu'au {devis.validity_until ? dateStr(devis.validity_until) : '—'}
+          </span>
+        </div>
+
+        {/* Status banners (if already decided) */}
+        {devis.devis_status === 'accepte' && (
+          <div class="status-banner status-banner-accepted">
+            <div class="status-icon">✓</div>
+            <div>
+              <div class="status-title">Proposition acceptée</div>
+              <div class="status-sub">
+                {devis.accepted_at ? dateStr(devis.accepted_at) : ''}
+                {' '}— Nous vous contacterons sous peu pour confirmer les détails.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {devis.devis_status === 'refuse' && (
+          <div class="status-banner status-banner-rejected">
+            <div class="status-icon">✗</div>
+            <div>
+              <div class="status-title">Proposition déclinée</div>
+              <div class="status-sub">
+                {devis.rejected_at ? dateStr(devis.rejected_at) : ''}
+                {devis.rejection_reason ? ` · ${devis.rejection_reason}` : ''}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CTA */}
+        {devis.devis_status === 'en_attente' && (
+          <div class="cta-wrap">
+            <form method="POST" style="width:100%">
+              <button type="submit" name="action" value="accept" class="btn-accept">
+                ✓ &nbsp;Accepter cette proposition
+              </button>
+            </form>
+            <button id="btn-reject" class="btn-reject">
+              Décliner
+            </button>
+          </div>
+        )}
+      </>
+    )}
+
+    <!-- Footer -->
+    <footer class="page-footer" style="margin-top: 24px;">
+      <p>Proposition préparée par <strong>Togolese</strong></p>
+      <p>Montants en francs CFA (FCFA), à titre indicatif</p>
+    </footer>
+
+  </div>
+
+  <!-- Reject Modal -->
+  {devis && devis.devis_status === 'en_attente' && (
+    <div id="reject-modal">
+      <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-box">
+          <div class="modal-header">
+            <div class="modal-title">Décliner la proposition</div>
+            <div class="modal-sub">Votre retour nous aide à mieux vous servir.</div>
+          </div>
+          <div class="modal-body">
+            <form method="POST">
+              <textarea
+                name="reason"
+                rows="4"
+                placeholder="Raison du refus (optionnel) — prix, délai, autre…"
+                class="modal-textarea"
+              ></textarea>
+              <div class="modal-actions">
+                <button type="button" id="btn-cancel" class="btn-modal-cancel">Annuler</button>
+                <button type="submit" name="action" value="reject" class="btn-modal-confirm">Confirmer le refus</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+
+  <script>
+    const btnReject = document.getElementById('btn-reject');
+    const btnCancel = document.getElementById('btn-cancel');
+    const modal = document.getElementById('reject-modal');
+    const overlay = document.getElementById('modal-overlay');
+
+    btnReject?.addEventListener('click', () => modal?.classList.add('is-open'));
+    btnCancel?.addEventListener('click', () => modal?.classList.remove('is-open'));
+    overlay?.addEventListener('click', (e) => {
+      if (e.target === overlay) modal?.classList.remove('is-open');
+    });
+  </script>
+</body>
+</html>

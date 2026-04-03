@@ -184,76 +184,91 @@ function getDevisNumber(id: number): string {
 
   <!-- ══════════════════════════════════════════════════
        MODAL CONFIRMER — Proposition A : "Fiche Devis"
-       Style document propre, tableau éditable, total
+       Design SaaS avec cartes produits, photos visibles
   ══════════════════════════════════════════════════ -->
   <div id="confirm-modal-a" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden">
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
             <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
           </div>
-          <div>
-            <h2 class="text-base font-bold text-gray-900">Fiche de Devis</h2>
-            <p id="cma-devis-num" class="text-xs text-gray-500 font-mono"></p>
+          <div class="min-w-0">
+            <h2 class="text-base font-bold text-gray-900 truncate">Fiche de Devis</h2>
+            <p id="cma-devis-num" class="text-xs text-gray-500 font-mono truncate"></p>
           </div>
         </div>
-        <button class="close-confirm-modal text-gray-400 hover:text-gray-600 p-1">
+        <button class="close-confirm-modal text-gray-400 hover:text-gray-600 p-1 flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
 
-      <div class="overflow-auto flex-1 px-6 py-5 space-y-5">
-        <!-- Client info -->
-        <div class="bg-gray-50 rounded-xl p-4 flex gap-6 text-sm">
-          <div><span class="text-xs font-semibold text-gray-500 uppercase">Client</span><p id="cma-client" class="font-semibold text-gray-900 mt-0.5"></p></div>
-          <div><span class="text-xs font-semibold text-gray-500 uppercase">Téléphone</span><p id="cma-phone" class="font-semibold text-gray-900 mt-0.5"></p></div>
-          <div><span class="text-xs font-semibold text-gray-500 uppercase">Livraison</span>
-            <select id="cma-delivery" class="mt-0.5 text-sm font-semibold text-gray-900 bg-white border border-gray-200 rounded-lg px-2 py-1">
-              <option value="avion">✈️ Express (avion)</option>
-              <option value="bateau">🚢 Économique (bateau)</option>
-            </select>
+      <!-- Scrollable content -->
+      <div class="overflow-auto flex-1">
+        <div class="px-4 sm:px-6 py-6 space-y-6">
+          <!-- Client info card -->
+          <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 p-4 sm:p-5 space-y-4">
+            <!-- Name & Phone on same line -->
+            <div class="grid grid-cols-2 gap-4 items-start">
+              <div>
+                <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1.5">👤 Client</p>
+                <p id="cma-client" class="text-base font-semibold text-gray-900 leading-snug"></p>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1.5">📱 Téléphone</p>
+                <p id="cma-phone" class="text-base font-semibold text-gray-900 font-mono break-all"></p>
+              </div>
+            </div>
+
+            <!-- Delivery mode -->
+            <div class="space-y-2 pt-2 border-t border-emerald-200">
+              <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">🚚 Mode de livraison</p>
+              <select id="cma-delivery" class="w-full text-sm font-semibold text-gray-900 bg-white border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 cursor-pointer transition-colors">
+                <option value="avion">✈️ Express (avion) - 4 à 14 jours</option>
+                <option value="bateau">🚢 Économique (bateau) - 45 à 60 jours</option>
+              </select>
+            </div>
           </div>
-        </div>
 
-        <!-- Products table -->
-        <div>
-          <p class="text-xs font-bold text-gray-500 uppercase mb-2">Produits</p>
-          <table class="w-full text-sm border-collapse">
-            <thead>
-              <tr class="bg-gray-50 text-xs text-gray-500 uppercase">
-                <th class="text-left px-3 py-2 rounded-tl-lg font-semibold">Produit</th>
-                <th class="text-center px-3 py-2 font-semibold w-20">Qté</th>
-                <th class="text-right px-3 py-2 rounded-tr-lg font-semibold w-28">Prix unit. (F)</th>
-              </tr>
-            </thead>
-            <tbody id="cma-products-body" class="divide-y divide-gray-100"></tbody>
-          </table>
-        </div>
+          <!-- Divider -->
+          <div class="border-t border-gray-200"></div>
 
-        <!-- Notes -->
-        <div>
-          <label class="text-xs font-bold text-gray-500 uppercase block mb-1">Note au client (optionnel)</label>
-          <textarea id="cma-note" rows="2" placeholder="Message accompagnant le devis..." class="w-full text-sm px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 resize-none"></textarea>
+          <!-- Products cards -->
+          <div id="cma-products-container" class="space-y-4">
+            <!-- Produits seront insérés ici en JS -->
+          </div>
+
+          <!-- Divider -->
+          <div class="border-t border-gray-200"></div>
+
+          <!-- Notes -->
+          <div>
+            <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Note au client (optionnel)</label>
+            <textarea id="cma-note" rows="2" placeholder="Message accompagnant le devis..." class="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-400 resize-none"></textarea>
+          </div>
         </div>
       </div>
 
       <!-- Footer with total -->
-      <div class="border-t border-gray-100 px-6 py-4">
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-sm font-semibold text-gray-600">Total devis</span>
-          <span id="cma-total" class="text-2xl font-black text-gray-900">0 F</span>
+      <div class="border-t border-gray-100 px-4 sm:px-6 py-4 flex-shrink-0 bg-gray-50">
+        <div class="text-center mb-4">
+          <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Total devis</p>
+          <p id="cma-total" class="text-3xl font-black text-gray-900">0 FCFA</p>
         </div>
-        <button id="cma-send" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+        <button id="cma-send" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-sm sm:text-base">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
           Envoyer au client
         </button>
       </div>
     </div>
   </div>
+
+  <style>
+    .cma-state-radio { accent-color: rgb(16 185 129); }
+  </style>
 
   <!-- ══════════════════════════════════════════════════
        MODAL CONFIRMER — Proposition B : "Confirmateur rapide"
@@ -644,41 +659,86 @@ function getDevisNumber(id: number): string {
       document.getElementById('cma-phone').textContent = inquiry.client_phone;
       document.getElementById('cma-delivery').value = inquiry.delivery_type || 'avion';
 
-      const tbody = document.getElementById('cma-products-body');
-      tbody.innerHTML = '';
+      const container = document.getElementById('cma-products-container');
+      container.innerHTML = '';
 
       // Per-product new photos storage
       inquiry._editProducts.forEach(p => { p._newPhotos = p._newPhotos || []; });
 
       inquiry._editProducts.forEach((p, i) => {
-        const tr = document.createElement('tr');
-        tr.className = 'align-top border-b border-gray-100';
-        tr.innerHTML = `
-          <td class="px-3 py-3">
-            <input type="text" value="${p.name.replace(/"/g,'&quot;')}" class="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm font-medium text-gray-800 focus:outline-none focus:border-blue-400 cma-name" data-idx="${i}" placeholder="Nom du produit"/>
-            <input type="text" value="${(p.state||'').replace(/"/g,'&quot;')}" class="w-full border border-gray-200 rounded-lg px-2 py-1 text-xs text-gray-500 focus:outline-none focus:border-blue-400 cma-state mt-1" data-idx="${i}" placeholder="État (neuf, occasion...)"/>
-            <!-- Photo upload zone -->
-            <div class="mt-2">
-              <label class="flex items-center gap-1.5 px-2 py-1.5 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors text-xs text-gray-500 w-fit cma-upload-label" data-idx="${i}">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Ajouter photos
-                <input type="file" accept="image/*" multiple class="hidden cma-file-input" data-idx="${i}"/>
-              </label>
-              <div class="flex flex-wrap gap-1 mt-1.5 cma-photo-grid" data-idx="${i}"></div>
-            </div>
-          </td>
-          <td class="px-3 py-3 text-center">
-            <input type="number" min="1" value="${p._qty}" class="w-16 text-center border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-blue-400 cma-qty" data-idx="${i}"/>
-          </td>
-          <td class="px-3 py-3 text-right">
-            <input type="number" min="0" value="0" placeholder="0" class="w-28 text-right border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-blue-400 cma-price" data-idx="${i}"/>
-          </td>
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-gray-200 rounded-lg p-4 sm:p-5 space-y-3 cma-product-card';
+        card.dataset.idx = i;
+
+        // Product name with border
+        const nameWrap = document.createElement('div');
+        nameWrap.className = 'border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus-within:border-emerald-400 focus-within:bg-white transition-colors';
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = p.name.replace(/"/g,'&quot;');
+        nameInput.className = 'w-full text-sm font-semibold text-gray-900 bg-transparent border-0 p-0 focus:outline-none focus:ring-0 cma-name';
+        nameInput.dataset.idx = i;
+        nameInput.placeholder = 'Nom du produit';
+        nameWrap.appendChild(nameInput);
+        card.appendChild(nameWrap);
+
+        // Qty & Price inline
+        const qtyPriceDiv = document.createElement('div');
+        qtyPriceDiv.className = 'grid grid-cols-2 gap-3 sm:gap-4';
+        qtyPriceDiv.innerHTML = `
+          <div>
+            <p class="text-xs font-bold text-gray-500 uppercase mb-1">Qté</p>
+            <input type="number" min="1" value="${p._qty}" class="w-full text-center border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-medium focus:outline-none focus:border-emerald-400 cma-qty" data-idx="${i}"/>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-gray-500 uppercase mb-1">Prix unit. (FCFA)</p>
+            <input type="number" min="0" value="0" placeholder="0" class="w-full text-right border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-medium focus:outline-none focus:border-emerald-400 cma-price" data-idx="${i}"/>
+          </div>
         `;
-        tbody.appendChild(tr);
+        card.appendChild(qtyPriceDiv);
+
+        // State (Neuf / Occasion)
+        const stateDiv = document.createElement('div');
+        stateDiv.className = 'space-y-2';
+        stateDiv.innerHTML = `
+          <p class="text-xs font-bold text-gray-500 uppercase">État</p>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="cma-state-${i}" value="Neuf" ${p.state === 'Neuf' ? 'checked' : ''} class="cma-state-radio" data-idx="${i}"/>
+              <span class="text-sm text-gray-700">Neuf</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="cma-state-${i}" value="Occasion" ${p.state === 'Occasion' ? 'checked' : ''} class="cma-state-radio" data-idx="${i}"/>
+              <span class="text-sm text-gray-700">Occasion</span>
+            </label>
+          </div>
+        `;
+        card.appendChild(stateDiv);
+
+        // Photo upload section
+        const photoDiv = document.createElement('div');
+        photoDiv.className = 'space-y-2';
+        photoDiv.innerHTML = `
+          <label class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-emerald-300 bg-emerald-50 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-100 transition-colors cma-upload-label" data-idx="${i}">
+            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span class="text-sm font-semibold text-emerald-700">📸 Ajouter des photos</span>
+            <input type="file" accept="image/*" multiple class="hidden cma-file-input" data-idx="${i}"/>
+          </label>
+          <div class="flex flex-wrap gap-2 cma-photo-grid" data-idx="${i}"></div>
+        `;
+        card.appendChild(photoDiv);
+
+        // Subtotal
+        const subtotalDiv = document.createElement('div');
+        subtotalDiv.className = 'pt-3 border-t border-gray-200 text-right';
+        subtotalDiv.innerHTML = `<p class="text-sm font-semibold text-gray-900">Sous-total : <span class="cma-subtotal" data-idx="${i}">0 FCFA</span></p>`;
+        card.appendChild(subtotalDiv);
+
+        container.appendChild(card);
 
         // Wire up file input
-        const fileInput = tr.querySelector('.cma-file-input');
-        const photoGrid = tr.querySelector('.cma-photo-grid');
+        const fileInput = card.querySelector('.cma-file-input');
+        const photoGrid = card.querySelector('.cma-photo-grid');
         fileInput.addEventListener('change', () => {
           Array.from(fileInput.files).forEach(file => {
             if (!file.type.startsWith('image/')) return;
@@ -686,11 +746,12 @@ function getDevisNumber(id: number): string {
             const reader = new FileReader();
             reader.onload = e => {
               const thumb = document.createElement('div');
-              thumb.className = 'relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0';
+              thumb.className = 'relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 flex-shrink-0 bg-gray-100';
               const fileRef = file;
               thumb.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover"/>
-                <button type="button" class="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded text-[9px] flex items-center justify-center cma-rm-photo">✕</button>`;
-              thumb.querySelector('.cma-rm-photo').addEventListener('click', () => {
+                <button type="button" class="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 text-white rounded text-[11px] flex items-center justify-center font-bold cma-rm-photo hover:bg-black/90">✕</button>`;
+              thumb.querySelector('.cma-rm-photo').addEventListener('click', (ev) => {
+                ev.preventDefault();
                 p._newPhotos = p._newPhotos.filter(f => f !== fileRef);
                 thumb.remove();
               });
@@ -703,18 +764,25 @@ function getDevisNumber(id: number): string {
       });
 
       function refreshTotalA() {
+        let total = 0;
         inquiry._editProducts.forEach((p, i) => {
-          p._qty = parseInt(tbody.querySelector(`.cma-qty[data-idx="${i}"]`).value) || 1;
-          p._price = parseFloat(tbody.querySelector(`.cma-price[data-idx="${i}"]`).value) || 0;
-          const nameEl = tbody.querySelector(`.cma-name[data-idx="${i}"]`);
+          p._qty = parseInt(container.querySelector(`.cma-qty[data-idx="${i}"]`).value) || 1;
+          p._price = parseFloat(container.querySelector(`.cma-price[data-idx="${i}"]`).value) || 0;
+          const nameEl = container.querySelector(`.cma-name[data-idx="${i}"]`);
           if (nameEl) p.name = nameEl.value;
-          const stateEl = tbody.querySelector(`.cma-state[data-idx="${i}"]`);
-          if (stateEl) p.state = stateEl.value;
+
+          const stateRadios = container.querySelectorAll(`input[name="cma-state-${i}"]:checked`);
+          if (stateRadios.length > 0) p.state = stateRadios[0].value;
+
+          const subtotal = p._qty * p._price;
+          total += subtotal;
+          const subtotalEl = container.querySelector(`.cma-subtotal[data-idx="${i}"]`);
+          if (subtotalEl) subtotalEl.textContent = fmt(subtotal) + ' FCFA';
         });
-        document.getElementById('cma-total').textContent = fmt(calcTotal(inquiry._editProducts)) + ' F';
+        document.getElementById('cma-total').textContent = fmt(total) + ' FCFA';
       }
 
-      tbody.addEventListener('input', refreshTotalA);
+      container.addEventListener('input', refreshTotalA);
       refreshTotalA();
 
       document.getElementById('cma-send').onclick = () => sendConfirm(inquiry, 'a');
@@ -887,14 +955,28 @@ function getDevisNumber(id: number): string {
         : '';
 
       try {
-        const res = await fetch(`/api/inquiries/${inquiry.id}`, {
-          method: 'PATCH',
+        const res = await fetch(`/api/inquiries/confirm`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'acceptee' }),
+          body: JSON.stringify({
+            inquiry_id: inquiry.id,
+            products: inquiry._editProducts.map(p => ({
+              name: p.name,
+              state: p.state,
+              quantity: p._qty,
+              price: p._price,
+              photos: p.photos || [],
+            })),
+            total: calcTotal(inquiry._editProducts),
+            delivery_type: delivery,
+            note,
+          }),
         });
 
         if (res.ok) {
+          const data = await res.json();
           ['a','b','c'].forEach(id => document.getElementById(`confirm-modal-${id}`).classList.add('hidden'));
+
           // Update status select in row
           const select = document.querySelector(`.status-select[data-id="${inquiry.id}"]`);
           if (select) {
@@ -902,11 +984,22 @@ function getDevisNumber(id: number): string {
             select.className = select.className.replace(/bg-\w+-100|text-\w+-800/g, '');
             select.classList.add('bg-green-100', 'text-green-800');
           }
-          alert(`✓ Devis ${getDevisNum(inquiry.id)} confirmé !`);
+
+          // Show success with devis link
+          const baseUrl = window.location.origin;
+          const devisLink = `${baseUrl}/devis/${data.access_token}`;
+          const message = `✓ Devis créé : ${data.devis_number}\n\nLien client :\n${devisLink}\n\n(Copié dans le presse-papiers)`;
+
+          // Copy link to clipboard
+          navigator.clipboard.writeText(devisLink).catch(() => {});
+
+          alert(message);
         } else {
-          alert('Erreur lors de la confirmation');
+          const error = await res.json();
+          alert(`Erreur : ${error.error || 'Confirmation échouée'}`);
         }
-      } catch {
+      } catch (e) {
+        console.error(e);
         alert('Erreur réseau');
       }
     }

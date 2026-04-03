@@ -1,23 +1,26 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 // Use DB_PATH env var for Railway volume, fallback to project root for local dev
-// process.cwd() always points to the project root during npm run dev
 const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'orders.db');
 
-let db: Database.Database;
+// Store on globalThis so Vite HMR module reloads reuse the same connection
+// instead of creating a new one (which causes SQLITE_BUSY)
+const g = globalThis as any;
 
 export function getDb(): Database.Database {
-  if (!db) {
-    db = new Database(DB_PATH);
+  if (!g.__appDb) {
+    const db = new Database(DB_PATH);
     db.pragma('journal_mode = WAL');
+    db.pragma('busy_timeout = 10000');
     db.pragma('foreign_keys = ON');
+    db.pragma('synchronous = NORMAL');
     initSchema(db);
     runMigrations(db);
     seedInitialUser(db);
+    g.__appDb = db;
   }
-  return db;
+  return g.__appDb;
 }
 
 function initSchema(db: Database.Database) {
@@ -90,7 +93,7 @@ function initSchema(db: Database.Database) {
       desired_deadline TEXT DEFAULT '',
       photos TEXT DEFAULT '[]',
       external_link TEXT DEFAULT '',
-      status TEXT NOT NULL DEFAULT 'en_attente' CHECK(status IN ('en_attente', 'contacte', 'en_cours', 'convertie', 'rejetee')),
+      status TEXT NOT NULL DEFAULT 'en_attente' CHECK(status IN ('en_attente', 'acceptee', 'refusee', 'annulee')),
       notes TEXT DEFAULT '',
       products TEXT DEFAULT '[]',
       delivery_type TEXT DEFAULT 'avion' CHECK(delivery_type IN ('avion', 'bateau')),
@@ -160,9 +163,69 @@ function runMigrations(db: Database.Database) {
     `ALTER TABLE inquiries ADD COLUMN products TEXT DEFAULT '[]'`,
     `ALTER TABLE inquiries ADD COLUMN delivery_type TEXT DEFAULT 'avion'`,
     `ALTER TABLE inquiries ADD COLUMN deadline TEXT DEFAULT ''`,
+    // Add access token to devis for public client access
+    `ALTER TABLE devis ADD COLUMN access_token TEXT`,
+    // Migrate inquiries status values: old → new
+    `UPDATE inquiries SET status = 'acceptee' WHERE status IN ('contacte', 'en_cours', 'convertie')`,
+    `UPDATE inquiries SET status = 'refusee' WHERE status = 'rejetee'`,
   ];
   for (const sql of migrations) {
-    try { db.exec(sql); } catch { /* column already exists */ }
+    try { db.exec(sql); } catch { /* column already exists or constraint issue */ }
+  }
+
+  // Recreate inquiries table with new CHECK constraint if old one still exists
+  migrateInquiriesConstraint(db);
+}
+
+function migrateInquiriesConstraint(db: Database.Database) {
+  const row = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='inquiries'`).get() as any;
+  if (!row || !row.sql.includes("'rejetee'")) return; // Already migrated
+
+  // Run entire migration as one atomic transaction
+  const migrate = db.transaction(() => {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS inquiries_v2 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_name TEXT NOT NULL,
+        client_phone TEXT NOT NULL,
+        description TEXT NOT NULL,
+        quantity INTEGER DEFAULT 1,
+        desired_deadline TEXT DEFAULT '',
+        photos TEXT DEFAULT '[]',
+        external_link TEXT DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'en_attente' CHECK(status IN ('en_attente', 'acceptee', 'refusee', 'annulee')),
+        notes TEXT DEFAULT '',
+        products TEXT DEFAULT '[]',
+        delivery_type TEXT DEFAULT 'avion' CHECK(delivery_type IN ('avion', 'bateau')),
+        deadline TEXT DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO inquiries_v2 (id, client_name, client_phone, description, quantity,
+        desired_deadline, photos, external_link, status, notes, products,
+        delivery_type, deadline, created_at, updated_at)
+      SELECT id, client_name, client_phone, description, quantity,
+        desired_deadline, photos, external_link,
+        CASE
+          WHEN status IN ('contacte','en_cours','convertie') THEN 'acceptee'
+          WHEN status = 'rejetee' THEN 'refusee'
+          ELSE 'en_attente'
+        END,
+        notes, products, delivery_type, deadline, created_at, updated_at
+      FROM inquiries;
+      DROP TABLE inquiries;
+      ALTER TABLE inquiries_v2 RENAME TO inquiries;
+    `);
+  });
+
+  try {
+    db.pragma('foreign_keys = OFF');
+    migrate();
+    db.pragma('foreign_keys = ON');
+    console.log('[Migration] inquiries status constraint updated');
+  } catch (e) {
+    db.pragma('foreign_keys = ON');
+    console.log('[Migration] inquiries already up to date');
   }
 }
 

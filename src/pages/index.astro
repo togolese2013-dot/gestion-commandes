@@ -1,8 +1,1855 @@
 ---
 import { isAuthenticated } from '../lib/auth';
 
+// Admins get redirected to their dashboard
 if (isAuthenticated(Astro.request)) {
   return Astro.redirect('/admin/orders');
 }
-return Astro.redirect('/login');
 ---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TOGOLESE — Commandez depuis le monde entier, livré chez vous</title>
+  <meta name="description" content="Téléphone, vêtements, électronique… Dites-nous ce que vous voulez depuis l'étranger, on achète et on livre au Togo." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:       #059669;
+      --green-dark:  #047857;
+      --green-deep:  #064e3b;
+      --green-light: #ecfdf5;
+      --green-mid:   #d1fae5;
+      --amber:       #f59e0b;
+      --amber-dark:  #d97706;
+      --text:        #111827;
+      --muted:       #6b7280;
+      --border:      #e5e7eb;
+      --white:       #ffffff;
+      --radius:      16px;
+    }
+
+    html { scroll-behavior: smooth; overflow-x: hidden; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      color: var(--text);
+      background: var(--white);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Utilities ─── */
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .section { padding: 80px 0; }
+    @media (max-width: 768px) { .section { padding: 56px 0; } }
+
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--green);
+      background: var(--green-light);
+      border: 1.5px solid var(--green-mid);
+      border-radius: 50px;
+      padding: 5px 14px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(26px, 5vw, 38px);
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+    .section-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 560px;
+    }
+
+    /* ─── HEADER (base.com style) ─── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: box-shadow 0.3s;
+    }
+    .header.scrolled {
+      box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      position: relative;
+    }
+
+    /* Logo — left side */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+    .logo-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--green), #10b981);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      box-shadow: 0 4px 14px rgba(5,150,105,0.3);
+    }
+    .logo-text {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--green-deep);
+      letter-spacing: 0.3px;
+    }
+    .logo-flag { font-size: 15px; }
+
+    /* Nav — absolutely centered */
+    .nav-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-center a {
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    .nav-center a:hover {
+      color: var(--text);
+      background: var(--green-light);
+    }
+    @media (max-width: 900px) { .nav-center { display: none; } }
+
+    /* Right buttons */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      background: transparent;
+      color: var(--text);
+      border: 1.5px solid var(--border);
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover {
+      border-color: var(--green);
+      color: var(--green);
+      background: var(--green-light);
+    }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      background: var(--green-deep);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(4,78,59,0.25);
+      letter-spacing: -0.01em;
+    }
+    .btn-nav:hover {
+      background: var(--green-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(4,78,59,0.35);
+    }
+    @media (max-width: 480px) { .btn-ghost { display: none; } }
+
+    /* Mobile hamburger */
+    .burger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 6px;
+      background: none;
+      border: none;
+    }
+    .burger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+    @media (max-width: 768px) { .burger { display: flex; } }
+
+    /* ─── TICKER ─── */
+    .ticker {
+      background: var(--green-deep);
+      color: rgba(255,255,255,0.88);
+      font-size: 12.5px;
+      font-weight: 500;
+      padding: 8px 0;
+      overflow: hidden;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+    .ticker-inner {
+      display: inline-flex;
+      gap: 0;
+      animation: ticker 30s linear infinite;
+    }
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 44px;
+    }
+    .ticker-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--amber);
+      flex-shrink: 0;
+      opacity: 0.9;
+    }
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ─── HERO (base.com inspired) ─── */
+    .hero {
+      position: relative;
+      padding: 0;
+      overflow: hidden;
+      min-height: 680px;
+    }
+
+    /* Canvas gradient background */
+    #hero-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* Wave SVG at the bottom */
+    .hero-wave {
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      line-height: 0;
+    }
+    .hero-wave svg {
+      display: block;
+      width: 100%;
+      height: 64px;
+    }
+
+    /* Hero content */
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 80px 20px 100px;
+      max-width: 780px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    @media (max-width: 640px) {
+      .hero-content { padding: 60px 20px 90px; }
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--green-dark);
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(5,150,105,0.25);
+      border-radius: 50px;
+      padding: 6px 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 12px rgba(5,150,105,0.1);
+      letter-spacing: 0.02em;
+    }
+    .hero-eyebrow-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50%      { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    /* Large title — base.com style */
+    .hero-title {
+      font-size: clamp(40px, 7vw, 68px);
+      font-weight: 900;
+      line-height: 1.08;
+      color: var(--green-deep);
+      margin-bottom: 22px;
+      letter-spacing: -0.03em;
+    }
+    /* Rotating word — block centered on its own line */
+    .word-rotate-block {
+      display: block;
+      position: relative;
+      height: 1.15em;
+      overflow: hidden;
+      margin: 4px 0;
+    }
+    .word-rotate-block span {
+      display: block;
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      color: var(--green);
+      opacity: 0;
+      transform: translateY(110%);
+      animation: slideWord 16s linear infinite;
+      white-space: nowrap;
+    }
+    .word-rotate-block span::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--amber), #fbbf24, transparent);
+      border-radius: 2px;
+    }
+    .word-rotate-block span:nth-child(1) { animation-delay: 0s; }
+    .word-rotate-block span:nth-child(2) { animation-delay: 4s; }
+    .word-rotate-block span:nth-child(3) { animation-delay: 8s; }
+    .word-rotate-block span:nth-child(4) { animation-delay: 12s; }
+    @keyframes slideWord {
+      0%    { opacity: 0; transform: translateY(110%); }
+      6%    { opacity: 1; transform: translateY(0); }
+      22%   { opacity: 1; transform: translateY(0); }
+      28%   { opacity: 0; transform: translateY(-110%); }
+      100%  { opacity: 0; transform: translateY(-110%); }
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      color: #374151;
+      line-height: 1.7;
+      margin-bottom: 36px;
+      max-width: 560px;
+      text-align: center;
+    }
+    @media (max-width: 640px) { .hero-sub { font-size: 15px; } }
+
+    /* Hero form — centered card */
+    .hero-form-wrap {
+      width: 100%;
+      max-width: 540px;
+    }
+    .hero-form {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 22px;
+      padding: 28px 28px 22px;
+      box-shadow: 0 12px 48px rgba(4,78,59,0.14), 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid rgba(5,150,105,0.12);
+    }
+    .hero-form-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 3px;
+      letter-spacing: -0.01em;
+    }
+    .hero-form-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .form-field {
+      margin-bottom: 12px;
+    }
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: #f9fafb;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .form-input::placeholder { color: #9ca3af; }
+    .form-input:focus {
+      border-color: var(--green);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
+    }
+    .btn-hero {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 6px 22px rgba(4,78,59,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      margin-top: 4px;
+      letter-spacing: -0.01em;
+    }
+    .btn-hero:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(4,78,59,0.4);
+    }
+    .form-badges {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .form-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .form-badge-check { color: var(--green); font-size: 13px; }
+
+    /* Hero trust row */
+    .hero-trust {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+    .hero-trust-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--green-deep);
+    }
+    .hero-trust-icon {
+      width: 32px; height: 32px;
+      background: rgba(255,255,255,0.85);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      box-shadow: 0 2px 8px rgba(4,78,59,0.12);
+    }
+
+    /* ─── HOW IT WORKS ─── */
+    .how-section { background: white; }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      margin-top: 56px;
+      position: relative;
+    }
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 40px;
+      left: calc(16.6% + 20px);
+      right: calc(16.6% + 20px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--green-mid), var(--green), var(--green-mid));
+      z-index: 0;
+    }
+    @media (max-width: 640px) {
+      .steps-grid { grid-template-columns: 1fr; gap: 32px; }
+      .steps-grid::before { display: none; }
+    }
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+    .step-number {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), #10b981);
+      color: white;
+      font-size: 32px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(5,150,105,0.35);
+      flex-shrink: 0;
+    }
+    .step-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .step-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .step-icon-small {
+      display: inline-block;
+      width: 32px; height: 32px;
+      background: var(--green-light);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin: 12px auto 0;
+    }
+
+    /* ─── CATEGORIES ─── */
+    .categories-section { background: var(--green-light); }
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+    @media (max-width: 768px) { .categories-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .categories-grid { grid-template-columns: 1fr 1fr; gap: 12px; } }
+
+    .category-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1.5px solid rgba(5,150,105,0.08);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .category-card:hover {
+      border-color: var(--green);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(5,150,105,0.15);
+    }
+    .category-emoji {
+      font-size: 32px;
+      width: 56px; height: 56px;
+      background: var(--green-light);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .category-card:hover .category-emoji { transform: scale(1.1); }
+    .category-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+    .category-link {
+      font-size: 12px;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    /* ─── TRUST ─── */
+    .trust-section { background: white; }
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      margin-top: 56px;
+    }
+    @media (max-width: 768px) { .trust-grid { grid-template-columns: 1fr; gap: 20px; } }
+
+    .trust-card {
+      background: var(--green-light);
+      border: 1.5px solid var(--green-mid);
+      border-radius: 20px;
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .trust-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--green), #10b981);
+    }
+    .trust-icon {
+      font-size: 36px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .trust-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--green-deep);
+      margin-bottom: 10px;
+    }
+    .trust-text {
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.7;
+    }
+
+    /* ─── ORIGINS ─── */
+    .origins-section {
+      background: var(--green-deep);
+      color: white;
+      padding: 64px 0;
+    }
+    .origins-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    @media (max-width: 768px) { .origins-grid { grid-template-columns: 1fr; gap: 36px; } }
+    .origins-title {
+      font-size: clamp(26px, 4vw, 36px);
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .origins-sub {
+      font-size: 15px;
+      opacity: 0.7;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+    .origins-flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .origin-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .origin-pill:hover { background: rgba(255,255,255,0.18); }
+    .origins-numbers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .origin-stat {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+    .origin-stat-n {
+      font-size: 36px;
+      font-weight: 900;
+      color: #6ee7b7;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .origin-stat-l { font-size: 12px; opacity: 0.6; font-weight: 500; }
+
+    /* ─── TESTIMONIALS ─── */
+    .testi-section { background: #f9fafb; }
+    .testi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+    @media (max-width: 900px) { .testi-grid { grid-template-columns: 1fr; max-width: 440px; margin-left: auto; margin-right: auto; } }
+
+    /* WhatsApp style */
+    .testi-bubble-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .testi-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .testi-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+    }
+    .testi-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .testi-city { font-size: 11px; color: var(--muted); }
+
+    .bubble {
+      border-radius: 18px;
+      padding: 13px 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      position: relative;
+      max-width: 90%;
+    }
+    .bubble-incoming {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+      color: var(--text);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .bubble-outgoing {
+      background: #dcf8c6;
+      border-bottom-right-radius: 4px;
+      align-self: flex-end;
+      color: #1a3d1a;
+      border: 1px solid #b7e09e;
+    }
+    .bubble-time {
+      font-size: 10px;
+      opacity: 0.55;
+      margin-top: 4px;
+      text-align: right;
+    }
+    .testi-stars {
+      font-size: 13px;
+      color: var(--amber);
+      margin-top: 8px;
+    }
+    .testi-card {
+      background: white;
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      border: 1.5px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── DELIVERY MODES ─── */
+    .delivery-section { background: white; }
+    .delivery-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 48px;
+    }
+    @media (max-width: 640px) { .delivery-grid { grid-template-columns: 1fr; } }
+    .delivery-mode-card {
+      border-radius: 20px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .delivery-avion {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border: 2px solid #bfdbfe;
+    }
+    .delivery-bateau {
+      background: linear-gradient(135deg, var(--green-light), var(--green-mid));
+      border: 2px solid #6ee7b7;
+    }
+    .delivery-mode-icon { font-size: 48px; margin-bottom: 16px; }
+    .delivery-mode-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .delivery-avion .delivery-mode-tag { background: #1d4ed8; color: white; }
+    .delivery-bateau .delivery-mode-tag { background: var(--green); color: white; }
+    .delivery-mode-title {
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .delivery-avion .delivery-mode-title { color: #1e3a8a; }
+    .delivery-bateau .delivery-mode-title { color: var(--green-deep); }
+    .delivery-mode-delay {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .delivery-avion .delivery-mode-delay { color: #1d4ed8; }
+    .delivery-bateau .delivery-mode-delay { color: var(--green-dark); }
+    .delivery-mode-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .delivery-mode-points li {
+      font-size: 14px;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .delivery-mode-points li::before {
+      content: '✓';
+      color: var(--green);
+      font-weight: 800;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    /* ─── FAQ ─── */
+    .faq-section { background: var(--green-light); }
+    .faq-list {
+      max-width: 720px;
+      margin: 48px auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .faq-item {
+      background: white;
+      border: 1.5px solid var(--green-mid);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .faq-question {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 22px;
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .faq-question:hover { background: var(--green-light); }
+    .faq-question.open { color: var(--green-dark); }
+    .faq-chevron {
+      width: 28px; height: 28px;
+      background: var(--green-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+      transition: transform 0.3s;
+      color: var(--green);
+    }
+    .faq-question.open .faq-chevron { transform: rotate(180deg); background: var(--green-mid); }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.35s ease;
+    }
+    .faq-answer.open { max-height: 200px; }
+    .faq-answer-inner {
+      padding: 0 22px 18px;
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.7;
+      border-top: 1px solid var(--green-mid);
+      padding-top: 16px;
+    }
+
+    /* ─── CTA FINAL ─── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--green-deep) 0%, #065f46 50%, #047857 100%);
+      color: white;
+      text-align: center;
+      padding: 80px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: -100px; right: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 60%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .cta-section::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -80px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 60%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .cta-inner { position: relative; z-index: 1; }
+    .cta-emoji { font-size: 56px; margin-bottom: 20px; }
+    .cta-title {
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 900;
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+    .cta-sub {
+      font-size: 17px;
+      opacity: 0.75;
+      margin-bottom: 36px;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 40px;
+      background: var(--amber);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: all 0.25s;
+      box-shadow: 0 8px 28px rgba(245,158,11,0.45);
+      letter-spacing: 0.3px;
+    }
+    .btn-cta:hover {
+      background: var(--amber-dark);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 36px rgba(245,158,11,0.5);
+    }
+    .cta-note {
+      margin-top: 20px;
+      font-size: 13px;
+      opacity: 0.5;
+    }
+    .cta-reassure {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+    .cta-r-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      opacity: 0.7;
+      font-weight: 500;
+    }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      background: #022c22;
+      color: rgba(255,255,255,0.85);
+      padding: 56px 0 28px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 28px;
+    }
+    @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 540px) { .footer-grid { grid-template-columns: 1fr; gap: 28px; } }
+    .footer-logo-text {
+      font-size: 20px;
+      font-weight: 900;
+      color: white;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .footer-tagline { font-size: 14px; opacity: 0.6; line-height: 1.6; margin-bottom: 20px; }
+    .footer-socials {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .social-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .social-pill:hover { background: rgba(255,255,255,0.15); color: white; }
+    .footer-col-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 16px;
+    }
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .footer-links a {
+      font-size: 14px;
+      color: rgba(255,255,255,0.65);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: white; }
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-copy {
+      font-size: 13px;
+      opacity: 0.4;
+    }
+    .footer-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      opacity: 0.4;
+    }
+
+    /* ─── WhatsApp FAB ─── */
+    .wa-fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      width: 56px; height: 56px;
+      background: #25d366;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(37,211,102,0.5);
+      text-decoration: none;
+      font-size: 26px;
+      transition: all 0.2s;
+      animation: fab-bounce 3s ease-in-out infinite;
+    }
+    .wa-fab:hover { transform: scale(1.1); box-shadow: 0 10px 28px rgba(37,211,102,0.6); }
+    @keyframes fab-bounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-4px); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ░░ HEADER (base.com style) ░░ -->
+  <header class="header" id="main-header">
+    <div class="container">
+      <div class="header-inner">
+
+        <!-- Logo — left -->
+        <a href="/" class="logo">
+          <div class="logo-icon">📦</div>
+          <span class="logo-text">TOGOLESE</span>
+          <span class="logo-flag">🇹🇬</span>
+        </a>
+
+        <!-- Nav — center (absolute) -->
+        <nav class="nav-center">
+          <a href="#fonctionnement">Comment ça marche</a>
+          <a href="#avantages">Avantages</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+
+        <!-- Actions — right -->
+        <div class="header-actions">
+          <a href="/admin" class="btn-ghost">Se connecter</a>
+          <a href="/demande" class="btn-nav">Faire une demande →</a>
+          <button class="burger" aria-label="Menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ░░ TICKER ░░ -->
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span class="ticker-item"><span class="ticker-dot"></span>✈️ Livraison Express — 4 à 14 jours</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>🌍 Import USA · Europe · Chine · Dubaï · Turquie</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>⭐ +500 clients satisfaits au Togo</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>💬 Devis gratuit sous 24h</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>🔒 Produits 100 % authentiques garantis</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>🚢 Mode Économique disponible — 45 à 60 jours</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>✈️ Livraison Express — 4 à 14 jours</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>🌍 Import USA · Europe · Chine · Dubaï · Turquie</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>⭐ +500 clients satisfaits au Togo</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>💬 Devis gratuit sous 24h</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>🔒 Produits 100 % authentiques garantis</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>🚢 Mode Économique disponible — 45 à 60 jours</span>
+    </div>
+  </div>
+
+  <!-- ░░ HERO (base.com inspired — centered + canvas gradient) ░░ -->
+  <section class="hero">
+
+    <!-- Animated canvas background -->
+    <canvas id="hero-canvas"></canvas>
+
+    <!-- Centered content -->
+    <div class="hero-content">
+
+      <div class="hero-eyebrow">
+        <span class="hero-eyebrow-dot"></span>
+        Service d'import au Togo · Depuis 2022
+      </div>
+
+      <h1 class="hero-title">
+        Commandez vos
+        <div class="word-rotate-block">
+          <span>iPhone 16 Pro</span>
+          <span>Sneakers Nike</span>
+          <span>MacBook Air</span>
+          <span>PS5 &amp; Jeux</span>
+        </div>
+        depuis l'étranger.
+      </h1>
+
+      <p class="hero-sub">
+        Dites-nous ce que vous voulez. On achète, on dédouane
+        et on livre directement chez vous au Togo.
+      </p>
+
+      <!-- Quick form -->
+      <div class="hero-form-wrap">
+        <div class="hero-form">
+          <div class="hero-form-title">Obtenir un devis gratuit</div>
+          <div class="hero-form-sub">Remplissez en 30 secondes · Réponse sous 24h</div>
+
+          <form action="/demande" method="GET">
+            <div class="form-field">
+              <label class="form-label">Produit recherché *</label>
+              <input
+                type="text"
+                name="produit"
+                class="form-input"
+                placeholder="Ex : iPhone 16 Pro, Nike Air Force 1, PS5…"
+              />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Votre numéro WhatsApp *</label>
+              <input
+                type="tel"
+                name="tel"
+                class="form-input"
+                placeholder="+228 XX XX XX XX"
+              />
+            </div>
+            <a href="/demande" class="btn-hero">
+              🚀 Obtenir mon devis gratuit
+            </a>
+          </form>
+
+          <div class="form-badges">
+            <span class="form-badge"><span class="form-badge-check">✓</span> Gratuit</span>
+            <span class="form-badge"><span class="form-badge-check">✓</span> Sans engagement</span>
+            <span class="form-badge"><span class="form-badge-check">✓</span> Réponse en 24h</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust row -->
+      <div class="hero-trust">
+        <div class="hero-trust-item">
+          <span class="hero-trust-icon">📦</span> 500+ commandes livrées
+        </div>
+        <div class="hero-trust-item">
+          <span class="hero-trust-icon">⭐</span> 99 % de satisfaction
+        </div>
+        <div class="hero-trust-item">
+          <span class="hero-trust-icon">⚡</span> Réponse sous 24h
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Wave separator to white -->
+    <div class="hero-wave">
+      <svg viewBox="0 0 1440 64" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M0,32 C240,64 480,0 720,32 C960,64 1200,0 1440,32 L1440,64 L0,64 Z" fill="#ffffff"/>
+      </svg>
+    </div>
+
+  </section>
+
+  <!-- ░░ COMMENT ÇA MARCHE ░░ -->
+  <section class="section how-section" id="fonctionnement">
+    <div class="container" style="text-align:center;">
+      <div class="section-tag">📋 Processus simple</div>
+      <h2 class="section-title">Aussi simple que 1, 2, 3</h2>
+      <p class="section-sub" style="margin:0 auto;">Pas besoin de carte bancaire internationale, pas de démarches compliquées. On s'occupe de tout.</p>
+
+      <div class="steps-grid">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3 class="step-title">Dites-nous ce que vous voulez</h3>
+          <p class="step-desc">Nom du produit, lien URL ou photo. Indiquez votre budget si vous en avez un.</p>
+          <div class="step-icon-small">📝</div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3 class="step-title">On vous envoie le prix total</h3>
+          <p class="step-desc">Produit + frais de livraison + douane. Tout inclus. Aucune mauvaise surprise.</p>
+          <div class="step-icon-small">💰</div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3 class="step-title">Vous payez, on livre</h3>
+          <p class="step-desc">Après confirmation, on achète et on livre directement chez vous au Togo.</p>
+          <div class="step-icon-small">🏠</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ CATÉGORIES ░░ -->
+  <section class="section categories-section">
+    <div class="container">
+      <div style="text-align:center;">
+        <div class="section-tag">🛍️ Ce qu'on importe</div>
+        <h2 class="section-title">Tout ce que vous cherchez, on peut le trouver</h2>
+        <p class="section-sub" style="margin:0 auto;">De l'électronique aux vêtements en passant par les cosmétiques — aucune limite de catégorie.</p>
+      </div>
+
+      <div class="categories-grid">
+        <a href="/demande" class="category-card">
+          <div class="category-emoji">📱</div>
+          <div>
+            <div class="category-name">Téléphones & Accessoires</div>
+            <div class="category-link">Demander →</div>
+          </div>
+        </a>
+        <a href="/demande" class="category-card">
+          <div class="category-emoji">👟</div>
+          <div>
+            <div class="category-name">Chaussures & Mode</div>
+            <div class="category-link">Demander →</div>
+          </div>
+        </a>
+        <a href="/demande" class="category-card">
+          <div class="category-emoji">💻</div>
+          <div>
+            <div class="category-name">Informatique & Électronique</div>
+            <div class="category-link">Demander →</div>
+          </div>
+        </a>
+        <a href="/demande" class="category-card">
+          <div class="category-emoji">💄</div>
+          <div>
+            <div class="category-name">Cosmétiques & Beauté</div>
+            <div class="category-link">Demander →</div>
+          </div>
+        </a>
+        <a href="/demande" class="category-card">
+          <div class="category-emoji">🏠</div>
+          <div>
+            <div class="category-name">Maison & Électroménager</div>
+            <div class="category-link">Demander →</div>
+          </div>
+        </a>
+        <a href="/demande" class="category-card">
+          <div class="category-emoji">🎮</div>
+          <div>
+            <div class="category-name">Jeux & Loisirs</div>
+            <div class="category-link">Demander →</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ POURQUOI NOUS FAIRE CONFIANCE ░░ -->
+  <section class="section trust-section" id="avantages">
+    <div class="container">
+      <div style="text-align:center;">
+        <div class="section-tag">🛡️ Nos engagements</div>
+        <h2 class="section-title">Pourquoi nous faire confiance ?</h2>
+        <p class="section-sub" style="margin:0 auto;">Des milliers de clients au Togo nous font confiance. Voici pourquoi.</p>
+      </div>
+
+      <div class="trust-grid">
+        <div class="trust-card">
+          <span class="trust-icon">🤝</span>
+          <h3 class="trust-title">On communique à chaque étape</h3>
+          <p class="trust-text">De la réception de votre demande jusqu'à la livraison, on vous tient informé par WhatsApp. Vous savez toujours où en est votre commande.</p>
+        </div>
+        <div class="trust-card">
+          <span class="trust-icon">💯</span>
+          <h3 class="trust-title">Produits vérifiés et authentiques</h3>
+          <p class="trust-text">On achète uniquement chez des fournisseurs et revendeurs officiels. Chaque commande est inspectée avant expédition. Zéro contrefaçon.</p>
+        </div>
+        <div class="trust-card">
+          <span class="trust-icon">🔄</span>
+          <h3 class="trust-title">Si problème, on trouve une solution</h3>
+          <p class="trust-text">Produit endommagé, retard de livraison, problème de taille ? On assume notre responsabilité et on vous propose une solution adaptée.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ ORIGINES ░░ -->
+  <section class="origins-section">
+    <div class="container">
+      <div class="origins-grid">
+        <div>
+          <div class="section-tag" style="background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);">
+            🌍 Nos sources
+          </div>
+          <h2 class="origins-title">Partout dans le monde,<br>toujours pour vous.</h2>
+          <p class="origins-sub">On s'approvisionne dans les plus grands marchés mondiaux pour vous trouver les meilleurs produits aux meilleurs prix.</p>
+          <div class="origins-flags">
+            <div class="origin-pill">🇺🇸 États-Unis</div>
+            <div class="origin-pill">🇫🇷 France</div>
+            <div class="origin-pill">🇨🇳 Chine</div>
+            <div class="origin-pill">🇦🇪 Dubaï</div>
+            <div class="origin-pill">🇹🇷 Turquie</div>
+            <div class="origin-pill">🇬🇧 Royaume-Uni</div>
+          </div>
+        </div>
+        <div class="origins-numbers">
+          <div class="origin-stat">
+            <div class="origin-stat-n">500+</div>
+            <div class="origin-stat-l">Commandes livrées</div>
+          </div>
+          <div class="origin-stat">
+            <div class="origin-stat-n">50+</div>
+            <div class="origin-stat-l">Pays d'import</div>
+          </div>
+          <div class="origin-stat">
+            <div class="origin-stat-n">24h</div>
+            <div class="origin-stat-l">Délai de réponse</div>
+          </div>
+          <div class="origin-stat">
+            <div class="origin-stat-n">99%</div>
+            <div class="origin-stat-l">Satisfaction client</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ TÉMOIGNAGES ░░ -->
+  <section class="section testi-section">
+    <div class="container">
+      <div style="text-align:center;">
+        <div class="section-tag">💬 Témoignages</div>
+        <h2 class="section-title">Ce que disent nos clients</h2>
+        <p class="section-sub" style="margin:0 auto;">Des vraies personnes, de vraies commandes, de vrais retours.</p>
+      </div>
+
+      <div class="testi-grid">
+
+        <!-- Témoignage 1 -->
+        <div class="testi-card">
+          <div class="testi-header">
+            <div class="testi-avatar" style="background:linear-gradient(135deg,#1d4ed8,#6366f1);">K</div>
+            <div>
+              <div class="testi-name">Kofi Adzoe</div>
+              <div class="testi-city">📍 Lomé</div>
+            </div>
+          </div>
+          <div class="testi-bubble-wrap">
+            <div class="bubble bubble-incoming">
+              Bonjour, j'ai commandé mon iPhone 15 Pro Max avec vous le mois dernier 🙏
+            </div>
+            <div class="bubble bubble-outgoing">
+              Reçu en exactement 9 jours depuis les USA ! Emballage parfait, téléphone neuf, très content 😍
+              <div class="bubble-time">✓✓ Hier</div>
+            </div>
+          </div>
+          <div class="testi-stars">⭐⭐⭐⭐⭐ <span style="font-size:12px;color:#6b7280;margin-left:4px;">iPhone 15 Pro · USA</span></div>
+        </div>
+
+        <!-- Témoignage 2 -->
+        <div class="testi-card">
+          <div class="testi-header">
+            <div class="testi-avatar" style="background:linear-gradient(135deg,#059669,#10b981);">A</div>
+            <div>
+              <div class="testi-name">Ama Sossah</div>
+              <div class="testi-city">📍 Kpalimé</div>
+            </div>
+          </div>
+          <div class="testi-bubble-wrap">
+            <div class="bubble bubble-incoming">
+              J'avais peur au début, la première commande c'est toujours stressant...
+            </div>
+            <div class="bubble bubble-outgoing">
+              Mais tout s'est très bien passé ! Mes Nike Air Force 1 depuis la France sont arrivées en 12 jours. Je recommande ! 👟✅
+              <div class="bubble-time">✓✓ 3 jours</div>
+            </div>
+          </div>
+          <div class="testi-stars">⭐⭐⭐⭐⭐ <span style="font-size:12px;color:#6b7280;margin-left:4px;">Nike Air Force · France</span></div>
+        </div>
+
+        <!-- Témoignage 3 -->
+        <div class="testi-card">
+          <div class="testi-header">
+            <div class="testi-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">Y</div>
+            <div>
+              <div class="testi-name">Yao Mensah</div>
+              <div class="testi-city">📍 Lomé</div>
+            </div>
+          </div>
+          <div class="testi-bubble-wrap">
+            <div class="bubble bubble-incoming">
+              J'ai commandé un MacBook Pro M3 depuis les USA, budget serré...
+            </div>
+            <div class="bubble bubble-outgoing">
+              Togolese m'a trouvé le meilleur prix, livré en 11 jours. Économisé plus de 150 000 FCFA par rapport aux magasins locaux 💪
+              <div class="bubble-time">✓✓ 1 semaine</div>
+            </div>
+          </div>
+          <div class="testi-stars">⭐⭐⭐⭐⭐ <span style="font-size:12px;color:#6b7280;margin-left:4px;">MacBook Pro M3 · USA</span></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ LIVRAISON ░░ -->
+  <section class="section delivery-section">
+    <div class="container">
+      <div style="text-align:center;">
+        <div class="section-tag">🚚 Livraison</div>
+        <h2 class="section-title">Deux options de livraison</h2>
+        <p class="section-sub" style="margin:0 auto;">Choisissez selon votre budget et votre urgence.</p>
+      </div>
+
+      <div class="delivery-grid">
+        <div class="delivery-mode-card delivery-avion">
+          <div class="delivery-mode-icon">✈️</div>
+          <div class="delivery-mode-tag">Recommandé</div>
+          <h3 class="delivery-mode-title">Express — Avion</h3>
+          <p class="delivery-mode-delay">4 à 14 jours ouvrés</p>
+          <ul class="delivery-mode-points">
+            <li>Priorité douane accélérée</li>
+            <li>Suivi en temps réel</li>
+            <li>Emballage renforcé</li>
+            <li>Idéal pour colis jusqu'à 30 kg</li>
+          </ul>
+        </div>
+        <div class="delivery-mode-card delivery-bateau">
+          <div class="delivery-mode-icon">🚢</div>
+          <div class="delivery-mode-tag">Économique</div>
+          <h3 class="delivery-mode-title">Économique — Bateau</h3>
+          <p class="delivery-mode-delay">45 à 60 jours</p>
+          <ul class="delivery-mode-points">
+            <li>Tarif réduit pour grandes commandes</li>
+            <li>Idéal pour gros volumes</li>
+            <li>Suivi de conteneur inclus</li>
+            <li>Aucune limite de poids</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ FAQ ░░ -->
+  <section class="section faq-section" id="faq">
+    <div class="container" style="text-align:center;">
+      <div class="section-tag">❓ Questions fréquentes</div>
+      <h2 class="section-title">Tout ce que vous voulez savoir</h2>
+      <p class="section-sub" style="margin:0 auto;">Des doutes ? Ces réponses couvrent 95% des questions que l'on reçoit.</p>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-question" data-faq="0">
+            Combien de temps prend la livraison ?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-0">
+            <div class="faq-answer-inner">
+              Tout dépend du mode choisi. En <strong>Express (avion)</strong>, comptez 4 à 14 jours ouvrés selon l'origine. En mode <strong>Économique (bateau)</strong>, comptez 45 à 60 jours. Le délai est communiqué précisément dans votre devis.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" data-faq="1">
+            Comment je paye ?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-1">
+            <div class="faq-answer-inner">
+              Après acceptation du devis, un <strong>acompte de 70%</strong> est requis pour lancer la commande. Le solde de 30% est réglé à la livraison. On accepte Mobile Money (Flooz, T-Money), virement bancaire et paiement en espèces à Lomé.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" data-faq="2">
+            Et si le produit arrive endommagé ?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-2">
+            <div class="faq-answer-inner">
+              Chaque colis est soigneusement emballé et protégé. En cas de dommage constaté à la livraison, contactez-nous immédiatement avec des photos. Nous prenons en charge le remboursement ou le remplacement selon les circonstances.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" data-faq="3">
+            Vous livrez partout au Togo ?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-3">
+            <div class="faq-answer-inner">
+              Oui ! On livre à <strong>Lomé</strong> directement à domicile. Pour les autres villes (Kpalimé, Atakpamé, Sokodé, Kara, Dapaong…), on s'arrange via les services de transport locaux. Les frais de livraison intérieure sont précisés dans le devis.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" data-faq="4">
+            Comment suivre ma commande ?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-4">
+            <div class="faq-answer-inner">
+              Dès que votre colis est expédié, on vous envoie le numéro de suivi par WhatsApp. Vous pouvez suivre l'avancée en temps réel. On vous prévient également à chaque étape clé : achat confirmé, envoi, passage douane, livraison en cours.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" data-faq="5">
+            Vous pouvez importer n'importe quel produit ?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-5">
+            <div class="faq-answer-inner">
+              La grande majorité des produits, oui ! Téléphones, ordinateurs, vêtements, chaussures, cosmétiques, électroménager, jouets, accessoires... Il existe quelques restrictions légales (produits dangereux, médicaments soumis à prescription, etc.) dont nous vous informerons si votre demande est concernée.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ CTA FINAL ░░ -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-inner">
+        <div class="cta-emoji">📦</div>
+        <h2 class="cta-title">Vous avez un produit en tête ?</h2>
+        <p class="cta-sub">La demande prend 2 minutes. Le devis est gratuit et sans engagement. On s'occupe du reste.</p>
+        <a href="/demande" class="btn-cta">
+          🚀 Faire ma demande maintenant
+        </a>
+        <p class="cta-note">Gratuit · Sans engagement · Réponse sous 24h</p>
+        <div class="cta-reassure">
+          <span class="cta-r-item">🇹🇬 Service togolais</span>
+          <span class="cta-r-item">🔒 Paiement sécurisé</span>
+          <span class="cta-r-item">⭐ +500 clients satisfaits</span>
+          <span class="cta-r-item">💬 Support WhatsApp</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ FOOTER ░░ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+
+        <!-- Brand col -->
+        <div>
+          <div class="footer-logo-text">📦 TOGOLESE 🇹🇬</div>
+          <p class="footer-tagline">
+            Votre service d'import au Togo.<br>
+            On commande pour vous, depuis le monde entier.
+          </p>
+          <div class="footer-socials">
+            <a href="#" class="social-pill">💬 WhatsApp</a>
+            <a href="#" class="social-pill">📘 Facebook</a>
+            <a href="#" class="social-pill">📸 Instagram</a>
+          </div>
+        </div>
+
+        <!-- Services -->
+        <div>
+          <div class="footer-col-title">Services</div>
+          <ul class="footer-links">
+            <li><a href="/demande">Faire une demande</a></li>
+            <li><a href="#fonctionnement">Comment ça marche</a></li>
+            <li><a href="#avantages">Nos avantages</a></li>
+            <li><a href="#faq">FAQ</a></li>
+          </ul>
+        </div>
+
+        <!-- Catégories -->
+        <div>
+          <div class="footer-col-title">Catégories</div>
+          <ul class="footer-links">
+            <li><a href="/demande">📱 Téléphones</a></li>
+            <li><a href="/demande">💻 Informatique</a></li>
+            <li><a href="/demande">👟 Mode & Chaussures</a></li>
+            <li><a href="/demande">💄 Cosmétiques</a></li>
+          </ul>
+        </div>
+
+        <!-- Contact -->
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <ul class="footer-links">
+            <li><a href="#">📍 Lomé, Togo</a></li>
+            <li><a href="#">💬 WhatsApp Business</a></li>
+            <li><a href="#">📧 contact@togolese.com</a></li>
+            <li><a href="/login" style="opacity:0.4;font-size:12px;">Admin ↗</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2024 TOGOLESE. Tous droits réservés.</div>
+        <div class="footer-badge">🇹🇬 Fait au Togo avec ❤️</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ░░ WHATSAPP FAB ░░ -->
+  <a href="https://wa.me/22800000000" target="_blank" rel="noopener noreferrer" class="wa-fab" title="Contactez-nous sur WhatsApp">
+    💬
+  </a>
+
+  <!-- ░░ SCRIPTS ░░ -->
+  <script>
+    // FAQ accordion
+    document.querySelectorAll('.faq-question').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = btn.getAttribute('data-faq');
+        const answer = document.getElementById(`faq-${idx}`);
+        const isOpen = btn.classList.contains('open');
+
+        // Close all
+        document.querySelectorAll('.faq-question').forEach(b => b.classList.remove('open'));
+        document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('open'));
+
+        // Open clicked if it was closed
+        if (!isOpen) {
+          btn.classList.add('open');
+          answer?.classList.add('open');
+        }
+      });
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href') || '');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Header scroll class
+    const header = document.getElementById('main-header');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 12) {
+        header?.classList.add('scrolled');
+      } else {
+        header?.classList.remove('scrolled');
+      }
+    }, { passive: true });
+
+    // ── Canvas animated gradient background ──
+    (function() {
+      const canvas = document.getElementById('hero-canvas') as HTMLCanvasElement;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Resize canvas to fill section
+      function resize() {
+        const section = canvas.parentElement;
+        if (!section) return;
+        canvas.width = section.offsetWidth;
+        canvas.height = section.offsetHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+
+      // Animated blobs / gradient orbs
+      const blobs = [
+        { x: 0.15, y: 0.3,  r: 0.55, c: 'rgba(167,243,208,0.7)',  vx: 0.0003, vy: 0.0002 },
+        { x: 0.75, y: 0.15, r: 0.45, c: 'rgba(110,231,183,0.55)', vx: -0.0002, vy: 0.0003 },
+        { x: 0.5,  y: 0.7,  r: 0.4,  c: 'rgba(52,211,153,0.35)',  vx: 0.0001, vy: -0.0003 },
+        { x: 0.9,  y: 0.6,  r: 0.35, c: 'rgba(209,250,229,0.8)',  vx: -0.0003, vy: -0.0001 },
+      ];
+
+      let t = 0;
+      function draw() {
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        // Base gradient
+        const bg = ctx.createLinearGradient(0, 0, w * 0.5, h);
+        bg.addColorStop(0, '#ecfdf5');
+        bg.addColorStop(0.5, '#d1fae5');
+        bg.addColorStop(1, '#a7f3d0');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        // Animate blob positions
+        t += 0.004;
+        blobs.forEach((b, i) => {
+          const nx = b.x + Math.sin(t * 0.7 + i) * 0.12;
+          const ny = b.y + Math.cos(t * 0.5 + i * 1.3) * 0.1;
+          const cx = nx * w, cy = ny * h, rad = b.r * Math.min(w, h);
+          const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+          grd.addColorStop(0, b.c);
+          grd.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = grd;
+          ctx.beginPath();
+          ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+  </script>
+
+</body>
+</html>
