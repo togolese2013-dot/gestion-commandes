@@ -1,4 +1,5 @@
 ---
+const GA_ID = import.meta.env.PUBLIC_GA_ID;
 ---
 <!doctype html>
 <html lang="fr">
@@ -6,6 +7,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Demande de Devis — TOGOLESE</title>
+  {GA_ID && (
+    <>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+      <script define:vars={{ GA_ID }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', GA_ID);
+      </script>
+    </>
+  )}
   <style is:global>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
