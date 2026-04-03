@@ -5,6 +5,8 @@ import { isAuthenticated } from '../lib/auth';
 if (isAuthenticated(Astro.request)) {
   return Astro.redirect('/admin/orders');
 }
+
+const GA_ID = import.meta.env.PUBLIC_GA_ID;
 ---
 
 <!DOCTYPE html>
@@ -15,6 +17,17 @@ if (isAuthenticated(Astro.request)) {
   <title>TOGOLESE — Commandez depuis le monde entier, livré chez vous</title>
   <meta name="description" content="Téléphone, vêtements, électronique… Dites-nous ce que vous voulez depuis l'étranger, on achète et on livre au Togo." />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  {GA_ID && (
+    <>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+      <script define:vars={{ GA_ID }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', GA_ID);
+      </script>
+    </>
+  )}
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
