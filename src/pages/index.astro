@@ -1072,7 +1072,17 @@ if (isAuthenticated(Astro.request)) {
       border-radius: 12px;
       opacity: 0.85;
       filter: grayscale(20%) brightness(0.9);
+      display: block;
     }
+    .footer-map-link {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-map-link:hover { color: rgba(255,255,255,0.9); }
     .footer-logo-text {
       font-size: 24px;
       font-weight: 900;
@@ -1800,13 +1810,15 @@ if (isAuthenticated(Astro.request)) {
         <!-- Localisation -->
         <div class="footer-map">
           <div class="footer-map-title">Localisation</div>
-          <a href="https://maps.app.goo.gl/N799puSeeC9K2UN2A" target="_blank" rel="noopener noreferrer">
-            <iframe
-              src="https://maps.google.com/maps?q=6.190443,1.2391144&z=17&ie=UTF8&iwloc=&output=embed"
-              loading="lazy"
-              allowfullscreen
-              title="Togolese Shop — Kégué, Lomé">
-            </iframe>
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3970.8!2d1.2342435!3d6.190443!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1023e3ff640a2729%3A0xf6e66cc96b3dfa97!2sTogolese%20Shop!5e0!3m2!1sfr!2stg!4v1680000000000!5m2!1sfr!2stg"
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Togolese Shop — Kégué, Lomé">
+          </iframe>
+          <a href="https://maps.app.goo.gl/N799puSeeC9K2UN2A" target="_blank" rel="noopener noreferrer" class="footer-map-link">
+            📍 Ouvrir dans Google Maps ↗
           </a>
         </div>
 
