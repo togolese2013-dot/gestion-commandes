@@ -19,11 +19,11 @@ if (isAuthenticated(Astro.request)) {
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --green:       #059669;
-      --green-dark:  #047857;
-      --green-deep:  #064e3b;
-      --green-light: #ecfdf5;
-      --green-mid:   #d1fae5;
+      --green:       #2563eb;
+      --green-dark:  #1d4ed8;
+      --green-deep:  #1e3a8a;
+      --green-light: #eff6ff;
+      --green-mid:   #dbeafe;
       --amber:       #f59e0b;
       --amber-dark:  #d97706;
       --text:        #111827;
@@ -80,25 +80,22 @@ if (isAuthenticated(Astro.request)) {
       max-width: 560px;
     }
 
-    /* ─── HEADER (base.com style) ─── */
+    /* ─── HEADER (base.com style — blue background) ─── */
     .header {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(255,255,255,0.97);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
+      background: #1d4ed8;
       transition: box-shadow 0.3s;
     }
     .header.scrolled {
-      box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.18);
     }
     .header-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 72px;
+      height: 64px;
       position: relative;
     }
 
@@ -106,29 +103,17 @@ if (isAuthenticated(Astro.request)) {
     .logo {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 0;
       text-decoration: none;
       flex-shrink: 0;
       z-index: 2;
     }
-    .logo-icon {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, var(--green), #10b981);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 19px;
-      box-shadow: 0 4px 14px rgba(5,150,105,0.3);
-    }
     .logo-text {
-      font-size: 18px;
+      font-size: 22px;
       font-weight: 900;
-      color: var(--green-deep);
-      letter-spacing: 0.3px;
+      color: #ffffff;
+      letter-spacing: -0.03em;
     }
-    .logo-flag { font-size: 15px; }
 
     /* Nav — absolutely centered */
     .nav-center {
@@ -137,20 +122,27 @@ if (isAuthenticated(Astro.request)) {
       transform: translateX(-50%);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 2px;
     }
     .nav-center a {
       font-size: 14px;
       font-weight: 500;
-      color: #374151;
+      color: rgba(255,255,255,0.88);
       text-decoration: none;
       padding: 8px 14px;
       border-radius: 8px;
       transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
     .nav-center a:hover {
-      color: var(--text);
-      background: var(--green-light);
+      color: #ffffff;
+      background: rgba(255,255,255,0.12);
+    }
+    .nav-chevron {
+      font-size: 11px;
+      opacity: 0.7;
     }
     @media (max-width: 900px) { .nav-center { display: none; } }
 
@@ -158,7 +150,7 @@ if (isAuthenticated(Astro.request)) {
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
       z-index: 2;
     }
@@ -166,10 +158,10 @@ if (isAuthenticated(Astro.request)) {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 9px 18px;
+      padding: 8px 18px;
       background: transparent;
-      color: var(--text);
-      border: 1.5px solid var(--border);
+      color: rgba(255,255,255,0.9);
+      border: 1.5px solid rgba(255,255,255,0.35);
       border-radius: 50px;
       font-size: 14px;
       font-weight: 600;
@@ -177,32 +169,36 @@ if (isAuthenticated(Astro.request)) {
       transition: all 0.2s;
     }
     .btn-ghost:hover {
-      border-color: var(--green);
-      color: var(--green);
-      background: var(--green-light);
+      border-color: rgba(255,255,255,0.7);
+      color: #ffffff;
+      background: rgba(255,255,255,0.1);
+    }
+    .btn-ghost svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
     }
     .btn-nav {
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 10px 20px;
-      background: var(--green-deep);
-      color: white;
+      padding: 9px 20px;
+      background: #ffffff;
+      color: #1d4ed8;
       border: none;
       border-radius: 50px;
       font-size: 14px;
       font-weight: 700;
       text-decoration: none;
       transition: all 0.2s;
-      box-shadow: 0 4px 14px rgba(4,78,59,0.25);
       letter-spacing: -0.01em;
     }
     .btn-nav:hover {
-      background: var(--green-dark);
+      background: #f0f7ff;
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(4,78,59,0.35);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
     }
-    @media (max-width: 480px) { .btn-ghost { display: none; } }
+    @media (max-width: 640px) { .btn-ghost { display: none; } }
 
     /* Mobile hamburger */
     .burger {
@@ -218,46 +214,11 @@ if (isAuthenticated(Astro.request)) {
       display: block;
       width: 22px;
       height: 2px;
-      background: var(--text);
+      background: rgba(255,255,255,0.9);
       border-radius: 2px;
       transition: all 0.3s;
     }
     @media (max-width: 768px) { .burger { display: flex; } }
-
-    /* ─── TICKER ─── */
-    .ticker {
-      background: var(--green-deep);
-      color: rgba(255,255,255,0.88);
-      font-size: 12.5px;
-      font-weight: 500;
-      padding: 8px 0;
-      overflow: hidden;
-      white-space: nowrap;
-      letter-spacing: 0.01em;
-    }
-    .ticker-inner {
-      display: inline-flex;
-      gap: 0;
-      animation: ticker 30s linear infinite;
-    }
-    .ticker-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 44px;
-    }
-    .ticker-dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--amber);
-      flex-shrink: 0;
-      opacity: 0.9;
-    }
-    @keyframes ticker {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
-    }
 
     /* ─── HERO (base.com inspired) ─── */
     .hero {
@@ -1186,27 +1147,30 @@ if (isAuthenticated(Astro.request)) {
 
 <body>
 
-  <!-- ░░ HEADER (base.com style) ░░ -->
+  <!-- ░░ HEADER (base.com style — blue) ░░ -->
   <header class="header" id="main-header">
     <div class="container">
       <div class="header-inner">
 
-        <!-- Logo — left -->
+        <!-- Logo — left (text only, like base.com) -->
         <a href="/" class="logo">
-          <div class="logo-icon">📦</div>
-          <span class="logo-text">TOGOLESE</span>
-          <span class="logo-flag">🇹🇬</span>
+          <span class="logo-text">Togolese.</span>
         </a>
 
         <!-- Nav — center (absolute) -->
         <nav class="nav-center">
-          <a href="#fonctionnement">Comment ça marche</a>
-          <a href="#avantages">Avantages</a>
+          <a href="#fonctionnement">Comment ça marche <span class="nav-chevron">▾</span></a>
+          <a href="#avantages">Avantages <span class="nav-chevron">▾</span></a>
+          <a href="#livraison">Livraison</a>
           <a href="#faq">FAQ</a>
         </nav>
 
         <!-- Actions — right -->
         <div class="header-actions">
+          <a href="/commande" class="btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Suivre ma commande
+          </a>
           <a href="/demande" class="btn-nav">Faire une demande →</a>
           <button class="burger" aria-label="Menu">
             <span></span><span></span><span></span>
@@ -1216,24 +1180,6 @@ if (isAuthenticated(Astro.request)) {
       </div>
     </div>
   </header>
-
-  <!-- ░░ TICKER ░░ -->
-  <div class="ticker">
-    <div class="ticker-inner">
-      <span class="ticker-item"><span class="ticker-dot"></span>✈️ Livraison Express — 4 à 14 jours</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>🌍 Import USA · Europe · Chine · Dubaï · Turquie</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>⭐ +500 clients satisfaits au Togo</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>💬 Devis gratuit sous 24h</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>🔒 Produits 100 % authentiques garantis</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>🚢 Mode Économique disponible — 45 à 60 jours</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>✈️ Livraison Express — 4 à 14 jours</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>🌍 Import USA · Europe · Chine · Dubaï · Turquie</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>⭐ +500 clients satisfaits au Togo</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>💬 Devis gratuit sous 24h</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>🔒 Produits 100 % authentiques garantis</span>
-      <span class="ticker-item"><span class="ticker-dot"></span>🚢 Mode Économique disponible — 45 à 60 jours</span>
-    </div>
-  </div>
 
   <!-- ░░ HERO (base.com inspired — centered + canvas gradient) ░░ -->
   <section class="hero">
@@ -1804,10 +1750,10 @@ if (isAuthenticated(Astro.request)) {
 
       // Animated blobs / gradient orbs
       const blobs = [
-        { x: 0.15, y: 0.3,  r: 0.55, c: 'rgba(167,243,208,0.7)',  vx: 0.0003, vy: 0.0002 },
-        { x: 0.75, y: 0.15, r: 0.45, c: 'rgba(110,231,183,0.55)', vx: -0.0002, vy: 0.0003 },
-        { x: 0.5,  y: 0.7,  r: 0.4,  c: 'rgba(52,211,153,0.35)',  vx: 0.0001, vy: -0.0003 },
-        { x: 0.9,  y: 0.6,  r: 0.35, c: 'rgba(209,250,229,0.8)',  vx: -0.0003, vy: -0.0001 },
+        { x: 0.15, y: 0.3,  r: 0.55, c: 'rgba(147,197,253,0.7)',  vx: 0.0003, vy: 0.0002 },
+        { x: 0.75, y: 0.15, r: 0.45, c: 'rgba(96,165,250,0.55)',  vx: -0.0002, vy: 0.0003 },
+        { x: 0.5,  y: 0.7,  r: 0.4,  c: 'rgba(59,130,246,0.35)',  vx: 0.0001, vy: -0.0003 },
+        { x: 0.9,  y: 0.6,  r: 0.35, c: 'rgba(219,234,254,0.8)',  vx: -0.0003, vy: -0.0001 },
       ];
 
       let t = 0;
@@ -1817,9 +1763,9 @@ if (isAuthenticated(Astro.request)) {
 
         // Base gradient
         const bg = ctx.createLinearGradient(0, 0, w * 0.5, h);
-        bg.addColorStop(0, '#ecfdf5');
-        bg.addColorStop(0.5, '#d1fae5');
-        bg.addColorStop(1, '#a7f3d0');
+        bg.addColorStop(0, '#eff6ff');
+        bg.addColorStop(0.5, '#dbeafe');
+        bg.addColorStop(1, '#93c5fd');
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, w, h);
 
