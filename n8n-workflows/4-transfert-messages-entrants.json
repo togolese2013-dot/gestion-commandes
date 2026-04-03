@@ -32,7 +32,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://app.togolese.fr/api/orders/by-phone?phone={{ $json.from }}",
+        "url": "=https://togolese.fr/api/orders/by-phone?phone={{ $json.from }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -65,28 +65,29 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.openai.com/v1/chat/completions",
+        "url": "https://api.anthropic.com/v1/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Authorization", "value": "Bearer YOUR_OPENAI_API_KEY" },
-            { "name": "Content-Type",  "value": "application/json" }
+            { "name": "x-api-key",         "value": "YOUR_ANTHROPIC_API_KEY" },
+            { "name": "anthropic-version",  "value": "2023-06-01" },
+            { "name": "Content-Type",       "value": "application/json" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 400,\n  \"temperature\": 0.4,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es l'assistant WhatsApp officiel de TOGOLESE, entreprise togolaise d'importation et distribution de matériel photo et vidéo à Lomé.\\n\\n═══ IDENTITÉ ═══\\n• Boutique : Kégué, derrière l'hôtel O'Balkan, Lomé, Togo\\n• Téléphone : +228 90 22 64 91\\n• Email : Contact@togolesegroup.com\\n• Site : app.togolese.fr\\n\\n═══ SERVICES ═══\\n• EXPRESS ✈️ : livraison 4–14 jours ouvrés\\n• ECO 🚢 : livraison 30–45 jours ouvrés\\n• Paiement : 70% à la commande + 30% à la livraison\\n• Réclamation acceptable sous 30 jours après réception\\n• Retrait en boutique disponible à la réception de la commande\\n\\n═══ RÈGLES STRICTES ═══\\n1. Réponds UNIQUEMENT en français, tu vouvoies toujours le client\\n2. Sois chaleureux, professionnel, rassurant et concis (3–5 lignes max)\\n3. Utilise UNIQUEMENT les données commandes ci-dessous — n'invente jamais d'information\\n4. Ne donne JAMAIS de date exacte de livraison — utilise les fourchettes officielles\\n5. Pour tout problème complexe ou réclamation → renvoyer vers +228 90 22 64 91\\n6. Termine TOUJOURS par une ligne de signature : — *TOGOLESE* 🛒\\n7. Utilise les emojis avec modération pour rendre la lecture plus agréable\\n8. Si le client est inconnu (pas de commande), propose-lui de créer une commande ou de contacter le +228 90 22 64 91\\n\\n═══ GUIDE PAR INTENTION ═══\\n• SUIVI → donne le statut exact, le transport choisi, et le délai restant estimé\\n• PAIEMENT → rappelle le montant versé, le solde restant et comment régler (virement / en boutique)\\n• RÉCLAMATION → rassure, empathie, escalade vers +228 90 22 64 91 si besoin\\n• DÉLAI → donne les fourchettes officielles selon le mode de transport choisi\\n• SALUTATION → réponds chaleureusement et propose de l'aide\\n• REMERCIEMENT → réponds avec enthousiasme et propose de l'aide future\\n• GÉNÉRAL → réponds avec pertinence, reste ouvert\\n\\n═══ INTENTION DÉTECTÉE ═══\\n{{ $json.intention }}\\n\\n═══ COMMANDES DE CE CLIENT ═══\\n{{ $json.contexteCommandes }}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Le client {{ $json.name }} a écrit : {{ $json.texte }}\"\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"model\": \"claude-haiku-4-5-20251001\",\n  \"max_tokens\": 400,\n  \"system\": \"Tu es l'assistant WhatsApp officiel de TOGOLESE, entreprise togolaise d'importation et distribution de produits depuis l'étranger à Lomé.\\n\\n═══ IDENTITÉ ═══\\n• Boutique : Kégué, derrière l'hôtel O'Balkan, Lomé, Togo\\n• Téléphone : +228 90 22 64 91\\n• Email : Contact@togolesegroup.com\\n• Site : togolese.fr\\n\\n═══ SERVICES ═══\\n• EXPRESS ✈️ : livraison 4–14 jours ouvrés\\n• ECO 🚢 : livraison 30–45 jours ouvrés\\n• Paiement : 70% à la commande + 30% à la livraison\\n• Réclamation acceptable sous 30 jours après réception\\n• Retrait en boutique disponible à la réception de la commande\\n\\n═══ RÈGLES STRICTES ═══\\n1. Réponds UNIQUEMENT en français, tu vouvoies toujours le client\\n2. Sois chaleureux, professionnel, rassurant et concis (3–5 lignes max)\\n3. Utilise UNIQUEMENT les données commandes ci-dessous — n'invente jamais d'information\\n4. Ne donne JAMAIS de date exacte de livraison — utilise les fourchettes officielles\\n5. Pour tout problème complexe ou réclamation → renvoyer vers +228 90 22 64 91\\n6. Termine TOUJOURS par une ligne de signature : — *TOGOLESE* 🛒\\n7. Utilise les emojis avec modération pour rendre la lecture plus agréable\\n8. Si le client est inconnu (pas de commande), propose-lui de faire une demande sur togolese.fr ou de contacter le +228 90 22 64 91\\n\\n═══ GUIDE PAR INTENTION ═══\\n• SUIVI → donne le statut exact, le transport choisi, et le délai restant estimé\\n• PAIEMENT → rappelle le montant versé, le solde restant et comment régler (virement / en boutique)\\n• RÉCLAMATION → rassure, empathie, escalade vers +228 90 22 64 91 si besoin\\n• DÉLAI → donne les fourchettes officielles selon le mode de transport choisi\\n• SALUTATION → réponds chaleureusement et propose de l'aide\\n• REMERCIEMENT → réponds avec enthousiasme et propose de l'aide future\\n• GÉNÉRAL → réponds avec pertinence, reste ouvert\\n\\n═══ INTENTION DÉTECTÉE ═══\\n{{ $json.intention }}\\n\\n═══ COMMANDES DE CE CLIENT ═══\\n{{ $json.contexteCommandes }}\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Le client {{ $json.name }} a écrit : {{ $json.texte }}\"\n    }\n  ]\n}",
         "options": {}
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000005",
-      "name": "Agent IA OpenAI",
+      "name": "Agent IA Claude",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1420, 220]
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst ctx  = $('Préparer contexte + intention').first().json;\n\n// Use AI response or fallback\nconst reponse = data.choices?.[0]?.message?.content?.trim()\n  || 'Bonjour ! Merci pour votre message. Notre équipe vous répond dans les plus brefs délais. Pour toute urgence, contactez-nous directement au *+228 90 22 64 91* — *TOGOLESE* 🛒';\n\n// Log usage for monitoring\nconst usage = data.usage || {};\nconsole.log(`[IA] ${ctx.name} | intention: ${ctx.intention} | tokens: ${usage.total_tokens || '?'}`);\n\nreturn [{ json: { from: ctx.from, reponse, intention: ctx.intention } }];"
+        "jsCode": "const data = $input.first().json;\nconst ctx  = $('Préparer contexte + intention').first().json;\n\n// Claude API response format: content[0].text\nconst reponse = data.content?.[0]?.text?.trim()\n  || 'Bonjour ! Merci pour votre message. Notre équipe vous répond dans les plus brefs délais. Pour toute urgence, contactez-nous directement au *+228 90 22 64 91* — *TOGOLESE* 🛒';\n\n// Log usage for monitoring\nconst usage = data.usage || {};\nconsole.log(`[IA] ${ctx.name} | intention: ${ctx.intention} | tokens: ${(usage.input_tokens || 0) + (usage.output_tokens || 0)}`);\n\nreturn [{ json: { from: ctx.from, reponse, intention: ctx.intention } }];"
       },
       "id": "a1b2c3d4-0004-0001-0001-000000000006",
       "name": "Extraire réponse IA",
@@ -133,7 +134,7 @@
     "Préparer contexte + intention": {
       "main": [[{ "node": "Agent IA OpenAI", "type": "main", "index": 0 }]]
     },
-    "Agent IA OpenAI": {
+    "Agent IA Claude": {
       "main": [[{ "node": "Extraire réponse IA", "type": "main", "index": 0 }]]
     },
     "Extraire réponse IA": {
