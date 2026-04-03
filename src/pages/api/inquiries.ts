@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { createInquiry, getAllInquiries } from '../../lib/inquiries';
 import { requireAuth } from '../../lib/auth';
+import { sendNewInquiryWebhook } from '../../lib/webhook';
 import fs from 'fs';
 import path from 'path';
 
@@ -81,6 +82,9 @@ export const POST: APIRoute = async (context) => {
       delivery_type,
       deadline: desired_deadline,
     });
+
+    // Notify owner via WhatsApp (fire-and-forget)
+    sendNewInquiryWebhook(inquiry).catch(() => {});
 
     return new Response(JSON.stringify(inquiry), { status: 201 });
   } catch (error) {

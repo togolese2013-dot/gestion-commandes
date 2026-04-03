@@ -1,0 +1,82 @@
+{
+  "name": "5 — Nouvelle demande (notification propriétaire)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nouvelle-demande",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh-001-001-001-001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json.body ?? $input.first().json;\n\nconst delivery = d.delivery_type === 'avion' ? '✈️ Express (avion)' : '🚢 Économique (bateau)';\nconst count = d.products_count ?? 1;\nconst products = d.products_text ?? '—';\n\nconst message = [\n  '🔔 *Nouvelle demande reçue !*',\n  '',\n  `👤 *Client :* ${d.client_name}`,\n  `📞 *Téléphone :* ${d.client_phone}`,\n  `📦 *Produit(s) (${count}) :*`,\n  products,\n  `🚚 *Livraison :* ${delivery}`,\n  '',\n  '➡️ Connecte-toi sur togolese.fr/admin pour traiter cette demande.'\n].join('\\n');\n\nreturn [{ json: { message, client_phone: d.client_phone } }];"
+      },
+      "id": "co-001-001-001-001-000000000002",
+      "name": "Préparer notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v20.0/1108545832334279/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"22890226491\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $json.message }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "ht-001-001-001-001-000000000003",
+      "name": "Notifier propriétaire WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true }",
+        "options": {}
+      },
+      "id": "re-001-001-001-001-000000000004",
+      "name": "Répondre",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Préparer notification", "type": "main", "index": 0 }]]
+    },
+    "Préparer notification": {
+      "main": [[{ "node": "Notifier propriétaire WhatsApp", "type": "main", "index": 0 }]]
+    },
+    "Notifier propriétaire WhatsApp": {
+      "main": [[{ "node": "Répondre", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "5-demande-v1"
+}
