@@ -495,6 +495,26 @@ if (isAuthenticated(Astro.request)) {
     }
     .form-badge-check { color: var(--green); font-size: 13px; }
 
+    /* Hero CTA wrap (no card) */
+    .hero-cta-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .hero-cta-wrap .btn-hero {
+      width: 100%;
+    }
+    .hero-cta-wrap .form-badges .form-badge {
+      color: var(--green-deep);
+      font-weight: 600;
+    }
+    .hero-cta-wrap .form-badge-check {
+      color: var(--green-dark);
+    }
+
     /* Hero trust row */
     .hero-trust {
       display: flex;
@@ -1187,7 +1207,6 @@ if (isAuthenticated(Astro.request)) {
 
         <!-- Actions — right -->
         <div class="header-actions">
-          <a href="/admin" class="btn-ghost">Se connecter</a>
           <a href="/demande" class="btn-nav">Faire une demande →</a>
           <button class="burger" aria-label="Menu">
             <span></span><span></span><span></span>
@@ -1234,7 +1253,7 @@ if (isAuthenticated(Astro.request)) {
         Commandez vos
         <div class="word-rotate-block">
           <span>iPhone 16 Pro</span>
-          <span>Sneakers Nike</span>
+          <span>Appareils Photo</span>
           <span>MacBook Air</span>
           <span>PS5 &amp; Jeux</span>
         </div>
@@ -1246,41 +1265,15 @@ if (isAuthenticated(Astro.request)) {
         et on livre directement chez vous au Togo.
       </p>
 
-      <!-- Quick form -->
-      <div class="hero-form-wrap">
-        <div class="hero-form">
-          <div class="hero-form-title">Obtenir un devis gratuit</div>
-          <div class="hero-form-sub">Remplissez en 30 secondes · Réponse sous 24h</div>
-
-          <form action="/demande" method="GET">
-            <div class="form-field">
-              <label class="form-label">Produit recherché *</label>
-              <input
-                type="text"
-                name="produit"
-                class="form-input"
-                placeholder="Ex : iPhone 16 Pro, Nike Air Force 1, PS5…"
-              />
-            </div>
-            <div class="form-field">
-              <label class="form-label">Votre numéro WhatsApp *</label>
-              <input
-                type="tel"
-                name="tel"
-                class="form-input"
-                placeholder="+228 XX XX XX XX"
-              />
-            </div>
-            <a href="/demande" class="btn-hero">
-              🚀 Obtenir mon devis gratuit
-            </a>
-          </form>
-
-          <div class="form-badges">
-            <span class="form-badge"><span class="form-badge-check">✓</span> Gratuit</span>
-            <span class="form-badge"><span class="form-badge-check">✓</span> Sans engagement</span>
-            <span class="form-badge"><span class="form-badge-check">✓</span> Réponse en 24h</span>
-          </div>
+      <!-- CTA direct -->
+      <div class="hero-cta-wrap">
+        <a href="/demande" class="btn-hero">
+          🚀 Obtenir mon devis gratuit
+        </a>
+        <div class="form-badges">
+          <span class="form-badge"><span class="form-badge-check">✓</span> Gratuit</span>
+          <span class="form-badge"><span class="form-badge-check">✓</span> Sans engagement</span>
+          <span class="form-badge"><span class="form-badge-check">✓</span> Réponse en 24h</span>
         </div>
       </div>
 
