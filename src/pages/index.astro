@@ -85,7 +85,7 @@ if (isAuthenticated(Astro.request)) {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: #1d4ed8;
+      background: var(--green-dark);
       transition: box-shadow 0.3s;
     }
     .header.scrolled {
@@ -184,7 +184,7 @@ if (isAuthenticated(Astro.request)) {
       gap: 7px;
       padding: 9px 20px;
       background: #ffffff;
-      color: #1d4ed8;
+      color: var(--green-dark);
       border: none;
       border-radius: 50px;
       font-size: 14px;
@@ -301,7 +301,7 @@ if (isAuthenticated(Astro.request)) {
       font-size: clamp(40px, 7vw, 68px);
       font-weight: 900;
       line-height: 1.08;
-      color: var(--green-deep);
+      color: var(--green-dark);
       margin-bottom: 22px;
       letter-spacing: -0.03em;
     }
