@@ -19,11 +19,11 @@ if (isAuthenticated(Astro.request)) {
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --green:       #2563eb;
-      --green-dark:  #1d4ed8;
-      --green-deep:  #1e3a8a;
-      --green-light: #eff6ff;
-      --green-mid:   #dbeafe;
+      --green:       #059669;
+      --green-dark:  #047857;
+      --green-deep:  #064e3b;
+      --green-light: #ecfdf5;
+      --green-mid:   #d1fae5;
       --amber:       #f59e0b;
       --amber-dark:  #d97706;
       --text:        #111827;
@@ -1750,10 +1750,10 @@ if (isAuthenticated(Astro.request)) {
 
       // Animated blobs / gradient orbs
       const blobs = [
-        { x: 0.15, y: 0.3,  r: 0.55, c: 'rgba(147,197,253,0.7)',  vx: 0.0003, vy: 0.0002 },
-        { x: 0.75, y: 0.15, r: 0.45, c: 'rgba(96,165,250,0.55)',  vx: -0.0002, vy: 0.0003 },
-        { x: 0.5,  y: 0.7,  r: 0.4,  c: 'rgba(59,130,246,0.35)',  vx: 0.0001, vy: -0.0003 },
-        { x: 0.9,  y: 0.6,  r: 0.35, c: 'rgba(219,234,254,0.8)',  vx: -0.0003, vy: -0.0001 },
+        { x: 0.15, y: 0.3,  r: 0.55, c: 'rgba(167,243,208,0.7)',  vx: 0.0003, vy: 0.0002 },
+        { x: 0.75, y: 0.15, r: 0.45, c: 'rgba(110,231,183,0.55)', vx: -0.0002, vy: 0.0003 },
+        { x: 0.5,  y: 0.7,  r: 0.4,  c: 'rgba(52,211,153,0.35)',  vx: 0.0001, vy: -0.0003 },
+        { x: 0.9,  y: 0.6,  r: 0.35, c: 'rgba(209,250,229,0.8)',  vx: -0.0003, vy: -0.0001 },
       ];
 
       let t = 0;
@@ -1763,9 +1763,9 @@ if (isAuthenticated(Astro.request)) {
 
         // Base gradient
         const bg = ctx.createLinearGradient(0, 0, w * 0.5, h);
-        bg.addColorStop(0, '#eff6ff');
-        bg.addColorStop(0.5, '#dbeafe');
-        bg.addColorStop(1, '#93c5fd');
+        bg.addColorStop(0, '#ecfdf5');
+        bg.addColorStop(0.5, '#d1fae5');
+        bg.addColorStop(1, '#a7f3d0');
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, w, h);
 
