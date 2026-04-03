@@ -1168,9 +1168,24 @@ if (isAuthenticated(Astro.request)) {
       /* Sections — padding réduit */
       .section { padding: 44px 0; }
 
-      /* Steps — numéros plus petits */
-      .step-number { width: 60px; height: 60px; font-size: 24px; }
-      .step-title { font-size: 16px; }
+      /* Steps — cartes horizontales compactes sur mobile */
+      .steps-grid { grid-template-columns: 1fr; gap: 14px; margin-top: 32px; }
+      .step {
+        flex-direction: row;
+        text-align: left;
+        align-items: flex-start;
+        gap: 16px;
+        background: white;
+        border: 1.5px solid var(--green-mid);
+        border-radius: 16px;
+        padding: 18px 16px;
+        box-shadow: 0 2px 8px rgba(5,150,105,0.07);
+      }
+      .step-number { width: 48px; height: 48px; font-size: 20px; flex-shrink: 0; margin-bottom: 0; }
+      .step-body { flex: 1; min-width: 0; }
+      .step-title { font-size: 15px; margin-bottom: 4px; }
+      .step-desc { font-size: 13px; }
+      .step-icon-small { display: none; }
 
       /* Catégories — 2 colonnes compactes */
       .categories-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -1179,10 +1194,21 @@ if (isAuthenticated(Astro.request)) {
       .category-name { font-size: 12px; }
       .category-link { font-size: 11px; }
 
-      /* Trust cards — padding réduit */
-      .trust-card { padding: 22px 18px; }
-      .trust-icon { font-size: 28px; margin-bottom: 10px; }
-      .trust-title { font-size: 15px; }
+      /* Trust cards — layout horizontal compact */
+      .trust-grid { gap: 12px; margin-top: 28px; }
+      .trust-card {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 18px 16px;
+        border-radius: 16px;
+      }
+      .trust-card::before { display: none; }
+      .trust-icon { font-size: 28px; margin-bottom: 0; flex-shrink: 0; }
+      .trust-body { flex: 1; min-width: 0; }
+      .trust-title { font-size: 14px; margin-bottom: 4px; }
+      .trust-text { font-size: 13px; line-height: 1.5; }
 
       /* Origins — cacher les stats chiffres sur mobile (garder texte) */
       .origins-numbers { display: none; }
@@ -1328,20 +1354,26 @@ if (isAuthenticated(Astro.request)) {
       <div class="steps-grid">
         <div class="step">
           <div class="step-number">1</div>
-          <h3 class="step-title">Dites-nous ce que vous voulez</h3>
-          <p class="step-desc">Nom du produit, lien URL ou photo. Indiquez votre budget si vous en avez un.</p>
+          <div class="step-body">
+            <h3 class="step-title">Dites-nous ce que vous voulez</h3>
+            <p class="step-desc">Nom du produit, lien URL ou photo. Indiquez votre budget si vous en avez un.</p>
+          </div>
           <div class="step-icon-small">📝</div>
         </div>
         <div class="step">
           <div class="step-number">2</div>
-          <h3 class="step-title">On vous envoie le prix total</h3>
-          <p class="step-desc">Produit + frais de livraison + douane. Tout inclus. Aucune mauvaise surprise.</p>
+          <div class="step-body">
+            <h3 class="step-title">On vous envoie le prix total</h3>
+            <p class="step-desc">Produit + frais de livraison + douane. Tout inclus. Aucune mauvaise surprise.</p>
+          </div>
           <div class="step-icon-small">💰</div>
         </div>
         <div class="step">
           <div class="step-number">3</div>
-          <h3 class="step-title">Vous payez, on livre</h3>
-          <p class="step-desc">Après confirmation, on achète et on livre directement chez vous au Togo.</p>
+          <div class="step-body">
+            <h3 class="step-title">Vous payez, on livre</h3>
+            <p class="step-desc">Après confirmation, on achète et on livre directement chez vous au Togo.</p>
+          </div>
           <div class="step-icon-small">🏠</div>
         </div>
       </div>
@@ -1416,18 +1448,24 @@ if (isAuthenticated(Astro.request)) {
       <div class="trust-grid">
         <div class="trust-card">
           <span class="trust-icon">🤝</span>
-          <h3 class="trust-title">On communique à chaque étape</h3>
-          <p class="trust-text">De la réception de votre demande jusqu'à la livraison, on vous tient informé par WhatsApp. Vous savez toujours où en est votre commande.</p>
+          <div class="trust-body">
+            <h3 class="trust-title">On communique à chaque étape</h3>
+            <p class="trust-text">De la réception de votre demande jusqu'à la livraison, on vous tient informé par WhatsApp. Vous savez toujours où en est votre commande.</p>
+          </div>
         </div>
         <div class="trust-card">
           <span class="trust-icon">💯</span>
-          <h3 class="trust-title">Produits vérifiés et authentiques</h3>
-          <p class="trust-text">On achète uniquement chez des fournisseurs et revendeurs officiels. Chaque commande est inspectée avant expédition. Zéro contrefaçon.</p>
+          <div class="trust-body">
+            <h3 class="trust-title">Produits vérifiés et authentiques</h3>
+            <p class="trust-text">On achète uniquement chez des fournisseurs et revendeurs officiels. Chaque commande est inspectée avant expédition. Zéro contrefaçon.</p>
+          </div>
         </div>
         <div class="trust-card">
           <span class="trust-icon">🔄</span>
-          <h3 class="trust-title">Si problème, on trouve une solution</h3>
-          <p class="trust-text">Produit endommagé, retard de livraison, problème de taille ? On assume notre responsabilité et on vous propose une solution adaptée.</p>
+          <div class="trust-body">
+            <h3 class="trust-title">Si problème, on trouve une solution</h3>
+            <p class="trust-text">Produit endommagé, retard de livraison, problème de taille ? On assume notre responsabilité et on vous propose une solution adaptée.</p>
+          </div>
         </div>
       </div>
     </div>
