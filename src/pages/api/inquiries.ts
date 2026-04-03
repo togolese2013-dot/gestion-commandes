@@ -40,17 +40,30 @@ export const POST: APIRoute = async (context) => {
       return new Response(JSON.stringify({ error: 'Au moins un produit requis' }), { status: 400 });
     }
 
-    // Handle file uploads for photos
-    const files = formData.getAll('photos');
-    const photos: string[] = [];
+    // Handle file uploads for photos - associate with products
+    console.log(`[inquiries.ts] Processing photos for ${products.length} products`);
 
-    for (const file of files) {
-      if (file instanceof File && file.size > 0) {
-        const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name}`;
-        const filepath = path.join(UPLOAD_DIR, filename);
-        const buffer = await file.arrayBuffer();
-        fs.writeFileSync(filepath, Buffer.from(buffer));
-        photos.push(`/uploads/inquiries/${filename}`);
+    for (let idx = 0; idx < products.length; idx++) {
+      const productFiles = formData.getAll(`product_${idx}_photos`);
+      const productPhotos: string[] = [];
+
+      for (const file of productFiles) {
+        if (file instanceof File && file.size > 0) {
+          try {
+            const buffer = await file.arrayBuffer();
+            const base64 = Buffer.from(buffer).toString('base64');
+            const mimeType = file.type || 'image/jpeg';
+            const dataUrl = `data:${mimeType};base64,${base64}`;
+            productPhotos.push(dataUrl);
+            console.log(`[inquiries.ts] Photo stored for product ${idx}: ${file.name} (${file.size} bytes)`);
+          } catch (err) {
+            console.error(`[inquiries.ts] Error processing file: ${err}`);
+          }
+        }
+      }
+
+      if (productPhotos.length > 0) {
+        products[idx].photos = productPhotos;
       }
     }
 
@@ -62,7 +75,7 @@ export const POST: APIRoute = async (context) => {
       description,
       quantity: products.length,
       desired_deadline,
-      photos,
+      photos: [], // Photos are now stored in each product
       external_link: '',
       products,
       delivery_type,

@@ -16,7 +16,7 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 };
 
 const fmt = (n: number) => n.toLocaleString('fr-FR');
-const dateStr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const dateStr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 
 const statusColors: Record<string, string> = {
   'yellow': 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -73,7 +73,7 @@ function getDevisNumber(id: number): string {
             <tr class="bg-gray-50 border-b border-gray-200">
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">N° Devis</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Client</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Produits</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Livraison</th>
               <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Statut</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
               <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
@@ -102,21 +102,8 @@ function getDevisNumber(id: number): string {
                       <div class="font-medium text-gray-900">{inquiry.client_name}</div>
                       <div class="text-xs text-gray-500">{inquiry.client_phone}</div>
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-700 max-w-xs">
-                      {products.length > 0 ? (
-                        <div class="space-y-1">
-                          {products.map((p: any, i: number) => (
-                            <div class="flex items-center gap-1.5 text-xs">
-                              <span class="w-4 h-4 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0">{i+1}</span>
-                              <span class="font-medium text-gray-800">{p.name}</span>
-                              {p.quantity > 1 && <span class="text-gray-400">×{p.quantity}</span>}
-                              {p.state && <span class="text-gray-400 italic">({p.state})</span>}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span class="text-gray-500 line-clamp-2">{inquiry.description}</span>
-                      )}
+                    <td class="px-4 py-3 text-sm text-gray-700">
+                      {inquiry.delivery_type === 'bateau' ? 'ECO' : 'EXPRESS'}
                     </td>
                     <td class="px-4 py-3 text-center">
                       <select class="status-select text-xs font-semibold px-2 py-1 rounded border-0 cursor-pointer transition-colors" data-id={inquiry.id} data-status={status} class:list={[statusBadgeColors[color]]}>
@@ -545,21 +532,26 @@ function getDevisNumber(id: number): string {
         const content = document.getElementById('detail-modal-content');
         content.innerHTML = `
           <div class="space-y-4">
-            <div class="grid grid-cols-2 gap-3">
-              <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs font-bold text-gray-400 uppercase">Client</p>
-                <p class="font-semibold text-gray-900 text-sm mt-0.5">${inquiry.client_name}</p>
-              </div>
-              <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs font-bold text-gray-400 uppercase">Téléphone</p>
-                <p class="font-semibold text-gray-900 text-sm mt-0.5">${inquiry.client_phone}</p>
+            <div>
+              <p class="text-sm font-bold text-gray-700 uppercase mb-3">👤 Informations client</p>
+              <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <div class="grid grid-cols-2 gap-6">
+                  <div>
+                    <p class="text-xs text-blue-500 font-semibold">Nom</p>
+                    <p class="font-semibold text-gray-900">${inquiry.client_name}</p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-blue-500 font-semibold">Téléphone</p>
+                    <p class="font-semibold text-gray-900">${inquiry.client_phone}</p>
+                  </div>
+                </div>
               </div>
             </div>
             ${productsHtml}
             <div class="grid grid-cols-2 gap-3">
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs font-bold text-gray-400 uppercase">Livraison</p>
-                <p class="text-sm text-gray-900 mt-0.5">${inquiry.delivery_type === 'bateau' ? '🚢 Économique (bateau)' : '✈️ Express (avion)'}</p>
+                <p class="text-sm text-gray-900 mt-0.5">${inquiry.delivery_type === 'bateau' ? 'ECO' : 'EXPRESS'}</p>
               </div>
               <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs font-bold text-gray-400 uppercase">Date</p>

@@ -115,7 +115,8 @@
     input[type="tel"],
     input[type="number"],
     input[type="url"],
-    textarea {
+    textarea,
+    select {
       width: 100%;
       padding: 11px 14px;
       border: 1.5px solid #e5e7eb;
@@ -127,7 +128,7 @@
       transition: border-color 0.2s, box-shadow 0.2s;
       outline: none;
     }
-    input:focus, textarea:focus {
+    input:focus, textarea:focus, select:focus {
       border-color: #6366f1;
       box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
     }
@@ -596,7 +597,9 @@
     addProduct();
 
     document.getElementById('btn-add-product').addEventListener('click', addProduct);
-    document.getElementById('btn-submit').addEventListener('click', submitForm);
+    document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('btn-submit').addEventListener('click', submitForm);
+});
     document.getElementById('btn-new-request').addEventListener('click', resetForm);
 
     // Delivery card toggle
@@ -669,7 +672,11 @@
             </div>
             <div class="field-group">
               <label class="field-label">État <span class="req">*</span></label>
-              <input type="text" class="p-state" placeholder="Neuf, occasion..." value="${escHtml(product._state || '')}" />
+              <select class="p-state">
+                <option value="">-- Choisir --</option>
+                <option value="Neuf" ${product._state === 'Neuf' ? 'selected' : ''}>Neuf</option>
+                <option value="Occasion" ${product._state === 'Occasion' ? 'selected' : ''}>Occasion</option>
+              </select>
             </div>
             <div class="field-group">
               <label class="field-label">Qté <span class="req">*</span></label>
@@ -856,12 +863,16 @@
           state: card.querySelector('.p-state').value.trim(),
           quantity: parseInt(card.querySelector('.p-qty').value) || 1,
           links: p.links.map(l => l.url).filter(Boolean),
+          photos: [], // Will be filled by API
         };
       });
       formData.append('products', JSON.stringify(productsData));
 
-      products.forEach(p => {
-        p.files.forEach(f => formData.append('photos', f));
+      // Send photos grouped by product ID
+      products.forEach((p, idx) => {
+        p.files.forEach(f => {
+          formData.append(`product_${idx}_photos`, f);
+        });
       });
 
       const notes = document.getElementById('notes').value.trim();
