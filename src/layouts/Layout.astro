@@ -34,7 +34,7 @@ const isAdminRole = currentUser?.role === 'admin';
           <div class="flex items-center justify-between gap-4 h-16">
 
             <!-- Logo -->
-            <a href="/" class="font-black text-xl shrink-0 text-white" style="letter-spacing:-0.04em;">Togolese.</a>
+            <a href="/admin/dashboard" class="font-black text-xl shrink-0 text-white" style="letter-spacing:-0.04em;">Togolese.</a>
 
             <!-- Nav centrale — desktop uniquement -->
             <nav class="hidden sm:flex items-center gap-0.5 text-sm font-medium flex-1 justify-center">
@@ -47,7 +47,6 @@ const isAdminRole = currentUser?.role === 'admin';
                 Demandes
                 <span id="inquiry-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-amber-400 text-white text-[10px] font-bold rounded-full leading-none"></span>
               </a>
-              <a href="/admin/analytics" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">📊 Stats</a>
               <a href="/admin/clients" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">Clients</a>
               {isAdminRole && (
                 <a href="/admin/payments" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">Paiements</a>
