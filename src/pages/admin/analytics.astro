@@ -5,9 +5,11 @@ import Layout from '../../layouts/Layout.astro';
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
-const GA_ID       = import.meta.env.PUBLIC_GA_ID ?? '';
-const LOOKER_URL  = import.meta.env.PUBLIC_LOOKER_STUDIO_URL ?? '';
-const GA_PROPERTY = import.meta.env.PUBLIC_GA_PROPERTY_ID ?? '';
+// GA_ID hardcodé — change ici si l'ID change
+const GA_ID      = import.meta.env.PUBLIC_GA_ID || 'G-NTZP3Y9C2B';
+const LOOKER_URL = import.meta.env.PUBLIC_LOOKER_STUDIO_URL ?? '';
+// Property ID numérique GA4 (optionnel pour les liens directs)
+const GA_BASE    = 'https://analytics.google.com/analytics/web/';
 ---
 
 <Layout title="Statistiques" isAdmin={true}>
@@ -17,21 +19,22 @@ const GA_PROPERTY = import.meta.env.PUBLIC_GA_PROPERTY_ID ?? '';
     <div class="flex items-center justify-between flex-wrap gap-3">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">📊 Statistiques visiteurs</h1>
-        <p class="text-sm text-gray-500 mt-1">Analyse du trafic via Google Analytics 4</p>
+        <p class="text-sm text-gray-500 mt-1">Analyse du trafic · Google Analytics 4 — <span class="font-mono text-xs text-emerald-700">{GA_ID}</span></p>
       </div>
-      {GA_ID && (
-        <a
-          href={`https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/reportinghub`}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-          Ouvrir GA4
-        </a>
-      )}
+      <a
+        href={GA_BASE}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors"
+        style="background:#047857;"
+        onmouseover="this.style.background='#065f46'"
+        onmouseout="this.style.background='#047857'"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+        Ouvrir GA4
+      </a>
     </div>
 
     {LOOKER_URL ? (
@@ -44,123 +47,97 @@ const GA_PROPERTY = import.meta.env.PUBLIC_GA_PROPERTY_ID ?? '';
           title="Tableau de bord Google Analytics"
         ></iframe>
       </div>
-    ) : GA_ID ? (
-      <!-- GA4 configuré mais pas Looker Studio : raccourcis vers GA4 -->
+    ) : (
+      <!-- Raccourcis GA4 -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-        <!-- Temps réel -->
-        <a href={`https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/realtime`}
-           target="_blank" rel="noopener noreferrer"
-           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-blue-300 transition-all group">
+        <a href={`${GA_BASE}#/p/reports/realtime`} target="_blank" rel="noopener noreferrer"
+           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-emerald-300 transition-all group">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-xl">🟢</div>
-            <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Temps réel</h3>
+            <h3 class="font-semibold text-gray-800 group-hover:text-emerald-700">Temps réel</h3>
           </div>
-          <p class="text-sm text-gray-500">Visiteurs actifs en ce moment, pages consultées, pays d'origine.</p>
-          <p class="text-xs text-blue-600 mt-3 font-medium">Ouvrir ↗</p>
+          <p class="text-sm text-gray-500">Visiteurs actifs en ce moment, pages consultées, pays.</p>
+          <p class="text-xs mt-3 font-medium" style="color:#047857;">Ouvrir ↗</p>
         </a>
 
-        <!-- Démographie -->
-        <a href={`https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/explorer?params=_u..nav%3Dmaui`}
-           target="_blank" rel="noopener noreferrer"
-           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-blue-300 transition-all group">
+        <a href={`${GA_BASE}#/p/reports/explorer`} target="_blank" rel="noopener noreferrer"
+           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-emerald-300 transition-all group">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-xl">👥</div>
-            <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Démographie</h3>
+            <h3 class="font-semibold text-gray-800 group-hover:text-emerald-700">Démographie</h3>
           </div>
           <p class="text-sm text-gray-500">Pays, tranche d'âge, sexe, langue des visiteurs.</p>
-          <p class="text-xs text-blue-600 mt-3 font-medium">Ouvrir ↗</p>
+          <p class="text-xs mt-3 font-medium" style="color:#047857;">Ouvrir ↗</p>
         </a>
 
-        <!-- Appareils -->
-        <a href={`https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/explorer?params=_u..nav%3Dmaui`}
-           target="_blank" rel="noopener noreferrer"
-           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-blue-300 transition-all group">
+        <a href={`${GA_BASE}#/p/reports/explorer`} target="_blank" rel="noopener noreferrer"
+           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-emerald-300 transition-all group">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-xl">📱</div>
-            <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Appareils</h3>
+            <h3 class="font-semibold text-gray-800 group-hover:text-emerald-700">Appareils</h3>
           </div>
           <p class="text-sm text-gray-500">Mobile vs Desktop, navigateur, système d'exploitation.</p>
-          <p class="text-xs text-blue-600 mt-3 font-medium">Ouvrir ↗</p>
+          <p class="text-xs mt-3 font-medium" style="color:#047857;">Ouvrir ↗</p>
         </a>
 
-        <!-- Pages vues -->
-        <a href={`https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/explorer?params=_u..nav%3Dmaui`}
-           target="_blank" rel="noopener noreferrer"
-           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-blue-300 transition-all group">
+        <a href={`${GA_BASE}#/p/reports/explorer`} target="_blank" rel="noopener noreferrer"
+           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-emerald-300 transition-all group">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-xl">📄</div>
-            <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Pages vues</h3>
+            <h3 class="font-semibold text-gray-800 group-hover:text-emerald-700">Pages vues</h3>
           </div>
           <p class="text-sm text-gray-500">Pages les plus visitées, durée de session, taux de rebond.</p>
-          <p class="text-xs text-blue-600 mt-3 font-medium">Ouvrir ↗</p>
+          <p class="text-xs mt-3 font-medium" style="color:#047857;">Ouvrir ↗</p>
         </a>
 
-        <!-- Acquisition -->
-        <a href={`https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/explorer?params=_u..nav%3Dmaui`}
-           target="_blank" rel="noopener noreferrer"
-           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-blue-300 transition-all group">
+        <a href={`${GA_BASE}#/p/reports/explorer`} target="_blank" rel="noopener noreferrer"
+           class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-emerald-300 transition-all group">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-xl">🔗</div>
-            <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Acquisition</h3>
+            <h3 class="font-semibold text-gray-800 group-hover:text-emerald-700">Acquisition</h3>
           </div>
           <p class="text-sm text-gray-500">D'où viennent tes visiteurs : Google, WhatsApp, direct, réseaux sociaux.</p>
-          <p class="text-xs text-blue-600 mt-3 font-medium">Ouvrir ↗</p>
+          <p class="text-xs mt-3 font-medium" style="color:#047857;">Ouvrir ↗</p>
         </a>
 
-        <!-- Configurer Looker Studio -->
-        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-5">
+        <!-- Looker Studio CTA -->
+        <div class="rounded-2xl border p-5" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#a7f3d0;">
           <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-200 flex items-center justify-center text-xl">✨</div>
-            <h3 class="font-semibold text-blue-800">Dashboard intégré</h3>
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style="background:#bbf7d0;">✨</div>
+            <h3 class="font-semibold" style="color:#065f46;">Dashboard intégré</h3>
           </div>
-          <p class="text-sm text-blue-700 mb-3">Intègre un rapport Looker Studio directement ici pour voir toutes les stats sans quitter l'admin.</p>
+          <p class="text-sm mb-3" style="color:#047857;">Intègre Looker Studio ici pour tout voir sans quitter l'admin.</p>
           <a href="https://lookerstudio.google.com" target="_blank" rel="noopener noreferrer"
-             class="text-xs font-semibold text-blue-700 hover:text-blue-900 underline">
-            Créer un rapport Looker Studio →
+             class="text-xs font-semibold underline" style="color:#047857;">
+            Créer un rapport →
           </a>
-          <p class="text-xs text-blue-500 mt-2">Puis ajoute <code class="bg-blue-100 px-1 rounded">PUBLIC_LOOKER_STUDIO_URL</code> dans Railway.</p>
+          <p class="text-xs mt-2" style="color:#059669;">Puis ajoute <code class="px-1 rounded" style="background:#bbf7d0;">PUBLIC_LOOKER_STUDIO_URL</code> dans Railway.</p>
         </div>
 
       </div>
 
-      <!-- Guide setup Looker Studio -->
+      <!-- Guide -->
       <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-        <h2 class="font-bold text-gray-800 mb-4">📋 Comment intégrer le tableau de bord ici ?</h2>
+        <h2 class="font-bold text-gray-800 mb-4">📋 Intégrer le tableau de bord directement ici</h2>
         <ol class="space-y-3 text-sm text-gray-600">
           <li class="flex gap-3">
-            <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
-            <span>Va sur <a href="https://lookerstudio.google.com" target="_blank" class="text-blue-600 hover:underline font-medium">lookerstudio.google.com</a> → <strong>Créer</strong> → <strong>Rapport</strong></span>
+            <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5" style="background:#047857;">1</span>
+            <span>Va sur <a href="https://lookerstudio.google.com" target="_blank" class="font-medium underline" style="color:#047857;">lookerstudio.google.com</a> → <strong>Créer</strong> → <strong>Rapport</strong></span>
           </li>
           <li class="flex gap-3">
-            <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-            <span>Connecte la source de données → <strong>Google Analytics</strong> → sélectionne <strong>togolese.fr</strong></span>
+            <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5" style="background:#047857;">2</span>
+            <span>Connecte <strong>Google Analytics</strong> → sélectionne <strong>togolese.fr</strong></span>
           </li>
           <li class="flex gap-3">
-            <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
-            <span>Personnalise le rapport (pays, âge, pages vues, sessions…)</span>
+            <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5" style="background:#047857;">3</span>
+            <span><strong>Fichier → Intégrer le rapport</strong> → copie l'URL iframe</span>
           </li>
           <li class="flex gap-3">
-            <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">4</span>
-            <span>Clique <strong>Fichier → Intégrer le rapport</strong> → copie l'URL iframe</span>
-          </li>
-          <li class="flex gap-3">
-            <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">5</span>
-            <span>Dans Railway → Variables → ajoute <code class="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-xs">PUBLIC_LOOKER_STUDIO_URL = [ton URL]</code></span>
+            <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5" style="background:#047857;">4</span>
+            <span>Railway → Variables → <code class="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-xs">PUBLIC_LOOKER_STUDIO_URL = [ton URL]</code></span>
           </li>
         </ol>
-      </div>
-
-    ) : (
-      <!-- GA4 non configuré -->
-      <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
-        <div class="text-4xl mb-3">⚠️</div>
-        <h2 class="font-bold text-amber-800 text-lg mb-2">Google Analytics non configuré</h2>
-        <p class="text-amber-700 text-sm mb-4">Ajoute la variable <code class="bg-amber-100 px-1.5 py-0.5 rounded font-mono">PUBLIC_GA_ID=G-XXXXXXXXXX</code> dans Railway pour activer le suivi.</p>
-        <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-xl hover:bg-amber-700 transition-colors">
-          Créer un compte GA4 →
-        </a>
       </div>
     )}
 
