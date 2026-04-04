@@ -168,6 +168,11 @@ function runMigrations(db: Database.Database) {
     // Migrate inquiries status values: old → new
     `UPDATE inquiries SET status = 'acceptee' WHERE status IN ('contacte', 'en_cours', 'convertie')`,
     `UPDATE inquiries SET status = 'refusee' WHERE status = 'rejetee'`,
+    // Add extended profile fields to users
+    `ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''`,
+    `ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''`,
+    `ALTER TABLE users ADD COLUMN birthdate TEXT DEFAULT ''`,
+    `ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT ''`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* column already exists or constraint issue */ }
@@ -175,6 +180,9 @@ function runMigrations(db: Database.Database) {
 
   // Recreate inquiries table with new CHECK constraint if old one still exists
   migrateInquiriesConstraint(db);
+
+  // Add 'convertie' to inquiries status CHECK constraint
+  migrateInquiriesAddConvertie(db);
 }
 
 function migrateInquiriesConstraint(db: Database.Database) {
@@ -226,6 +234,46 @@ function migrateInquiriesConstraint(db: Database.Database) {
   } catch (e) {
     db.pragma('foreign_keys = ON');
     console.log('[Migration] inquiries already up to date');
+  }
+}
+
+function migrateInquiriesAddConvertie(db: Database.Database) {
+  const row = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='inquiries'`).get() as any;
+  if (!row || row.sql.includes("'convertie'")) return; // Already has 'convertie'
+
+  const migrate = db.transaction(() => {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS inquiries_v3 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_name TEXT NOT NULL,
+        client_phone TEXT NOT NULL,
+        description TEXT NOT NULL,
+        quantity INTEGER DEFAULT 1,
+        desired_deadline TEXT DEFAULT '',
+        photos TEXT DEFAULT '[]',
+        external_link TEXT DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'en_attente' CHECK(status IN ('en_attente', 'acceptee', 'refusee', 'annulee', 'convertie')),
+        notes TEXT DEFAULT '',
+        products TEXT DEFAULT '[]',
+        delivery_type TEXT DEFAULT 'avion' CHECK(delivery_type IN ('avion', 'bateau')),
+        deadline TEXT DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO inquiries_v3 SELECT * FROM inquiries;
+      DROP TABLE inquiries;
+      ALTER TABLE inquiries_v3 RENAME TO inquiries;
+    `);
+  });
+
+  try {
+    db.pragma('foreign_keys = OFF');
+    migrate();
+    db.pragma('foreign_keys = ON');
+    console.log('[Migration] inquiries status: added convertie');
+  } catch (e) {
+    db.pragma('foreign_keys = ON');
+    console.log('[Migration] inquiries convertie already present');
   }
 }
 
