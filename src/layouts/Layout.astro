@@ -207,9 +207,39 @@ const isAdminRole = currentUser?.role === 'admin';
       </div>
     )}
 
-    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 w-full">
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 w-full pb-24 sm:pb-8">
       <slot />
     </main>
+
+    <!-- ── Barre raccourcis mobile ─────────────────────────────────────── -->
+    {isAdmin && (
+      <nav class="fixed bottom-0 left-0 right-0 sm:hidden z-50 flex items-stretch" style="background:#047857;box-shadow:0 -2px 16px rgba(0,0,0,0.2);padding-bottom:env(safe-area-inset-bottom);">
+
+        <a href="/admin/orders" class="mob-tab nav-link flex-1 flex flex-col items-center justify-center gap-1 py-3 relative" style="color:rgba(255,255,255,0.75);">
+          <span id="mob-pending-badge" class="hidden absolute top-2 right-6 items-center justify-center min-w-[16px] h-4 px-1 bg-red-400 text-white text-[9px] font-bold rounded-full leading-none"></span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <span class="text-[11px] font-medium">Commandes</span>
+        </a>
+
+        <a href="/admin/inquiries" class="mob-tab nav-link flex-1 flex flex-col items-center justify-center gap-1 py-3 relative" style="color:rgba(255,255,255,0.75);">
+          <span id="mob-inquiry-badge" class="hidden absolute top-2 right-6 items-center justify-center min-w-[16px] h-4 px-1 bg-amber-400 text-white text-[9px] font-bold rounded-full leading-none"></span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span class="text-[11px] font-medium">Demandes</span>
+        </a>
+
+        <a href="/admin/payments" class="mob-tab nav-link flex-1 flex flex-col items-center justify-center gap-1 py-3" style="color:rgba(255,255,255,0.75);">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+          </svg>
+          <span class="text-[11px] font-medium">Paiements</span>
+        </a>
+
+      </nav>
+    )}
 
     <div id="toast-container"></div>
 
@@ -352,6 +382,18 @@ const isAdminRole = currentUser?.role === 'admin';
         }
         updateInquiryBadge();
         setInterval(updateInquiryBadge, 30_000);
+
+        // ── Active state barre mobile ─────────────────────────────────────────
+        (function () {
+          const path = window.location.pathname;
+          document.querySelectorAll('.mob-tab').forEach(function (a: any) {
+            const href = a.getAttribute('href');
+            if (!href) return;
+            if (path === href || path.startsWith(href + '/')) {
+              a.style.color = 'white';
+            }
+          });
+        })();
 
         // ── Recherche globale ─────────────────────────────────────────────────
         const globalSearch  = document.getElementById('global-search') as HTMLInputElement | null;
