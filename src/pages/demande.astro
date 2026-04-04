@@ -297,20 +297,21 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      border: 2px dashed #6ee7b7;
-      border-radius: 10px;
-      padding: 12px 16px;
-      background: #f0fdf4;
+      gap: 6px;
+      border: 1.5px dashed #6ee7b7;
+      border-radius: 8px;
+      padding: 9px 14px;
+      background: transparent;
       cursor: pointer;
       transition: all 0.2s;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: #047857;
+      width: 100%;
     }
     .drop-zone:hover, .drop-zone.dragover {
       border-color: #059669;
-      background: #ecfdf5;
+      background: #f0fdf4;
     }
 
     .photo-grid {
@@ -769,18 +770,17 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
             </div>
 
             <div class="tab-panel active" data-panel="photo">
-              <div class="drop-zone" data-pid="${product.id}">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+              <div class="photo-grid"></div>
+              <div class="drop-zone" data-pid="${product.id}" style="margin-top:8px;">
                 📸 Ajouter des photos
                 <input type="file" accept="image/*" multiple style="display:none" />
               </div>
-              <div class="photo-grid"></div>
             </div>
 
             <div class="tab-panel" data-panel="link">
               <div id="links-list-${product.id}" style="display:flex;flex-direction:column;gap:8px;"></div>
               <button type="button" class="btn-add-link" data-pid="${product.id}" style="margin-top:8px;padding:9px 14px;border:1.5px dashed #c7d2fe;border-radius:8px;background:transparent;color:#4f46e5;font-size:13px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;">
-                + Ajouter un lien
+                🔗 Ajouter un lien
               </button>
             </div>
           </div>
