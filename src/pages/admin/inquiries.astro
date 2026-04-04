@@ -628,6 +628,7 @@ function getDevisNumber(id: number): string {
                       <span class="text-gray-400 text-xs">×${p.quantity || 1}</span>
                       ${p.state ? `<span class="text-xs text-gray-500 italic bg-white px-1.5 py-0.5 rounded border border-gray-200">${p.state}</span>` : ''}
                     </div>
+                    ${p.notes ? `<p class="text-xs text-gray-500 italic mt-1 bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-100">📝 ${p.notes}</p>` : ''}
                     ${linksHtml ? `<div class="mt-1">${linksHtml}</div>` : ''}
                     ${thumbsHtml}
                   </div>
