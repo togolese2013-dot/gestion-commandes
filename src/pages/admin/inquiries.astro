@@ -52,17 +52,24 @@ function getDevisNumber(id: number): string {
       </a>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-      {Object.entries(statusLabels).map(([status, { label, color }]) => {
-        const count = inquiries.filter(i => (i.status || 'en_attente') === status).length;
-        return (
-          <div class={`${statusColors[color]} border rounded-lg p-4`}>
-            <p class="text-xs font-semibold uppercase tracking-wide opacity-75">{label}</p>
-            <p class="text-2xl font-bold mt-1">{count}</p>
-          </div>
-        );
-      })}
+    <!-- Filtres -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      {[
+        { key: 'toutes',     label: 'Toutes',     count: inquiries.length },
+        { key: 'en_attente', label: 'En attente', count: inquiries.filter(i => (i.status || 'en_attente') === 'en_attente').length },
+        { key: 'acceptee',   label: 'Acceptée',   count: inquiries.filter(i => i.status === 'acceptee').length },
+        { key: 'refusee',    label: 'Refusée',    count: inquiries.filter(i => i.status === 'refusee').length },
+        { key: 'annulee',    label: 'Annulée',    count: inquiries.filter(i => i.status === 'annulee').length },
+      ].map(({ key, label, count }) => (
+        <button
+          class="filter-btn flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors"
+          data-filter={key}
+          style={key === 'toutes' ? 'background:#047857;color:white;border-color:#047857;' : 'background:white;color:#6b7280;border-color:#e5e7eb;'}
+        >
+          {label}
+          <span class="text-xs font-bold px-1.5 py-0.5 rounded-full" style={key === 'toutes' ? 'background:rgba(255,255,255,0.25);' : 'background:#f3f4f6;'}>{count}</span>
+        </button>
+      ))}
     </div>
 
     <!-- Table -->
@@ -92,7 +99,7 @@ function getDevisNumber(id: number): string {
                 const { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
                 const products = inquiry.products || [];
                 return (
-                  <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-id={inquiry.id}>
+                  <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-id={inquiry.id} data-status={status}>
                     <td class="px-4 py-3">
                       <span class="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">
                         {getDevisNumber(inquiry.id!)}
@@ -415,6 +422,40 @@ function getDevisNumber(id: number): string {
       -webkit-box-orient: vertical;
     }
   </style>
+
+  <script>
+    // ── Filtres ────────────────────────────────────────────────────────────
+    (function () {
+      const btns = document.querySelectorAll('.filter-btn');
+      const rows = document.querySelectorAll('tbody tr[data-status]');
+
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const filter = btn.getAttribute('data-filter');
+
+          // Style boutons
+          btns.forEach(b => {
+            b.style.background = 'white';
+            b.style.color = '#6b7280';
+            b.style.borderColor = '#e5e7eb';
+            const badge = b.querySelector('span');
+            if (badge) badge.style.background = '#f3f4f6';
+          });
+          btn.style.background = '#047857';
+          btn.style.color = 'white';
+          btn.style.borderColor = '#047857';
+          const activeBadge = btn.querySelector('span');
+          if (activeBadge) activeBadge.style.background = 'rgba(255,255,255,0.25)';
+
+          // Filtrer les lignes
+          rows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            (row as HTMLElement).style.display = (filter === 'toutes' || status === filter) ? '' : 'none';
+          });
+        });
+      });
+    })();
+  </script>
 
   <script define:vars={{ inquiries }}>
     const ACTIVE_MODAL = 'a'; // 'a', 'b', ou 'c' — à changer selon le choix
