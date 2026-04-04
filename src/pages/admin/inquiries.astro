@@ -53,7 +53,7 @@ function getDevisNumber(id: number): string {
     </div>
 
     <!-- Filtres -->
-    <div class="flex flex-wrap gap-2 mb-6">
+    <div class="flex gap-2 mb-6 overflow-x-auto pb-1" style="flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
       {[
         { key: 'toutes',     label: 'Toutes',     count: inquiries.length },
         { key: 'en_attente', label: 'En attente', count: inquiries.filter(i => (i.status || 'en_attente') === 'en_attente').length },
@@ -62,7 +62,7 @@ function getDevisNumber(id: number): string {
         { key: 'annulee',    label: 'Annulée',    count: inquiries.filter(i => i.status === 'annulee').length },
       ].map(({ key, label, count }) => (
         <button
-          class="filter-btn flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors"
+          class="filter-btn flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors whitespace-nowrap shrink-0"
           data-filter={key}
           style={key === 'toutes' ? 'background:#047857;color:white;border-color:#047857;' : 'background:white;color:#6b7280;border-color:#e5e7eb;'}
         >
