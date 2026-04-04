@@ -65,7 +65,8 @@ html { overflow-x: hidden; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
 
 /* ── Active nav link ──────────────────────────────────────────────────── */
-.nav-link.active { color: #047857; background-color: #ecfdf5; font-weight: 600; }
+.nav-link.active { color: white !important; background-color: rgba(255,255,255,0.2) !important; font-weight: 600; }
+.nav-link:hover { color: white !important; background-color: rgba(255,255,255,0.15) !important; }
 
 /* ── Toast notifications ──────────────────────────────────────────────── */
 #toast-container {

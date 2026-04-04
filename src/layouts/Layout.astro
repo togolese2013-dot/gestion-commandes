@@ -27,74 +27,69 @@ const isAdminRole = currentUser?.role === 'admin';
   </head>
   <body class="bg-gray-50 min-h-screen text-gray-900">
     {isAdmin && (
-      <header class="bg-white border-b border-gray-200 shadow-sm">
+      <header style="background:#047857;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.18);">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
-          <!-- Row 1: logo + search + user -->
-          <div class="flex items-center gap-4 h-12">
-            <a href="/" class="font-black text-xl shrink-0 tracking-tight" style="color:#047857;letter-spacing:-0.04em;">Togolese.</a>
-            <!-- Global search -->
-            <div class="relative hidden sm:block" style="width:220px;">
-              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-              </svg>
-              <input
-                id="global-search"
-                type="text"
-                autocomplete="off"
-                placeholder="Rechercher… (commandes, clients)"
-                class="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-gray-50 focus:bg-white transition"
-              />
-              <div id="global-results" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden overflow-hidden min-w-[320px]"></div>
-            </div>
-            <div class="flex-1 sm:hidden"></div>
-            <!-- Right actions -->
-            <div class="flex items-center gap-1 shrink-0">
+          <div class="flex items-center justify-between gap-4 h-16">
+
+            <!-- Logo -->
+            <a href="/" class="font-black text-xl shrink-0 text-white" style="letter-spacing:-0.04em;">Togolese.</a>
+
+            <!-- Nav centrale -->
+            <nav class="flex items-center gap-0.5 text-sm font-medium overflow-x-auto scrollbar-none flex-1 justify-center">
+              <a href="/admin/dashboard" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">Dashboard</a>
+              <a href="/admin/orders" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5" style="color:rgba(255,255,255,0.8);">
+                Commandes
+                <span id="pending-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-400 text-white text-[10px] font-bold rounded-full leading-none"></span>
+              </a>
+              <a href="/admin/inquiries" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5" style="color:rgba(255,255,255,0.8);">
+                Demandes
+                <span id="inquiry-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-amber-400 text-white text-[10px] font-bold rounded-full leading-none"></span>
+              </a>
+              <a href="/admin/analytics" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">📊 Stats</a>
+              <a href="/admin/clients" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">Clients</a>
+              {isAdminRole && (
+                <a href="/admin/payments" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">Paiements</a>
+              )}
+              {isAdminRole && (
+                <a href="/admin/settings" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">Paramètres</a>
+              )}
+            </nav>
+
+            <!-- Droite : recherche + user + déco -->
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="relative hidden sm:block" style="width:190px;">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style="color:rgba(255,255,255,0.5);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                </svg>
+                <input
+                  id="global-search"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Rechercher…"
+                  class="w-full pl-9 pr-3 py-1.5 rounded-lg text-xs text-white focus:outline-none transition"
+                  style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);"
+                />
+                <div id="global-results" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden overflow-hidden min-w-[320px]"></div>
+              </div>
               {currentUser && (
                 <button
                   id="profile-btn"
-                  class="text-xs font-medium text-gray-700 hover:text-emerald-700 transition-colors whitespace-nowrap cursor-pointer px-2 py-1.5 rounded-lg hover:bg-emerald-50"
+                  class="text-xs font-medium transition-colors whitespace-nowrap cursor-pointer px-2 py-1.5 rounded-lg"
+                  style="color:rgba(255,255,255,0.8);"
                   data-id={currentUser.id}
                   data-name={currentUser.full_name}
                 >
                   👤 <span class="hidden md:inline">{currentUser.full_name}</span>
                 </button>
               )}
-              <button id="dark-toggle" type="button" title="Mode sombre"
-                class="text-gray-400 hover:text-gray-700 transition-colors p-1.5 rounded-lg hover:bg-gray-100">
-                <svg id="icon-moon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>
-                </svg>
-                <svg id="icon-sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
-                </svg>
-              </button>
               <form action="/api/auth/logout" method="POST" style="display:flex;align-items:center;">
-                <button type="submit" class="text-xs text-gray-400 hover:text-red-600 transition-colors whitespace-nowrap px-2 py-1.5 rounded-lg hover:bg-gray-100">
+                <button type="submit" class="text-xs transition-colors whitespace-nowrap px-2 py-1.5 rounded-lg" style="color:rgba(255,255,255,0.6);">
                   Déconnexion
                 </button>
               </form>
             </div>
+
           </div>
-          <!-- Row 2: nav -->
-          <nav class="flex justify-center items-center gap-1 text-sm font-medium overflow-x-auto scrollbar-none -mx-1 px-1">
-            <a href="/admin/dashboard" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">Dashboard</a>
-<a href="/admin/orders" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
-              Commandes
-              <span id="pending-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full leading-none"></span>
-            </a>
-            <a href="/admin/inquiries" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
-              Demandes
-              <span id="inquiry-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-amber-500 text-white text-[10px] font-bold rounded-full leading-none"></span>
-            </a>
-            <a href="/admin/analytics" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">📊 Stats</a>
-            <a href="/admin/clients" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">Clients</a>
-            {isAdminRole && (
-              <a href="/admin/payments" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">Paiements</a>
-            )}
-            {isAdminRole && (
-              <a href="/admin/settings" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">Paramètres</a>
-            )}
-          </nav>
         </div>
       </header>
     )}
