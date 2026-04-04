@@ -31,9 +31,9 @@ const isAdminRole = currentUser?.role === 'admin';
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
           <!-- Row 1: logo + search + user -->
           <div class="flex items-center gap-4 h-12">
-            <a href="/" class="font-black text-sm shrink-0 tracking-tight" style="color:#047857;letter-spacing:-0.03em;">Togolese.</a>
-            <!-- Global search: fills all available space -->
-            <div class="flex-1 relative hidden sm:block">
+            <a href="/" class="font-black text-xl shrink-0 tracking-tight" style="color:#047857;letter-spacing:-0.04em;">Togolese.</a>
+            <!-- Global search -->
+            <div class="relative hidden sm:block" style="width:220px;">
               <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
               </svg>
@@ -78,8 +78,7 @@ const isAdminRole = currentUser?.role === 'admin';
           <!-- Row 2: nav -->
           <nav class="flex justify-center items-center gap-1 text-sm font-medium overflow-x-auto scrollbar-none -mx-1 px-1">
             <a href="/admin/dashboard" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">Dashboard</a>
-            <a href="/admin" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">+ Nouvelle</a>
-            <a href="/admin/orders" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
+<a href="/admin/orders" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
               Commandes
               <span id="pending-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full leading-none"></span>
             </a>
