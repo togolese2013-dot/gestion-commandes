@@ -34,8 +34,8 @@ const isAdminRole = currentUser?.role === 'admin';
             <!-- Logo -->
             <a href="/" class="font-black text-xl shrink-0 text-white" style="letter-spacing:-0.04em;">Togolese.</a>
 
-            <!-- Nav centrale -->
-            <nav class="flex items-center gap-0.5 text-sm font-medium overflow-x-auto scrollbar-none flex-1 justify-center">
+            <!-- Nav centrale — desktop uniquement -->
+            <nav class="hidden sm:flex items-center gap-0.5 text-sm font-medium overflow-x-auto scrollbar-none flex-1 justify-center">
               <a href="/admin/dashboard" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">Dashboard</a>
               <a href="/admin/orders" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5" style="color:rgba(255,255,255,0.8);">
                 Commandes
@@ -128,9 +128,87 @@ const isAdminRole = currentUser?.role === 'admin';
       </div>
     )}
 
-    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 w-full">
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 w-full pb-24 sm:pb-8">
       <slot />
     </main>
+
+    <!-- ── Barre de navigation mobile (sm:hidden) ─────────────────────── -->
+    {isAdmin && (
+      <>
+        <!-- Overlay "Plus" -->
+        <div id="mob-more-overlay" class="fixed inset-0 z-40 sm:hidden hidden" style="background:rgba(0,0,0,0.4);">
+          <div id="mob-more-sheet" class="absolute bottom-16 left-0 right-0 rounded-t-2xl shadow-2xl overflow-hidden" style="background:#fff;">
+            <div class="px-4 pt-4 pb-2">
+              <div class="w-10 h-1 rounded-full mx-auto mb-4" style="background:#e2e8f0;"></div>
+              <div class="grid grid-cols-2 gap-3">
+                <a href="/admin/analytics" class="mob-more-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm" style="background:#f0fdf4;color:#047857;">
+                  <span class="text-xl">📊</span> Stats
+                </a>
+                <a href="/admin/clients" class="mob-more-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm" style="background:#f0fdf4;color:#047857;">
+                  <span class="text-xl">👥</span> Clients
+                </a>
+                {isAdminRole && (
+                  <a href="/admin/payments" class="mob-more-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm" style="background:#f0fdf4;color:#047857;">
+                    <span class="text-xl">💳</span> Paiements
+                  </a>
+                )}
+                {isAdminRole && (
+                  <a href="/admin/settings" class="mob-more-link flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm" style="background:#f0fdf4;color:#047857;">
+                    <span class="text-xl">⚙️</span> Paramètres
+                  </a>
+                )}
+              </div>
+            </div>
+            <div class="px-4 pb-4 pt-2 border-t border-gray-100 mt-2">
+              <form action="/api/auth/logout" method="POST">
+                <button type="submit" class="w-full py-3 rounded-xl text-sm font-medium" style="background:#fef2f2;color:#dc2626;">
+                  Déconnexion
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barre fixe bas -->
+        <nav class="fixed bottom-0 left-0 right-0 sm:hidden z-50 flex items-stretch" style="background:#047857;box-shadow:0 -2px 16px rgba(0,0,0,0.18);padding-bottom:env(safe-area-inset-bottom);">
+
+          <!-- Dashboard -->
+          <a href="/admin/dashboard" class="mob-tab nav-link flex-1 flex flex-col items-center justify-center gap-0.5 py-2" style="color:rgba(255,255,255,0.7);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span class="text-[10px] font-medium leading-none">Dashboard</span>
+          </a>
+
+          <!-- Commandes -->
+          <a href="/admin/orders" class="mob-tab nav-link flex-1 flex flex-col items-center justify-center gap-0.5 py-2 relative" style="color:rgba(255,255,255,0.7);">
+            <span id="mob-pending-badge" class="hidden absolute top-1.5 right-5 items-center justify-center min-w-[16px] h-4 px-1 bg-red-400 text-white text-[9px] font-bold rounded-full leading-none"></span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+            <span class="text-[10px] font-medium leading-none">Commandes</span>
+          </a>
+
+          <!-- Demandes -->
+          <a href="/admin/inquiries" class="mob-tab nav-link flex-1 flex flex-col items-center justify-center gap-0.5 py-2 relative" style="color:rgba(255,255,255,0.7);">
+            <span id="mob-inquiry-badge" class="hidden absolute top-1.5 right-5 items-center justify-center min-w-[16px] h-4 px-1 bg-amber-400 text-white text-[9px] font-bold rounded-full leading-none"></span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <span class="text-[10px] font-medium leading-none">Demandes</span>
+          </a>
+
+          <!-- Plus -->
+          <button id="mob-more-btn" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-2" style="color:rgba(255,255,255,0.7);background:transparent;border:none;cursor:pointer;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <span class="text-[10px] font-medium leading-none">Plus</span>
+          </button>
+
+        </nav>
+      </>
+    )}
 
     <!-- Toast container -->
     <div id="toast-container"></div>
@@ -143,10 +221,43 @@ const isAdminRole = currentUser?.role === 'admin';
         document.querySelectorAll('.nav-link').forEach(function (a) {
           var href = a.getAttribute('href');
           if (!href) return;
-          // exact match or sub-path (but /admin must be exact to avoid matching everything)
           var active = href === '/admin' ? path === '/admin' : path === href || path.startsWith(href + '/');
-          if (active) a.classList.add('active');
+          if (active) {
+            a.classList.add('active');
+            // Mobile tab: full opacity
+            if (a.classList.contains('mob-tab')) {
+              a.style.color = 'white';
+            }
+          }
         });
+      })();
+
+      // ── Mobile more drawer ────────────────────────────────────────────────
+      (function () {
+        var overlay = document.getElementById('mob-more-overlay');
+        var btn     = document.getElementById('mob-more-btn');
+        if (!overlay || !btn) return;
+        function openMore() {
+          overlay.classList.remove('hidden');
+          overlay.classList.add('flex');
+          overlay.style.alignItems = 'flex-end';
+        }
+        function closeMore() {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+        }
+        btn.addEventListener('click', function () {
+          overlay.classList.contains('hidden') ? openMore() : closeMore();
+        });
+        overlay.addEventListener('click', function (e) {
+          if (e.target === overlay) closeMore();
+        });
+        // Active state for "Plus" links
+        var path = window.location.pathname;
+        var moreLinks = ['/admin/analytics', '/admin/clients', '/admin/payments', '/admin/settings'];
+        if (moreLinks.some(function(l){ return path === l || path.startsWith(l + '/'); })) {
+          btn.style.color = 'white';
+        }
       })();
 
       // ── Dark mode icons ───────────────────────────────────────────────────
@@ -232,21 +343,26 @@ const isAdminRole = currentUser?.role === 'admin';
         });
 
         // ── Badge commandes en attente ────────────────────────────────────────
-        async function updatePendingBadge() {
-          try {
-            const res = await fetch('/api/orders/count');
-            if (!res.ok) return;
-            const { en_attente } = await res.json();
-            const badge = document.getElementById('pending-badge');
+        function setBadge(ids: string[], count: number) {
+          ids.forEach(id => {
+            const badge = document.getElementById(id);
             if (!badge) return;
-            if (en_attente > 0) {
-              badge.textContent = en_attente > 99 ? '99+' : String(en_attente);
+            if (count > 0) {
+              badge.textContent = count > 99 ? '99+' : String(count);
               badge.classList.remove('hidden');
               badge.classList.add('inline-flex');
             } else {
               badge.classList.add('hidden');
               badge.classList.remove('inline-flex');
             }
+          });
+        }
+        async function updatePendingBadge() {
+          try {
+            const res = await fetch('/api/orders/count');
+            if (!res.ok) return;
+            const { en_attente } = await res.json();
+            setBadge(['pending-badge', 'mob-pending-badge'], en_attente);
           } catch { /* silent */ }
         }
         updatePendingBadge();
@@ -258,16 +374,7 @@ const isAdminRole = currentUser?.role === 'admin';
             const res = await fetch('/api/inquiries/count');
             if (!res.ok) return;
             const { en_attente } = await res.json();
-            const badge = document.getElementById('inquiry-badge');
-            if (!badge) return;
-            if (en_attente > 0) {
-              badge.textContent = en_attente > 99 ? '99+' : String(en_attente);
-              badge.classList.remove('hidden');
-              badge.classList.add('inline-flex');
-            } else {
-              badge.classList.add('hidden');
-              badge.classList.remove('inline-flex');
-            }
+            setBadge(['inquiry-badge', 'mob-inquiry-badge'], en_attente);
           } catch { /* silent */ }
         }
         updateInquiryBadge();
