@@ -2,17 +2,26 @@
 import Layout from '../../layouts/Layout.astro';
 import { requireAuth } from '../../lib/auth';
 import { getAllInquiries, updateInquiry } from '../../lib/inquiries';
+import { getAllDevis } from '../../lib/devis';
 
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
 const inquiries = getAllInquiries();
+const allDevis = getAllDevis();
+
+// Map inquiry_id (as string) → devis info for client-side use
+const devisMap: Record<string, { status: string; token: string; id: number }> = {};
+allDevis.forEach(d => {
+  devisMap[String(d.inquiry_id)] = { status: d.devis_status, token: d.access_token || '', id: d.id! };
+});
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   'en_attente': { label: 'En attente', color: 'yellow' },
   'acceptee':   { label: 'Acceptée',   color: 'green' },
   'refusee':    { label: 'Refusée',    color: 'red' },
   'annulee':    { label: 'Annulée',    color: 'gray' },
+  'convertie':  { label: 'Convertie',  color: 'blue' },
 };
 
 const fmt = (n: number) => n.toLocaleString('fr-FR');
@@ -23,6 +32,7 @@ const statusColors: Record<string, string> = {
   'green':  'bg-green-50 text-green-700 border-green-200',
   'red':    'bg-red-50 text-red-700 border-red-200',
   'gray':   'bg-gray-50 text-gray-500 border-gray-200',
+  'blue':   'bg-blue-50 text-blue-700 border-blue-200',
 };
 
 const statusBadgeColors: Record<string, string> = {
@@ -30,6 +40,7 @@ const statusBadgeColors: Record<string, string> = {
   'green':  'bg-green-100 text-green-800',
   'red':    'bg-red-100 text-red-800',
   'gray':   'bg-gray-100 text-gray-600',
+  'blue':   'bg-blue-100 text-blue-800',
 };
 
 function getDevisNumber(id: number): string {
@@ -52,21 +63,108 @@ function getDevisNumber(id: number): string {
       </a>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-      {Object.entries(statusLabels).map(([status, { label, color }]) => {
-        const count = inquiries.filter(i => (i.status || 'en_attente') === status).length;
+    <!-- Filtres — icônes (mobile uniquement) -->
+    <div class="flex md:hidden gap-2 mb-6">
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="toutes" title="Toutes" style="background:#047857;color:white;border-color:#047857;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h7"/></svg>
+        <span class="text-xs font-bold">{inquiries.length}</span>
+      </button>
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="en_attente" title="En attente" style="background:white;color:#6b7280;border-color:#e5e7eb;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{inquiries.filter(i => (i.status || 'en_attente') === 'en_attente').length}</span>
+      </button>
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="acceptee" title="Acceptée" style="background:white;color:#6b7280;border-color:#e5e7eb;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'acceptee').length}</span>
+      </button>
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="refusee" title="Refusée" style="background:white;color:#6b7280;border-color:#e5e7eb;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'refusee').length}</span>
+      </button>
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="annulee" title="Annulée" style="background:white;color:#6b7280;border-color:#e5e7eb;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+        <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'annulee').length}</span>
+      </button>
+    </div>
+
+    <!-- Filtres — texte (tablette/desktop) -->
+    <div class="hidden md:flex gap-2 flex-wrap mb-6">
+      {[
+        { key: 'toutes',     label: 'Toutes',     count: inquiries.length },
+        { key: 'en_attente', label: 'En attente', count: inquiries.filter(i => (i.status || 'en_attente') === 'en_attente').length },
+        { key: 'acceptee',   label: 'Acceptée',   count: inquiries.filter(i => i.status === 'acceptee').length },
+        { key: 'refusee',    label: 'Refusée',    count: inquiries.filter(i => i.status === 'refusee').length },
+        { key: 'annulee',    label: 'Annulée',    count: inquiries.filter(i => i.status === 'annulee').length },
+      ].map(({ key, label, count }) => (
+        <button
+          class="filter-btn flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors whitespace-nowrap shrink-0"
+          data-filter={key}
+          style={key === 'toutes' ? 'background:#047857;color:white;border-color:#047857;' : 'background:white;color:#6b7280;border-color:#e5e7eb;'}
+        >
+          {label}
+          <span class="text-xs font-bold px-1.5 py-0.5 rounded-full" style={key === 'toutes' ? 'background:rgba(255,255,255,0.25);' : 'background:#f3f4f6;'}>{count}</span>
+        </button>
+      ))}
+    </div>
+
+    <!-- Cartes mobile (md:hidden) -->
+    <div class="md:hidden space-y-3">
+      {inquiries.length === 0 ? (
+        <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center text-gray-500 text-sm">
+          Aucune demande reçue
+        </div>
+      ) : inquiries.map((inquiry) => {
+        const status = inquiry.status || 'en_attente';
+        const { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
         return (
-          <div class={`${statusColors[color]} border rounded-lg p-4`}>
-            <p class="text-xs font-semibold uppercase tracking-wide opacity-75">{label}</p>
-            <p class="text-2xl font-bold mt-1">{count}</p>
+          <div class="inquiry-card bg-white rounded-2xl border border-gray-200 shadow-sm p-4" data-status={status} data-id={inquiry.id}>
+            <!-- Top row: n° devis + statut -->
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md">
+                {getDevisNumber(inquiry.id!)}
+              </span>
+              <span class={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusColors[color]}`}>{label}</span>
+            </div>
+            <!-- Client -->
+            <div class="font-semibold text-gray-900 text-sm">{inquiry.client_name}</div>
+            <div class="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
+              <span>{inquiry.client_phone}</span>
+              <span>·</span>
+              <span>{inquiry.delivery_type === 'bateau' ? '🚢 ECO' : '✈️ EXPRESS'}</span>
+              <span>·</span>
+              <span>{dateStr(inquiry.created_at!)}</span>
+            </div>
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-gray-100">
+              {/* Confirm / Modifier / Convertir buttons */}
+              {status === 'convertie' ? null : status === 'acceptee' ? (
+                <button class="confirm-btn p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors" data-id={inquiry.id} title="Modifier le devis">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+              ) : (
+                <button class="confirm-btn p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors" data-id={inquiry.id} title="Envoyer le devis">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                </button>
+              )}
+              {devisMap[String(inquiry.id)]?.status === 'accepte' && status !== 'convertie' && (
+                <button class="convert-btn p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors" data-id={inquiry.id} data-devis-id={devisMap[String(inquiry.id)].id} title="Convertir en commande">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                </button>
+              )}
+              <button class="view-btn p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors" data-id={inquiry.id} title="Voir détails">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
+              <button class="delete-btn p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" data-id={inquiry.id} title="Supprimer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
           </div>
         );
       })}
     </div>
 
-    <!-- Table -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <!-- Table desktop (hidden on mobile) -->
+    <div class="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -92,7 +190,7 @@ function getDevisNumber(id: number): string {
                 const { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
                 const products = inquiry.products || [];
                 return (
-                  <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-id={inquiry.id}>
+                  <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-id={inquiry.id} data-status={status}>
                     <td class="px-4 py-3">
                       <span class="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">
                         {getDevisNumber(inquiry.id!)}
@@ -106,32 +204,41 @@ function getDevisNumber(id: number): string {
                       {inquiry.delivery_type === 'bateau' ? 'ECO' : 'EXPRESS'}
                     </td>
                     <td class="px-4 py-3 text-center">
-                      <select class="status-select text-xs font-semibold px-2 py-1 rounded border-0 cursor-pointer transition-colors" data-id={inquiry.id} data-status={status} class:list={[statusBadgeColors[color]]}>
-                        <option value="en_attente" selected={status === 'en_attente'}>En attente</option>
-                        <option value="acceptee" selected={status === 'acceptee'}>Acceptée</option>
-                        <option value="refusee" selected={status === 'refusee'}>Refusée</option>
-                        <option value="annulee" selected={status === 'annulee'}>Annulée</option>
-                      </select>
+                      <span class={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusBadgeColors[color]}`}>{label}</span>
                     </td>
                     <td class="px-4 py-3 text-xs text-gray-600">{dateStr(inquiry.created_at!)}</td>
                     <td class="px-4 py-3 text-center">
                       <div class="flex items-center justify-center gap-1">
-                        <!-- Confirmer -->
-                        <button class="confirm-btn inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-id={inquiry.id} title="Confirmer le devis">
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                          </svg>
-                          Confirmer
-                        </button>
+                        {/* Confirm / Modifier / Convertir */}
+                        {status === 'convertie' ? null : status === 'acceptee' ? (
+                          <button class="confirm-btn p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors" data-id={inquiry.id} title="Modifier le devis">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                          </button>
+                        ) : (
+                          <button class="confirm-btn p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors" data-id={inquiry.id} title="Envoyer le devis">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                            </svg>
+                          </button>
+                        )}
+                        {devisMap[String(inquiry.id)]?.status === 'accepte' && status !== 'convertie' && (
+                          <button class="convert-btn p-1.5 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors" data-id={inquiry.id} data-devis-id={devisMap[String(inquiry.id)].id} title="Convertir en commande">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                            </svg>
+                          </button>
+                        )}
                         <!-- Voir -->
-                        <button class="view-btn text-blue-600 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded" data-id={inquiry.id} title="Voir détails">
+                        <button class="view-btn text-blue-600 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg" data-id={inquiry.id} title="Voir détails">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                           </svg>
                         </button>
                         <!-- Supprimer -->
-                        <button class="delete-btn text-red-500 hover:text-red-600 p-1.5 hover:bg-red-50 rounded" data-id={inquiry.id} title="Supprimer">
+                        <button class="delete-btn text-red-500 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg" data-id={inquiry.id} title="Supprimer">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                           </svg>
@@ -151,7 +258,7 @@ function getDevisNumber(id: number): string {
   <!-- ══════════════════════════════════════════════════
        MODAL DÉTAIL
   ══════════════════════════════════════════════════ -->
-  <div id="detail-modal" class="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 hidden p-4">
+  <div id="detail-modal" class="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-[200] hidden p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-auto">
       <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-gray-900">Détails de la demande</h2>
@@ -168,7 +275,7 @@ function getDevisNumber(id: number): string {
   <!-- ══════════════════════════════════════════════════
        LIGHTBOX
   ══════════════════════════════════════════════════ -->
-  <div id="lightbox" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden">
+  <div id="lightbox" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[300] hidden">
     <button id="lb-close" class="absolute top-4 right-4 text-white/70 hover:text-white p-2">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
@@ -183,10 +290,53 @@ function getDevisNumber(id: number): string {
   </div>
 
   <!-- ══════════════════════════════════════════════════
+       MODAL SUCCÈS — Devis envoyé au client
+  ══════════════════════════════════════════════════ -->
+  <div id="devis-success-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[400] hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <!-- Header gradient -->
+      <div class="bg-gradient-to-br from-emerald-500 to-teal-600 px-6 pt-8 pb-10 text-white text-center relative">
+        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-black tracking-tight">Devis envoyé !</h3>
+        <p id="dso-num" class="text-emerald-100 text-sm font-mono mt-1 font-semibold"></p>
+      </div>
+      <!-- Body (pulls up over header) -->
+      <div class="-mt-6 bg-white rounded-2xl mx-3 shadow-lg px-5 py-5 space-y-4">
+        <div>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Lien à partager avec le client</p>
+          <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
+            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+            <p id="dso-link" class="text-xs text-blue-600 font-mono break-all flex-1 leading-relaxed"></p>
+          </div>
+        </div>
+        <div class="flex gap-2.5 pt-1">
+          <button id="dso-copy" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+            </svg>
+            Copier le lien
+          </button>
+          <button id="dso-close" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-colors">
+            Fermer
+          </button>
+        </div>
+        <p class="text-center text-xs text-gray-400">Le lien a été copié automatiquement dans le presse-papiers</p>
+      </div>
+      <div class="h-4"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
        MODAL CONFIRMER — Proposition A : "Fiche Devis"
        Design SaaS avec cartes produits, photos visibles
   ══════════════════════════════════════════════════ -->
-  <div id="confirm-modal-a" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+  <div id="confirm-modal-a" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] hidden p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden">
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
@@ -274,7 +424,7 @@ function getDevisNumber(id: number): string {
        MODAL CONFIRMER — Proposition B : "Confirmateur rapide"
        Compact, inline, aperçu visuel
   ══════════════════════════════════════════════════ -->
-  <div id="confirm-modal-b" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+  <div id="confirm-modal-b" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] hidden p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
       <!-- Colored header -->
       <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 pt-6 pb-8 text-white relative">
@@ -325,7 +475,7 @@ function getDevisNumber(id: number): string {
        MODAL CONFIRMER — Proposition C : "Wizard 2 étapes"
        Étape 1 = éditer | Étape 2 = aperçu + envoi
   ══════════════════════════════════════════════════ -->
-  <div id="confirm-modal-c" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden p-4">
+  <div id="confirm-modal-c" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] hidden p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
       <!-- Step indicator -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -416,7 +566,42 @@ function getDevisNumber(id: number): string {
     }
   </style>
 
-  <script define:vars={{ inquiries }}>
+  <script>
+    // ── Filtres ────────────────────────────────────────────────────────────
+    (function () {
+      const btns = document.querySelectorAll('.filter-btn');
+      const rows = document.querySelectorAll('tbody tr[data-status]');
+      const cards = document.querySelectorAll('.inquiry-card[data-status]');
+
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const filter = btn.getAttribute('data-filter');
+
+          // Style boutons
+          btns.forEach(b => {
+            b.style.background = 'white';
+            b.style.color = '#6b7280';
+            b.style.borderColor = '#e5e7eb';
+            const badge = b.querySelector('span');
+            if (badge) badge.style.background = '#f3f4f6';
+          });
+          btn.style.background = '#047857';
+          btn.style.color = 'white';
+          btn.style.borderColor = '#047857';
+          const activeBadge = btn.querySelector('span');
+          if (activeBadge) activeBadge.style.background = 'rgba(255,255,255,0.25)';
+
+          // Filtrer lignes tableau + cartes mobile
+          [...rows, ...cards].forEach(el => {
+            const status = el.getAttribute('data-status');
+            (el as HTMLElement).style.display = (filter === 'toutes' || status === filter) ? '' : 'none';
+          });
+        });
+      });
+    })();
+  </script>
+
+  <script define:vars={{ inquiries, devisMap }}>
     const ACTIVE_MODAL = 'a'; // 'a', 'b', ou 'c' — à changer selon le choix
 
     function getDevisNum(id) {
@@ -524,6 +709,7 @@ function getDevisNumber(id: number): string {
                       <span class="text-gray-400 text-xs">×${p.quantity || 1}</span>
                       ${p.state ? `<span class="text-xs text-gray-500 italic bg-white px-1.5 py-0.5 rounded border border-gray-200">${p.state}</span>` : ''}
                     </div>
+                    ${p.notes ? `<p class="text-xs text-gray-500 italic mt-1 bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-100">📝 ${p.notes}</p>` : ''}
                     ${linksHtml ? `<div class="mt-1">${linksHtml}</div>` : ''}
                     ${thumbsHtml}
                   </div>
@@ -985,15 +1171,32 @@ function getDevisNumber(id: number): string {
             select.classList.add('bg-green-100', 'text-green-800');
           }
 
-          // Show success with devis link
+          // Fix link: use /devis/c/ token route
           const baseUrl = window.location.origin;
-          const devisLink = `${baseUrl}/devis/${data.access_token}`;
-          const message = `✓ Devis créé : ${data.devis_number}\n\nLien client :\n${devisLink}\n\n(Copié dans le presse-papiers)`;
+          const devisLink = `${baseUrl}/devis/c/${data.access_token}`;
 
           // Copy link to clipboard
           navigator.clipboard.writeText(devisLink).catch(() => {});
 
-          alert(message);
+          // Show professional success modal
+          document.getElementById('dso-num').textContent = data.devis_number;
+          document.getElementById('dso-link').textContent = devisLink;
+          document.getElementById('devis-success-overlay').classList.remove('hidden');
+
+          // Change confirm button → pencil (modifier)
+          document.querySelectorAll(`.confirm-btn[data-id="${inquiry.id}"]`).forEach(btn => {
+            btn.title = 'Modifier le devis';
+            btn.classList.remove('text-emerald-600', 'hover:text-emerald-700', 'hover:bg-emerald-50');
+            btn.classList.add('text-amber-600', 'hover:text-amber-700', 'hover:bg-amber-50');
+            btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
+          });
+
+          // Update row/card status badge
+          document.querySelectorAll(`tr[data-id="${inquiry.id}"] .status-badge, .inquiry-card[data-id="${inquiry.id}"] .status-badge`).forEach(badge => {
+            badge.textContent = 'Acceptée';
+            badge.className = badge.className.replace(/bg-\w+-100|text-\w+-800/g, '');
+            badge.classList.add('bg-green-100', 'text-green-800');
+          });
         } else {
           const error = await res.json();
           alert(`Erreur : ${error.error || 'Confirmation échouée'}`);
@@ -1003,5 +1206,69 @@ function getDevisNumber(id: number): string {
         alert('Erreur réseau');
       }
     }
+
+    // ── Success overlay (devis sent) ───────────────────────────
+    const dsoOverlay = document.getElementById('devis-success-overlay');
+    const dsoCopy = document.getElementById('dso-copy');
+    const dsoClose = document.getElementById('dso-close');
+
+    dsoCopy?.addEventListener('click', () => {
+      const link = document.getElementById('dso-link').textContent;
+      navigator.clipboard.writeText(link).then(() => {
+        dsoCopy.textContent = '✓ Copié !';
+        setTimeout(() => {
+          dsoCopy.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg> Copier le lien`;
+        }, 2000);
+      });
+    });
+    dsoClose?.addEventListener('click', () => dsoOverlay?.classList.add('hidden'));
+    dsoOverlay?.addEventListener('click', e => {
+      if (e.target === dsoOverlay) dsoOverlay.classList.add('hidden');
+    });
+
+    // ── Convert devis → commande ───────────────────────────────
+    document.querySelectorAll('.convert-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const inquiryId = btn.dataset.id;
+        const devisId = btn.dataset.devisId;
+        if (!confirm('Convertir ce devis accepté en commande ?')) return;
+
+        try {
+          const res = await fetch(`/api/devis/${devisId}/convert`, { method: 'POST' });
+          if (res.ok) {
+            const data = await res.json();
+
+            // Remove convert and modifier buttons for this inquiry
+            document.querySelectorAll(`.convert-btn[data-id="${inquiryId}"]`).forEach(b => b.remove());
+            document.querySelectorAll(`.confirm-btn[data-id="${inquiryId}"]`).forEach(b => b.remove());
+
+            // Update row data-status
+            document.querySelectorAll(`tr[data-id="${inquiryId}"], .inquiry-card[data-id="${inquiryId}"]`).forEach(el => {
+              el.setAttribute('data-status', 'convertie');
+            });
+
+            // Update status badge text
+            document.querySelectorAll(`tr[data-id="${inquiryId}"] span[class*="rounded-full"], .inquiry-card[data-id="${inquiryId}"] span[class*="rounded-full"]`).forEach(badge => {
+              badge.textContent = 'Convertie';
+              badge.className = badge.className.replace(/bg-\w+-100|text-\w+-\d+/g, '');
+              badge.classList.add('bg-blue-100', 'text-blue-800');
+            });
+
+            // Show mini toast
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl z-[500] flex items-center gap-2';
+            toast.innerHTML = `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Commande créée : ${data.order_number}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+          } else {
+            const err = await res.json();
+            alert(`Erreur : ${err.error || 'Conversion échouée'}`);
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Erreur réseau');
+        }
+      });
+    });
   </script>
 </Layout>

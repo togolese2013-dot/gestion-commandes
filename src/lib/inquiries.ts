@@ -9,7 +9,7 @@ export interface Inquiry {
   desired_deadline?: string;
   photos?: string[]; // JSON stringified in DB
   external_link?: string;
-  status?: 'en_attente' | 'acceptee' | 'refusee' | 'annulee';
+  status?: 'en_attente' | 'acceptee' | 'refusee' | 'annulee' | 'convertie';
   notes?: string;
   products?: any[]; // JSON stringified in DB
   delivery_type?: 'avion' | 'bateau';
