@@ -53,23 +53,32 @@ function getDevisNumber(id: number): string {
     </div>
 
     <!-- Filtres -->
-    <div class="flex gap-2 mb-6 overflow-x-auto pb-1" style="flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-      {[
-        { key: 'toutes',     label: 'Toutes',     count: inquiries.length },
-        { key: 'en_attente', label: 'En attente', count: inquiries.filter(i => (i.status || 'en_attente') === 'en_attente').length },
-        { key: 'acceptee',   label: 'Acceptée',   count: inquiries.filter(i => i.status === 'acceptee').length },
-        { key: 'refusee',    label: 'Refusée',    count: inquiries.filter(i => i.status === 'refusee').length },
-        { key: 'annulee',    label: 'Annulée',    count: inquiries.filter(i => i.status === 'annulee').length },
-      ].map(({ key, label, count }) => (
-        <button
-          class="filter-btn flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors whitespace-nowrap shrink-0"
-          data-filter={key}
-          style={key === 'toutes' ? 'background:#047857;color:white;border-color:#047857;' : 'background:white;color:#6b7280;border-color:#e5e7eb;'}
-        >
-          {label}
-          <span class="text-xs font-bold px-1.5 py-0.5 rounded-full" style={key === 'toutes' ? 'background:rgba(255,255,255,0.25);' : 'background:#f3f4f6;'}>{count}</span>
-        </button>
-      ))}
+    <div class="flex gap-2 mb-6">
+      <!-- Toutes -->
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="toutes" title="Toutes" style="background:#047857;color:white;border-color:#047857;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h7"/></svg>
+        <span class="text-xs font-bold">{inquiries.length}</span>
+      </button>
+      <!-- En attente -->
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="en_attente" title="En attente" style="background:white;color:#6b7280;border-color:#e5e7eb;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{inquiries.filter(i => (i.status || 'en_attente') === 'en_attente').length}</span>
+      </button>
+      <!-- Acceptée -->
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="acceptee" title="Acceptée" style="background:white;color:#6b7280;border-color:#e5e7eb;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'acceptee').length}</span>
+      </button>
+      <!-- Refusée -->
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="refusee" title="Refusée" style="background:white;color:#6b7280;border-color:#e5e7eb;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'refusee').length}</span>
+      </button>
+      <!-- Annulée -->
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="annulee" title="Annulée" style="background:white;color:#6b7280;border-color:#e5e7eb;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+        <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'annulee').length}</span>
+      </button>
     </div>
 
     <!-- Cartes mobile (md:hidden) -->

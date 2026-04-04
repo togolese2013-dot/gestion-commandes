@@ -86,21 +86,27 @@ const statusColor: Record<string, string> = {
     </div>
 
     <!-- Status Filters -->
-    <div class="flex gap-2 overflow-x-auto pb-1" style="flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-      {[
-        { key: 'all', label: `Toutes`, count: orders.length },
-        { key: 'en_attente', label: 'En attente', count: orders.filter(o => o.status === 'en_attente').length },
-        { key: 'disponible', label: 'Disponible', count: orders.filter(o => o.status === 'disponible').length },
-        { key: 'recupere', label: 'Récupéré', count: orders.filter(o => o.status === 'recupere').length },
-      ].map(f => (
-        <button
-          class={`filter-btn px-4 py-1.5 rounded-full text-sm font-medium border transition-all whitespace-nowrap shrink-0 ${f.key === 'all' ? 'active' : ''}`}
-          data-filter={f.key}
-        >
-          {f.label}
-          <span class="ml-1.5 bg-black/10 px-1.5 py-0.5 rounded-full text-xs">{f.count}</span>
-        </button>
-      ))}
+    <div class="flex gap-2">
+      <!-- Toutes -->
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0 active" data-filter="all" title="Toutes">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h7"/></svg>
+        <span class="text-xs font-bold">{orders.length}</span>
+      </button>
+      <!-- En attente -->
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="en_attente" title="En attente">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{orders.filter(o => o.status === 'en_attente').length}</span>
+      </button>
+      <!-- Disponible -->
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="disponible" title="Disponible">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{orders.filter(o => o.status === 'disponible').length}</span>
+      </button>
+      <!-- Récupéré -->
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="recupere" title="Récupéré">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+        <span class="text-xs font-bold">{orders.filter(o => o.status === 'recupere').length}</span>
+      </button>
     </div>
 
     <!-- Search -->
