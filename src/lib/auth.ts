@@ -11,6 +11,10 @@ export interface SessionUser {
   username: string;
   full_name: string;
   role: string;
+  email?: string;
+  phone?: string;
+  birthdate?: string;
+  avatar?: string;
 }
 
 function getSecret(): string {
@@ -68,7 +72,7 @@ export function getCurrentUser(request: Request): SessionUser | null {
   const session = parseSession(request);
   if (!session || Date.now() >= session.expires) return null;
   const db = getDb();
-  const user = db.prepare('SELECT id, username, full_name, role FROM users WHERE id = ?').get(session.userId) as SessionUser | undefined;
+  const user = db.prepare('SELECT id, username, full_name, role, email, phone, birthdate, avatar FROM users WHERE id = ?').get(session.userId) as SessionUser | undefined;
   return user ?? null;
 }
 

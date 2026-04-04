@@ -168,6 +168,11 @@ function runMigrations(db: Database.Database) {
     // Migrate inquiries status values: old → new
     `UPDATE inquiries SET status = 'acceptee' WHERE status IN ('contacte', 'en_cours', 'convertie')`,
     `UPDATE inquiries SET status = 'refusee' WHERE status = 'rejetee'`,
+    // Add extended profile fields to users
+    `ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''`,
+    `ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''`,
+    `ALTER TABLE users ADD COLUMN birthdate TEXT DEFAULT ''`,
+    `ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT ''`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* column already exists or constraint issue */ }

@@ -31,13 +31,13 @@ const isAdminRole = currentUser?.role === 'admin';
 
         <!-- Barre principale -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
-          <div class="flex items-center justify-between gap-4 h-16">
+          <div class="grid h-16 items-center" style="grid-template-columns:1fr auto 1fr;">
 
-            <!-- Logo -->
-            <a href="/admin/dashboard" class="font-black text-xl shrink-0 text-white" style="letter-spacing:-0.04em;">Togolese.</a>
+            <!-- Logo — gauche -->
+            <a href="/admin/dashboard" class="font-black text-xl shrink-0 text-white justify-self-start" style="letter-spacing:-0.04em;">Togolese.</a>
 
             <!-- Nav centrale — desktop uniquement -->
-            <nav class="hidden sm:flex items-center gap-0.5 text-sm font-medium flex-1 justify-center">
+            <nav class="hidden sm:flex items-center gap-0.5 text-sm font-medium justify-center">
               <a href="/admin/dashboard" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap" style="color:rgba(255,255,255,0.8);">Dashboard</a>
               <a href="/admin/orders" class="nav-link py-1.5 px-3 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5" style="color:rgba(255,255,255,0.8);">
                 Commandes
@@ -56,8 +56,8 @@ const isAdminRole = currentUser?.role === 'admin';
               )}
             </nav>
 
-            <!-- Droite : recherche + user + déco + hamburger -->
-            <div class="flex items-center gap-2 shrink-0">
+            <!-- Droite : user + hamburger -->
+            <div class="flex items-center gap-2 justify-self-end">
 
               <!-- Recherche masquée (conservée pour les raccourcis clavier) -->
               <div class="hidden">
@@ -191,34 +191,92 @@ const isAdminRole = currentUser?.role === 'admin';
 
     <!-- Profile edit modal -->
     {isAdmin && currentUser && (
-      <div id="profile-modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-[200] hidden">
-        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
-          <h2 class="text-base font-semibold text-gray-900 mb-4">Mon profil</h2>
-          <form id="profile-form" class="space-y-3">
-            <input type="hidden" name="id" value={currentUser.id} />
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet</label>
-              <input type="text" name="full_name" required value={currentUser.full_name}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Nouveau mot de passe</label>
-              <input type="password" name="password" placeholder="Laisser vide pour ne pas changer"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
-            </div>
-            <p id="profile-error" class="text-sm text-red-600 hidden"></p>
-            <p id="profile-success" class="text-sm text-green-600 hidden">Modifications enregistrées ✓</p>
-            <div class="flex gap-2 pt-1">
-              <button type="submit"
-                class="flex-1 text-white text-sm font-semibold py-2 rounded-lg transition-colors" style="background:#047857;" onmouseover="this.style.background='#065f46'" onmouseout="this.style.background='#047857'">
-                Enregistrer
-              </button>
-              <button type="button" id="profile-cancel"
-                class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold py-2 rounded-lg transition-colors">
-                Annuler
-              </button>
-            </div>
-          </form>
+      <div id="profile-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] hidden p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto flex flex-col max-h-[92vh]">
+
+          <!-- Header modal -->
+          <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-bold text-gray-900">Mon profil</h2>
+            <button type="button" id="profile-cancel" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Scrollable body -->
+          <div class="overflow-y-auto flex-1 px-6 py-5">
+            <form id="profile-form" class="space-y-5">
+              <input type="hidden" name="id" value={currentUser.id} />
+
+              <!-- Avatar -->
+              <div class="flex flex-col items-center gap-3 pb-4 border-b border-gray-100">
+                <div id="profile-avatar-preview" class="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-black text-white overflow-hidden" style="background:#047857;">
+                  {currentUser.avatar
+                    ? <img src={currentUser.avatar} class="w-full h-full object-cover" />
+                    : currentUser.full_name.split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase()
+                  }
+                </div>
+                <label class="cursor-pointer text-xs font-medium px-4 py-1.5 rounded-full border border-gray-300 hover:bg-gray-50 transition-colors text-gray-600">
+                  Changer la photo
+                  <input type="file" name="avatar_file" accept="image/*" class="hidden" id="avatar-file-input" />
+                </label>
+                <input type="hidden" name="avatar" id="avatar-hidden" value={currentUser.avatar || ''} />
+              </div>
+
+              <!-- Infos personnelles -->
+              <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Informations personnelles</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet *</label>
+                    <input type="text" name="full_name" required value={currentUser.full_name}
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                    <input type="email" name="email" value={currentUser.email || ''}
+                      placeholder="exemple@email.com"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Téléphone</label>
+                    <input type="tel" name="phone" value={currentUser.phone || ''}
+                      placeholder="+228 90 00 00 00"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Date de naissance</label>
+                    <input type="date" name="birthdate" value={currentUser.birthdate || ''}
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sécurité -->
+              <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Sécurité</p>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Nouveau mot de passe</label>
+                  <input type="password" name="password" placeholder="Laisser vide pour ne pas changer"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+                </div>
+              </div>
+
+              <p id="profile-error" class="text-sm text-red-600 hidden"></p>
+              <p id="profile-success" class="text-sm text-green-600 hidden">Modifications enregistrées ✓</p>
+            </form>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-6 py-4 border-t border-gray-100 flex gap-3">
+            <button type="submit" form="profile-form"
+              class="flex-1 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors" style="background:#047857;">
+              Enregistrer
+            </button>
+            <button type="button" id="profile-cancel-2"
+              class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold py-2.5 rounded-xl transition-colors">
+              Annuler
+            </button>
+          </div>
         </div>
       </div>
     )}
@@ -330,8 +388,26 @@ const isAdminRole = currentUser?.role === 'admin';
           modal.classList.remove('hidden');
         });
 
-        document.getElementById('profile-cancel')?.addEventListener('click', () => modal.classList.add('hidden'));
-        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+        const closeModal = () => modal.classList.add('hidden');
+        document.getElementById('profile-cancel')?.addEventListener('click', closeModal);
+        document.getElementById('profile-cancel-2')?.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        // Avatar file → base64 preview
+        const avatarFileInput = document.getElementById('avatar-file-input') as HTMLInputElement;
+        const avatarHidden    = document.getElementById('avatar-hidden') as HTMLInputElement;
+        const avatarPreview   = document.getElementById('profile-avatar-preview')!;
+        avatarFileInput?.addEventListener('change', () => {
+          const file = avatarFileInput.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const b64 = ev.target?.result as string;
+            avatarHidden.value = b64;
+            avatarPreview.innerHTML = `<img src="${b64}" class="w-full h-full object-cover" />`;
+          };
+          reader.readAsDataURL(file);
+        });
 
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -340,8 +416,12 @@ const isAdminRole = currentUser?.role === 'admin';
           const id        = (form.querySelector('[name=id]') as HTMLInputElement).value;
           const full_name = (form.querySelector('[name=full_name]') as HTMLInputElement).value.trim();
           const password  = (form.querySelector('[name=password]') as HTMLInputElement).value.trim();
+          const email     = (form.querySelector('[name=email]')     as HTMLInputElement).value.trim();
+          const phone     = (form.querySelector('[name=phone]')     as HTMLInputElement).value.trim();
+          const birthdate = (form.querySelector('[name=birthdate]') as HTMLInputElement).value;
+          const avatar    = (form.querySelector('[name=avatar]')    as HTMLInputElement).value;
 
-          const body: Record<string, string> = { full_name };
+          const body: Record<string, string> = { full_name, email, phone, birthdate, avatar };
           if (password) body.password = password;
 
           const res = await fetch(`/api/users/${id}`, {
@@ -352,7 +432,16 @@ const isAdminRole = currentUser?.role === 'admin';
 
           if (res.ok) {
             okEl.classList.remove('hidden');
-            setTimeout(() => modal.classList.add('hidden'), 1000);
+            // Update header avatar/initials live
+            const initials = full_name.split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase();
+            document.querySelectorAll('#profile-btn .w-6').forEach((el: Element) => {
+              if (avatar) {
+                el.innerHTML = `<img src="${avatar}" class="w-full h-full object-cover rounded-full" />`;
+              } else {
+                el.textContent = initials;
+              }
+            });
+            setTimeout(() => closeModal(), 1200);
           } else {
             const err = await res.json();
             errEl.textContent = err.error ?? 'Erreur';
