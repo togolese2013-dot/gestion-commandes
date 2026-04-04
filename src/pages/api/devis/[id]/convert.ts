@@ -25,6 +25,17 @@ export const POST: APIRoute = async (context) => {
       return new Response(JSON.stringify({ error: 'Le devis doit être accepté par le client avant conversion' }), { status: 400 });
     }
 
+    // Read optional deposit override from body
+    let deposit = devis.acompte_amount;
+    let depositPaymentMethod = '';
+    try {
+      const body = await context.request.json();
+      if (typeof body.deposit === 'number' && body.deposit >= 0) deposit = body.deposit;
+      if (body.deposit_payment_method) depositPaymentMethod = String(body.deposit_payment_method);
+    } catch { /* no body, use defaults */ }
+
+    const remaining_balance = devis.total_amount - deposit;
+
     // Mark inquiry as converted
     const inquiry = getInquiryById(devis.inquiry_id);
     if (inquiry) {
@@ -45,8 +56,9 @@ export const POST: APIRoute = async (context) => {
       client_phone: devis.client_phone,
       delivery_type: devis.delivery_type,
       total_amount: devis.total_amount,
-      deposit: devis.acompte_amount,
-      remaining_balance: devis.solde_amount,
+      deposit,
+      remaining_balance,
+      deposit_payment_method: depositPaymentMethod,
       products,
       notes: `Converti du devis ${devis.devis_number}`,
     });
