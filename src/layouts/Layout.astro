@@ -31,7 +31,7 @@ const isAdminRole = currentUser?.role === 'admin';
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
           <!-- Row 1: logo + search + user -->
           <div class="flex items-center gap-4 h-12">
-            <span class="font-bold text-sm text-blue-700 shrink-0 tracking-tight">Gestion Commandes</span>
+            <a href="/" class="font-black text-sm shrink-0 tracking-tight" style="color:#047857;letter-spacing:-0.03em;">Togolese.</a>
             <!-- Global search: fills all available space -->
             <div class="flex-1 relative hidden sm:block">
               <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +42,7 @@ const isAdminRole = currentUser?.role === 'admin';
                 type="text"
                 autocomplete="off"
                 placeholder="Rechercher… (commandes, clients)"
-                class="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition"
+                class="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-gray-50 focus:bg-white transition"
               />
               <div id="global-results" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg hidden overflow-hidden min-w-[320px]"></div>
             </div>
@@ -52,7 +52,7 @@ const isAdminRole = currentUser?.role === 'admin';
               {currentUser && (
                 <button
                   id="profile-btn"
-                  class="text-xs font-medium text-gray-700 hover:text-blue-700 transition-colors whitespace-nowrap cursor-pointer px-2 py-1.5 rounded-lg hover:bg-gray-100"
+                  class="text-xs font-medium text-gray-700 hover:text-emerald-700 transition-colors whitespace-nowrap cursor-pointer px-2 py-1.5 rounded-lg hover:bg-emerald-50"
                   data-id={currentUser.id}
                   data-name={currentUser.full_name}
                 >
@@ -77,23 +77,23 @@ const isAdminRole = currentUser?.role === 'admin';
           </div>
           <!-- Row 2: nav -->
           <nav class="flex justify-center items-center gap-1 text-sm font-medium overflow-x-auto scrollbar-none -mx-1 px-1">
-            <a href="/admin/dashboard" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Dashboard</a>
-            <a href="/admin" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">+ Nouvelle</a>
-            <a href="/admin/orders" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
+            <a href="/admin/dashboard" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">Dashboard</a>
+            <a href="/admin" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">+ Nouvelle</a>
+            <a href="/admin/orders" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
               Commandes
               <span id="pending-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full leading-none"></span>
             </a>
-            <a href="/admin/inquiries" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
+            <a href="/admin/inquiries" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5">
               Demandes
               <span id="inquiry-badge" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 bg-amber-500 text-white text-[10px] font-bold rounded-full leading-none"></span>
             </a>
-            <a href="/admin/analytics" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">📊 Stats</a>
-            <a href="/admin/clients" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Clients</a>
+            <a href="/admin/analytics" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">📊 Stats</a>
+            <a href="/admin/clients" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">Clients</a>
             {isAdminRole && (
-              <a href="/admin/payments" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Paiements</a>
+              <a href="/admin/payments" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">Paiements</a>
             )}
             {isAdminRole && (
-              <a href="/admin/settings" class="nav-link py-2 px-3 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap">Paramètres</a>
+              <a href="/admin/settings" class="nav-link py-2 px-3 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap">Paramètres</a>
             )}
           </nav>
         </div>
@@ -110,18 +110,18 @@ const isAdminRole = currentUser?.role === 'admin';
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet</label>
               <input type="text" name="full_name" required value={currentUser.full_name}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Nouveau mot de passe</label>
               <input type="password" name="password" placeholder="Laisser vide pour ne pas changer"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
             </div>
             <p id="profile-error" class="text-sm text-red-600 hidden"></p>
             <p id="profile-success" class="text-sm text-green-600 hidden">Modifications enregistrées ✓</p>
             <div class="flex gap-2 pt-1">
               <button type="submit"
-                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+                class="flex-1 text-white text-sm font-semibold py-2 rounded-lg transition-colors" style="background:#047857;" onmouseover="this.style.background='#065f46'" onmouseout="this.style.background='#047857'">
                 Enregistrer
               </button>
               <button type="button" id="profile-cancel"
@@ -305,9 +305,9 @@ const isAdminRole = currentUser?.role === 'admin';
             html += `<div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">Commandes</div>`;
             html += orders.map((o: any) => `
               <a href="/admin/orders" data-order="${esc(o.order_number)}"
-                class="search-order-link flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors border-b border-gray-50">
+                class="search-order-link flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-emerald-50 transition-colors border-b border-gray-50">
                 <div>
-                  <span class="font-mono text-xs font-bold text-blue-700">${esc(o.order_number)}</span>
+                  <span class="font-mono text-xs font-bold text-emerald-700">${esc(o.order_number)}</span>
                   <span class="ml-2 text-sm text-gray-700">${esc(o.client_name)}</span>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
@@ -320,7 +320,7 @@ const isAdminRole = currentUser?.role === 'admin';
             html += `<div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100 ${orders.length ? 'border-t border-gray-200' : ''}">Clients</div>`;
             html += clients.map((c: any) => `
               <a href="/admin/clients"
-                class="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors border-b border-gray-50">
+                class="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-emerald-50 transition-colors border-b border-gray-50">
                 <span class="text-sm font-medium text-gray-900">${esc(c.name)}</span>
                 <span class="text-xs text-gray-400 font-mono">${esc(c.phone)}</span>
               </a>`).join('');

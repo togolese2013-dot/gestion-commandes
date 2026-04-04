@@ -12,9 +12,12 @@ const error = Astro.url.searchParams.get('error');
 <Layout title="Connexion">
   <div class="min-h-[80vh] flex items-center justify-center">
     <div class="bg-white rounded-2xl shadow-md p-8 w-full max-w-md">
+
       <div class="text-center mb-8">
-        <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Logo identique à l'entête public -->
+        <a href="/" class="inline-block font-black text-3xl tracking-tight mb-4" style="color:#047857;letter-spacing:-0.04em;">Togolese.</a>
+        <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style="background:#ecfdf5;">
+          <svg class="w-7 h-7" style="color:#047857;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
@@ -41,7 +44,7 @@ const error = Astro.url.searchParams.get('error');
             required
             autofocus
             autocomplete="username"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition"
             placeholder="votre identifiant"
           />
         </div>
@@ -55,17 +58,21 @@ const error = Astro.url.searchParams.get('error');
             type="password"
             required
             autocomplete="current-password"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition"
             placeholder="••••••••"
           />
         </div>
         <button
           type="submit"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors"
+          class="w-full text-white font-semibold py-2.5 rounded-lg transition-colors"
+          style="background:#047857;"
+          onmouseover="this.style.background='#065f46'"
+          onmouseout="this.style.background='#047857'"
         >
           Se connecter
         </button>
       </form>
+
     </div>
   </div>
 </Layout>
