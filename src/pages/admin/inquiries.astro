@@ -157,12 +157,7 @@ function getDevisNumber(id: number): string {
                       {inquiry.delivery_type === 'bateau' ? 'ECO' : 'EXPRESS'}
                     </td>
                     <td class="px-4 py-3 text-center">
-                      <select class="status-select text-xs font-semibold px-2 py-1 rounded border-0 cursor-pointer transition-colors" style="-webkit-appearance:none;appearance:none;" data-id={inquiry.id} data-status={status} class:list={[statusBadgeColors[color]]}>
-                        <option value="en_attente" selected={status === 'en_attente'}>En attente</option>
-                        <option value="acceptee" selected={status === 'acceptee'}>Acceptée</option>
-                        <option value="refusee" selected={status === 'refusee'}>Refusée</option>
-                        <option value="annulee" selected={status === 'annulee'}>Annulée</option>
-                      </select>
+                      <span class={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusBadgeColors[color]}`}>{label}</span>
                     </td>
                     <td class="px-4 py-3 text-xs text-gray-600">{dateStr(inquiry.created_at!)}</td>
                     <td class="px-4 py-3 text-center">
