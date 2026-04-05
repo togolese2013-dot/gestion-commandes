@@ -23,6 +23,18 @@ export interface Devis {
   accepted_at?: string;
   rejected_at?: string;
   rejection_reason?: string;
+  client_message?: string | null;
+  client_counter_price?: number | null;
+  payment_link?: string;
+}
+
+export interface DevisTemplate {
+  id?: number;
+  name: string;
+  delivery_type: 'avion' | 'bateau';
+  products_summary: any[];
+  notes: string;
+  created_at?: string;
 }
 
 // Generate secure access token for client
@@ -257,6 +269,47 @@ export function updateDevis(
 export function deleteDevis(id: number): boolean {
   const db = getDb();
   const result = db.prepare('DELETE FROM devis WHERE id = ?').run(id);
+  return result.changes > 0;
+}
+
+export function saveClientCounterProposal(
+  id: number,
+  message: string,
+  counterPrice?: number | null
+): Devis | null {
+  const db = getDb();
+  db.prepare(`
+    UPDATE devis SET client_message = ?, client_counter_price = ?, updated_at = datetime('now')
+    WHERE id = ?
+  `).run(message, counterPrice ?? null, id);
+  return getDevisById(id);
+}
+
+export function updatePaymentLink(id: number, link: string): Devis | null {
+  const db = getDb();
+  db.prepare(`UPDATE devis SET payment_link = ?, updated_at = datetime('now') WHERE id = ?`).run(link, id);
+  return getDevisById(id);
+}
+
+// ── Devis Templates ──
+export function getAllTemplates(): DevisTemplate[] {
+  const db = getDb();
+  const rows = db.prepare('SELECT * FROM devis_templates ORDER BY created_at DESC').all() as any[];
+  return rows.map(r => ({ ...r, products_summary: r.products_summary ? JSON.parse(r.products_summary) : [] }));
+}
+
+export function createTemplate(data: { name: string; delivery_type: 'avion' | 'bateau'; products_summary: any[]; notes?: string }): DevisTemplate {
+  const db = getDb();
+  const result = db.prepare(`
+    INSERT INTO devis_templates (name, delivery_type, products_summary, notes)
+    VALUES (?, ?, ?, ?)
+  `).run(data.name, data.delivery_type, JSON.stringify(data.products_summary), data.notes ?? '');
+  return db.prepare('SELECT * FROM devis_templates WHERE id = ?').get(result.lastInsertRowid) as DevisTemplate;
+}
+
+export function deleteTemplate(id: number): boolean {
+  const db = getDb();
+  const result = db.prepare('DELETE FROM devis_templates WHERE id = ?').run(id);
   return result.changes > 0;
 }
 

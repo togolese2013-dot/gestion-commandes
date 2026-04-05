@@ -173,6 +173,20 @@ function runMigrations(db: Database.Database) {
     `ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''`,
     `ALTER TABLE users ADD COLUMN birthdate TEXT DEFAULT ''`,
     `ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT ''`,
+    // Client counter-proposal fields
+    `ALTER TABLE devis ADD COLUMN client_message TEXT DEFAULT NULL`,
+    `ALTER TABLE devis ADD COLUMN client_counter_price REAL DEFAULT NULL`,
+    // Payment link for Wave/Moov Money
+    `ALTER TABLE devis ADD COLUMN payment_link TEXT DEFAULT ''`,
+    // Devis templates table
+    `CREATE TABLE IF NOT EXISTS devis_templates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      delivery_type TEXT NOT NULL DEFAULT 'avion',
+      products_summary TEXT NOT NULL DEFAULT '[]',
+      notes TEXT DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* column already exists or constraint issue */ }
