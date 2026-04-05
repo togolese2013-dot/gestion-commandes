@@ -80,729 +80,378 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       --border:       #e5e7eb;
     }
 
-    html { overflow-x: hidden; scroll-behavior: smooth; }
+    html { overflow-x: hidden; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-      background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 55%, #a7f3d0 100%);
+      background: #f0f9f4;
       min-height: 100vh;
       padding: 0 16px 80px;
       color: var(--text);
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
     }
-    /* iOS Safari zoom fix */
     input:not([type=checkbox]):not([type=radio]),
     textarea, select { font-size: max(16px, 1em); }
 
     /* ── Header ── */
     .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
       background: var(--green-dark);
       box-shadow: 0 2px 12px rgba(0,0,0,0.12);
       margin: 0 -16px 32px;
     }
     .header-inner {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 0 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 64px;
-      position: relative;
+      max-width: 1120px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; position: relative;
     }
-    .logo {
-      text-decoration: none;
-      flex-shrink: 0;
-      z-index: 2;
-    }
-    .logo-text {
-      font-size: 22px;
-      font-weight: 900;
-      color: #ffffff;
-      letter-spacing: -0.03em;
-    }
+    .logo { text-decoration: none; flex-shrink: 0; }
+    .logo-text { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -0.03em; }
     .nav-center {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 2px;
+      position: absolute; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 2px;
     }
     .nav-center a {
-      font-size: 14px;
-      font-weight: 500;
-      color: rgba(255,255,255,0.88);
-      text-decoration: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      transition: all 0.15s;
+      font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.88);
+      text-decoration: none; padding: 8px 14px; border-radius: 8px; transition: all 0.15s;
     }
-    .nav-center a:hover {
-      color: #ffffff;
-      background: rgba(255,255,255,0.12);
-    }
+    .nav-center a:hover { color: #fff; background: rgba(255,255,255,0.12); }
     @media (max-width: 900px) { .nav-center { display: none; } }
     .btn-nav-header {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 9px 20px;
-      background: #ffffff;
-      color: var(--green-dark);
-      border: none;
-      border-radius: 50px;
-      font-size: 14px;
-      font-weight: 700;
-      text-decoration: none;
-      transition: all 0.2s;
-      flex-shrink: 0;
-      z-index: 2;
+      padding: 9px 20px; background: #fff; color: var(--green-dark);
+      border-radius: 50px; font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: all 0.2s; flex-shrink: 0;
     }
-    .btn-nav-header:hover {
-      background: #f0fdf4;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    }
+    .btn-nav-header:hover { background: #f0fdf4; transform: translateY(-1px); }
 
     /* ── Page wrapper ── */
-    .page-wrap {
-      max-width: 680px;
-      margin: 0 auto;
-    }
+    .page-wrap { max-width: 680px; margin: 0 auto; }
 
-    /* ── Cards ── */
-    .card {
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.9);
-      box-shadow: 0 2px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+    /* ── Flash ── */
+    .flash {
+      border-radius: 14px; padding: 16px 20px; margin-bottom: 16px;
+      display: flex; align-items: flex-start; gap: 12px;
+      font-size: 14px; line-height: 1.5;
+    }
+    .flash-success { background: linear-gradient(135deg,#d1fae5,#ecfdf5); border: 1.5px solid #6ee7b7; color: #065f46; }
+    .flash-error   { background: #fff1f2; border: 1.5px solid #fca5a5; color: #9f1239; }
+    .flash-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Main card ── */
+    .main-card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 20px 60px rgba(4,120,87,0.1);
       overflow: hidden;
       margin-bottom: 16px;
     }
-    .card-body {
-      padding: 28px;
+
+    /* Animated top stripe */
+    .stripe {
+      height: 5px;
+      background: linear-gradient(90deg, #059669, #34d399, #6ee7b7, #059669);
+      background-size: 200% 100%;
+      animation: shimmer 3s linear infinite;
+    }
+    @keyframes shimmer { 0%{background-position:0 0} 100%{background-position:200% 0} }
+
+    .main-inner { padding: 28px 32px; }
+    @media (max-width: 480px) { .main-inner { padding: 22px 20px; } }
+
+    /* Top row: logo ↔ numéro */
+    .top-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 28px; gap: 16px;
+    }
+    .logo-block .logo-name { font-size: 20px; font-weight: 900; color: var(--green-dark); letter-spacing: -0.03em; }
+    .logo-block .logo-sub  { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .number-block { text-align: right; flex-shrink: 0; }
+    .number-tag {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--green); background: var(--green-light);
+      border-radius: 5px; padding: 3px 8px; margin-bottom: 5px;
+    }
+    .number-value { font-size: 20px; font-weight: 900; color: var(--text); letter-spacing: 1px; }
+    .number-date  { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+    .sep { height: 1px; background: #f3f4f6; margin: 0 0 24px; }
+
+    /* Client + delivery */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+    @media (max-width: 480px) { .info-grid { grid-template-columns: 1fr; } }
+    .info-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px; }
+    .client-row { display: flex; align-items: center; gap: 10px; }
+    .avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-dark), var(--green));
+      color: #fff; font-size: 15px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(4,120,87,0.25);
+    }
+    .client-name  { font-size: 14px; font-weight: 700; color: var(--text); }
+    .client-phone { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .delivery-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: var(--green-dark);
+      background: var(--green-light); border: 1.5px solid var(--green-border);
+      border-radius: 10px; padding: 8px 14px;
+    }
+    .delivery-sub { font-size: 11px; color: var(--muted); font-weight: 400; display: block; margin-top: 2px; }
+
+    /* Products */
+    .products-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #9ca3af; margin-bottom: 12px; }
+    .product-row {
+      border-radius: 12px; margin-bottom: 8px;
+      background: #fafafa; border: 1px solid #f3f4f6;
+      overflow: hidden;
+    }
+    .product-row-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 14px; gap: 12px;
+    }
+    .product-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .product-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--green-light); border: 1px solid var(--green-mid);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .p-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .p-meta { font-size: 11px; color: #9ca3af; margin-top: 2px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .p-tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      background: var(--green-light); border: 1px solid var(--green-border);
+      color: var(--green-dark); border-radius: 4px; padding: 1px 6px;
+    }
+    .p-price { font-size: 14px; font-weight: 700; color: var(--text); text-align: right; white-space: nowrap; flex-shrink: 0; }
+    .p-price-sub { font-size: 11px; color: #9ca3af; font-weight: 400; }
+
+    /* Photos strip */
+    .photos-strip {
+      padding: 0 14px 12px;
+      display: flex; gap: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .photos-strip::-webkit-scrollbar { display: none; }
+    .photo-thumb {
+      width: 72px; height: 72px; border-radius: 8px;
+      object-fit: cover; flex-shrink: 0;
+      border: 1.5px solid var(--green-mid);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .photo-thumb:hover {
+      transform: scale(1.04);
+      box-shadow: 0 4px 14px rgba(4,120,87,0.2);
     }
     @media (max-width: 480px) {
-      .card-body { padding: 22px 18px; }
+      .photo-thumb { width: 64px; height: 64px; }
     }
 
-    /* ── Section label ── */
-    .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 18px;
-    }
-
-    /* ── Devis hero ── */
-    .devis-hero {
-      text-align: center;
-      padding: 32px 28px 28px;
-    }
-    .devis-hero-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: var(--green-dark);
-      background: var(--green-light);
-      border: 1.5px solid var(--green-border);
-      border-radius: 50px;
-      padding: 5px 14px;
-      margin-bottom: 18px;
-    }
-    .devis-hero-tag-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--green-dark);
-      animation: pulse 2s ease-in-out infinite;
-    }
-    .devis-number-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-      border: 2px solid var(--green-border);
-      border-radius: 16px;
-      padding: 16px 36px;
-      margin-bottom: 14px;
-    }
-    .devis-number-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    .devis-number {
-      font-size: 28px;
-      font-weight: 900;
-      color: var(--green-dark);
-      letter-spacing: 2px;
-    }
-    .devis-date {
-      font-size: 13px;
-      color: #9ca3af;
-      letter-spacing: 0.3px;
-    }
-
-    /* ── Client card strip ── */
-    .client-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .client-avatar {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
+    /* Total block */
+    .total-block {
+      margin-top: 20px;
       background: linear-gradient(135deg, var(--green-dark), var(--green));
-      color: white;
-      font-size: 18px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 4px 14px rgba(4,120,87,0.3);
+      border-radius: 16px; padding: 22px 24px; color: #fff;
     }
-    .client-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
+    .total-label-sm { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: 0.55; margin-bottom: 4px; }
+    .total-big { font-size: clamp(32px, 8vw, 44px); font-weight: 900; letter-spacing: -1px; line-height: 1; }
+    .total-fcfa { font-size: 14px; font-weight: 600; opacity: 0.6; margin-left: 4px; }
+    .total-note { font-size: 11px; opacity: 0.4; margin: 5px 0 18px; }
+    .bp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .bp {
+      background: rgba(0,0,0,0.15); border-radius: 10px; padding: 12px 14px;
     }
-    .client-phone {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 2px;
-      letter-spacing: 0.3px;
-    }
+    .bp-key { font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; opacity: 0.5; margin-bottom: 4px; }
+    .bp-pct { background: rgba(255,255,255,0.15); border-radius: 3px; padding: 0 4px; font-size: 9px; margin-left: 3px; }
+    .bp-val { font-size: 16px; font-weight: 800; }
+    .bp-unit { font-size: 10px; opacity: 0.5; margin-left: 2px; }
 
-    /* ── Products ── */
-    .product-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 14px 0;
-      border-bottom: 1px solid #f3f4f6;
+    /* Validity bottom strip */
+    .validity-row {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 20px;
+      background: var(--green-light); border-top: 1px solid var(--green-mid);
     }
-    .product-item:last-child { border-bottom: none; }
-    .product-left { flex: 1; min-width: 0; }
-    .product-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 5px;
-    }
-    .product-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      padding: 3px 9px;
-      border-radius: 6px;
-      border: 1.5px solid;
-    }
-    .tag-state {
-      background: var(--green-light);
-      border-color: var(--green-border);
-      color: var(--green-dark);
-    }
-    .tag-qty {
-      background: #f9fafb;
-      border-color: var(--border);
-      color: var(--muted);
-    }
-    .product-right {
-      text-align: right;
-      flex-shrink: 0;
-    }
-    .product-unit {
-      font-size: 12px;
-      color: #9ca3af;
-      margin-bottom: 2px;
-    }
-    .product-price {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .product-price-unit {
-      font-size: 11px;
-      font-weight: 500;
-      color: #9ca3af;
-      margin-left: 2px;
-    }
+    .v-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+    .v-text { font-size: 13px; font-weight: 600; color: var(--green-dark); }
 
-    /* ── Delivery ── */
-    .delivery-box {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: #f9fafb;
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      padding: 16px 18px;
-    }
-    .delivery-icon-wrap {
-      width: 44px;
-      height: 44px;
-      background: white;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-    .delivery-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .delivery-sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    /* ── Total card ── */
-    .total-card {
-      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
-      border-radius: 20px;
-      padding: 28px;
-      color: white;
-      margin-bottom: 16px;
-      box-shadow: 0 8px 32px rgba(4,120,87,0.28);
-    }
-    .total-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      opacity: 0.65;
-      margin-bottom: 8px;
-    }
-    .total-amount {
-      font-size: clamp(38px, 10vw, 54px);
-      font-weight: 900;
-      letter-spacing: -1px;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .total-currency {
-      font-size: 18px;
-      font-weight: 600;
-      opacity: 0.75;
-      margin-left: 4px;
-    }
-    .total-sub {
-      font-size: 12px;
-      opacity: 0.5;
-      margin-bottom: 20px;
-    }
-    .total-divider {
-      height: 1px;
-      background: rgba(255,255,255,0.15);
-      margin: 20px 0;
-    }
-    .breakdown {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .breakdown-item {
-      background: rgba(255,255,255,0.12);
-      border-radius: 12px;
-      padding: 14px 16px;
-    }
-    .breakdown-key {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      opacity: 0.6;
-      margin-bottom: 4px;
-    }
-    .breakdown-pct {
-      display: inline-block;
-      background: rgba(255,255,255,0.18);
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-size: 10px;
-      margin-left: 4px;
-    }
-    .breakdown-val {
-      font-size: 17px;
-      font-weight: 800;
-    }
-    .breakdown-unit {
-      font-size: 11px;
-      font-weight: 500;
-      opacity: 0.6;
-      margin-left: 2px;
-    }
-
-    /* ── Validity strip ── */
-    .validity-strip {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: var(--green-light);
-      border: 1.5px solid var(--green-border);
-      border-radius: 50px;
-      padding: 10px 20px;
-      margin-bottom: 16px;
-    }
-    .validity-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--green-dark);
-      flex-shrink: 0;
-      animation: pulse 2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
-    }
-    .validity-text {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--green-dark);
-    }
-
-    /* ── Status banners ── */
+    /* Status banners */
     .status-banner {
-      border-radius: 16px;
-      padding: 18px 20px;
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
+      border-radius: 16px; padding: 18px 20px;
+      display: flex; align-items: flex-start; gap: 14px;
       margin-bottom: 16px;
     }
-    .status-banner-accepted {
-      background: linear-gradient(135deg, #d1fae5, #ecfdf5);
-      border: 1.5px solid #6ee7b7;
-    }
-    .status-banner-rejected {
-      background: #fff1f2;
-      border: 1.5px solid #fca5a5;
-    }
+    .status-accepted { background: linear-gradient(135deg,#d1fae5,#ecfdf5); border: 1.5px solid #6ee7b7; }
+    .status-rejected { background: #fff1f2; border: 1.5px solid #fca5a5; }
     .status-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
     }
-    .status-banner-accepted .status-icon {
-      background: #10b981;
-      color: white;
-      box-shadow: 0 4px 12px rgba(16,185,129,0.35);
-    }
-    .status-banner-rejected .status-icon {
-      background: #ef4444;
-      color: white;
-      box-shadow: 0 4px 12px rgba(239,68,68,0.3);
-    }
-    .status-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .status-sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 3px;
-      line-height: 1.5;
-    }
+    .status-accepted .status-icon { background: #10b981; color: white; box-shadow: 0 4px 12px rgba(16,185,129,.35); }
+    .status-rejected .status-icon { background: #ef4444; color: white; box-shadow: 0 4px 12px rgba(239,68,68,.3); }
+    .status-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .status-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
 
-    /* ── Flash messages ── */
-    .flash {
-      border-radius: 14px;
-      padding: 16px 20px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      font-size: 14px;
-      line-height: 1.5;
+    /* CTA card */
+    .cta-card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 12px 40px rgba(4,120,87,0.08);
+      padding: 24px; margin-bottom: 16px;
     }
-    .flash-success {
-      background: linear-gradient(135deg, #d1fae5, #ecfdf5);
-      border: 1.5px solid #6ee7b7;
-      color: #065f46;
-    }
-    .flash-error {
-      background: #fff1f2;
-      border: 1.5px solid #fca5a5;
-      color: #9f1239;
-    }
-    .flash-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-
-    /* ── CTA buttons ── */
-    .cta-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .cta-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .cta-sub   { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.55; }
     .btn-accept {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      padding: 16px 28px;
-      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      font-family: inherit;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      transition: all 0.25s;
-      box-shadow: 0 6px 24px rgba(4,120,87,0.35);
-    }
-    .btn-accept:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 32px rgba(4,120,87,0.45);
-    }
-    .btn-accept:active { transform: translateY(0); }
-    .btn-reject {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 14px 28px;
-      background: rgba(255,255,255,0.75);
-      color: var(--muted);
-      border: 1.5px solid var(--border);
-      border-radius: 50px;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, var(--green-dark), var(--green));
+      color: white; border: none; border-radius: 50px;
+      font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(4,120,87,0.3); margin-bottom: 10px;
       transition: all 0.2s;
     }
-    .btn-reject:hover {
-      background: white;
-      border-color: #d1d5db;
-      color: #374151;
+    .btn-accept:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(4,120,87,0.4); }
+    .btn-reject {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; padding: 13px;
+      background: #f9fafb; color: var(--muted);
+      border: 1.5px solid var(--border); border-radius: 50px;
+      font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+      transition: all 0.15s;
     }
+    .btn-reject:hover { background: #f3f4f6; color: #374151; }
 
-    /* ── Error page ── */
+    /* Error page */
     .error-page {
-      min-height: 60vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 40px 20px;
+      min-height: 60vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center; padding: 40px 20px;
     }
     .error-icon {
-      width: 72px;
-      height: 72px;
-      background: rgba(255,255,255,0.85);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-      margin: 0 auto 20px;
+      width: 72px; height: 72px; background: rgba(255,255,255,0.85); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin: 0 auto 20px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
-    .error-title {
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-    .error-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .error-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .error-sub   { font-size: 14px; color: var(--muted); line-height: 1.6; }
     .error-link {
-      display: inline-flex;
-      margin-top: 20px;
-      padding: 11px 24px;
-      background: var(--green-dark);
-      color: white;
-      border-radius: 50px;
-      font-size: 14px;
-      font-weight: 700;
-      text-decoration: none;
-      transition: all 0.2s;
+      display: inline-flex; margin-top: 20px; padding: 11px 24px;
+      background: var(--green-dark); color: white; border-radius: 50px;
+      font-size: 14px; font-weight: 700; text-decoration: none;
     }
-    .error-link:hover { background: var(--green-deep); transform: translateY(-1px); }
 
-    /* ── Reject modal ── */
+    /* Lightbox */
+    #lightbox { display: none; }
+    #lightbox.open { display: flex; }
+    .lb-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.92);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .lb-inner { position: relative; max-width: 90vw; max-height: 90vh; }
+    .lb-img { max-width: 90vw; max-height: 80vh; border-radius: 12px; object-fit: contain; display: block; }
+    .lb-close {
+      position: fixed; top: 16px; right: 16px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); color: white; border: none;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .lb-close:hover { background: rgba(255,255,255,0.22); }
+    .lb-arrow {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); color: white; border: none;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .lb-arrow:hover { background: rgba(255,255,255,0.22); }
+    .lb-prev { left: 12px; }
+    .lb-next { right: 12px; }
+    .lb-counter {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      font-size: 13px; color: rgba(255,255,255,0.55); font-weight: 500;
+    }
+
+    /* Reject modal */
     #reject-modal { display: none; }
     #reject-modal.is-open { display: flex; }
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(17,24,39,0.5);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 200;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      padding: 20px;
+      position: fixed; inset: 0; background: rgba(17,24,39,0.5);
+      backdrop-filter: blur(4px); z-index: 300;
+      display: flex; align-items: flex-end; justify-content: center; padding: 20px;
     }
-    @media (min-width: 480px) {
-      .modal-overlay { align-items: center; }
-    }
+    @media (min-width: 480px) { .modal-overlay { align-items: center; } }
     .modal-box {
-      background: white;
-      border-radius: 20px;
-      width: 100%;
-      max-width: 440px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      background: white; border-radius: 20px; width: 100%; max-width: 440px;
+      overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
       animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(20px) scale(0.97); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .modal-header {
-      padding: 22px 24px 18px;
-      border-bottom: 1px solid #f3f4f6;
-    }
-    .modal-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--text);
-    }
-    .modal-sub {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-    .modal-body { padding: 20px 24px 24px; }
+    .modal-header { padding: 22px 24px 18px; border-bottom: 1px solid #f3f4f6; }
+    .modal-title  { font-size: 17px; font-weight: 800; color: var(--text); }
+    .modal-sub    { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .modal-body   { padding: 20px 24px 24px; }
     .modal-textarea {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      font-family: inherit;
-      font-size: max(16px, 1em);
-      color: var(--text);
-      resize: none;
-      outline: none;
-      background: #f9fafb;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      line-height: 1.5;
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      font-family: inherit; font-size: max(16px, 1em); color: var(--text);
+      resize: none; outline: none; background: #f9fafb;
+      transition: border-color 0.2s, box-shadow 0.2s; line-height: 1.5;
     }
     .modal-textarea::placeholder { color: #9ca3af; }
     .modal-textarea:focus {
       border-color: var(--green);
-      box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
-      background: white;
+      box-shadow: 0 0 0 3px rgba(5,150,105,0.12); background: white;
     }
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 14px;
-    }
+    .modal-actions { display: flex; gap: 10px; margin-top: 14px; }
     .btn-modal-cancel {
-      flex: 1;
-      padding: 12px;
-      background: #f9fafb;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.15s;
+      flex: 1; padding: 12px; background: #f9fafb; border: 1.5px solid var(--border);
+      border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 600;
+      color: var(--muted); cursor: pointer;
     }
     .btn-modal-cancel:hover { background: #f3f4f6; }
     .btn-modal-confirm {
-      flex: 1.5;
-      padding: 12px;
-      background: #ef4444;
-      border: none;
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 700;
-      color: white;
-      cursor: pointer;
-      transition: all 0.15s;
-      box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+      flex: 1.5; padding: 12px; background: #ef4444; border: none;
+      border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 700;
+      color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(239,68,68,0.3);
     }
     .btn-modal-confirm:hover { background: #dc2626; }
 
-    /* ── Footer ── */
-    .page-footer {
-      text-align: center;
-      margin-top: 24px;
-      padding: 20px 0;
-      border-top: 1px solid rgba(255,255,255,0.5);
-    }
-    .footer-logo {
-      font-size: 18px;
-      font-weight: 900;
-      color: var(--green-dark);
-      letter-spacing: -0.03em;
-      margin-bottom: 6px;
-    }
-    .footer-text {
-      font-size: 12px;
-      color: #9ca3af;
-      line-height: 1.9;
-    }
-    .footer-text a { color: var(--green-dark); text-decoration: none; font-weight: 600; }
-    .footer-text a:hover { text-decoration: underline; }
+    /* Footer */
+    .page-footer { text-align: center; margin-top: 20px; padding: 16px 0; font-size: 12px; color: #9ca3af; line-height: 1.9; }
+    .page-footer strong { color: var(--green-dark); }
+    .page-footer a { color: var(--green-dark); text-decoration: none; font-weight: 600; }
   </style>
 </head>
 <body>
 
-  <!-- Header Togolese -->
+  <!-- Header -->
   <header class="header">
     <div class="header-inner">
-      <a href="/" class="logo">
-        <span class="logo-text">TOGOLESE</span>
-      </a>
+      <a href="/" class="logo"><span class="logo-text">Togolese.</span></a>
       <nav class="nav-center">
-        <a href="/#comment">Comment ça marche</a>
+        <a href="/#fonctionnement">Comment ça marche</a>
+        <a href="/#avantages">Avantages</a>
         <a href="/#livraison">Livraison</a>
-        <a href="/#avis">Avis clients</a>
+        <a href="/#faq">FAQ</a>
       </nav>
-      <a href="/demande" class="btn-nav-header">Commander</a>
+      <a href="/demande" class="btn-nav-header">Faire une demande</a>
     </div>
   </header>
 
   <div class="page-wrap">
 
-    <!-- Error state -->
     {error && (
       <div class="error-page">
         <div class="error-icon">🔍</div>
@@ -812,7 +461,6 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       </div>
     )}
 
-    <!-- Flash message -->
     {success && (
       <div class={`flash ${successType === 'accept' ? 'flash-success' : 'flash-error'}`}>
         <span class="flash-icon">{successType === 'accept' ? '✓' : '○'}</span>
@@ -822,130 +470,9 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
 
     {devis && (
       <>
-        <!-- Devis hero -->
-        <div class="card">
-          <div class="devis-hero">
-            <div class="devis-hero-tag">
-              <span class="devis-hero-tag-dot"></span>
-              Proposition commerciale
-            </div>
-            <div class="devis-number-badge">
-              <div class="devis-number-label">Numéro de devis</div>
-              <div class="devis-number">{devis.devis_number}</div>
-            </div>
-            <div class="devis-date">
-              {devis.created_at ? `Émis le ${dateStr(devis.created_at)}` : ''}
-            </div>
-          </div>
-        </div>
-
-        <!-- Client card -->
-        <div class="card">
-          <div class="card-body">
-            <div class="section-label">Destinataire</div>
-            <div class="client-row">
-              <div class="client-avatar">
-                {devis.client_name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div class="client-name">{devis.client_name}</div>
-                <div class="client-phone">{devis.client_phone}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Products card -->
-        <div class="card">
-          <div class="card-body">
-            <div class="section-label">Articles commandés</div>
-            {devis.products_summary && devis.products_summary.length > 0 ? (
-              devis.products_summary.map((p: any, i: number) => {
-                const qty = p.quantity || p._qty || 1;
-                const price = p.price || p._price || 0;
-                const subtotal = qty * price;
-                return (
-                  <div class="product-item" key={i}>
-                    <div class="product-left">
-                      <div class="product-name">{p.name}</div>
-                      <div class="product-tags">
-                        {p.state && <span class="tag tag-state">{p.state}</span>}
-                        {qty > 1 && <span class="tag tag-qty">× {qty}</span>}
-                      </div>
-                    </div>
-                    <div class="product-right">
-                      {qty > 1 && (
-                        <div class="product-unit">{fmt(price)} F / u</div>
-                      )}
-                      <div class="product-price">
-                        {fmt(subtotal)}<span class="product-price-unit"> FCFA</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p style="font-size:14px; color:#9ca3af; font-style:italic;">Aucun article renseigné</p>
-            )}
-          </div>
-        </div>
-
-        <!-- Delivery card -->
-        <div class="card">
-          <div class="card-body">
-            <div class="section-label">Mode de livraison</div>
-            <div class="delivery-box">
-              <div class="delivery-icon-wrap">
-                {devis.delivery_type === 'bateau' ? '🚢' : '✈️'}
-              </div>
-              <div>
-                <div class="delivery-title">
-                  {devis.delivery_type === 'bateau' ? 'Économique — Bateau' : 'Express — Avion'}
-                </div>
-                <div class="delivery-sub">
-                  {devis.delivery_type === 'bateau' ? 'Délai estimé : 45 – 60 jours' : 'Délai estimé : 4 – 14 jours'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Total card -->
-        <div class="total-card">
-          <div class="total-label">Total estimé</div>
-          <div>
-            <span class="total-amount">{fmt(devis.total_amount)}</span>
-            <span class="total-currency">FCFA</span>
-          </div>
-          <div class="total-sub">Toutes taxes comprises — prix indicatifs</div>
-          <div class="total-divider"></div>
-          <div class="breakdown">
-            <div class="breakdown-item">
-              <div class="breakdown-key">Acompte <span class="breakdown-pct">70%</span></div>
-              <div class="breakdown-val">
-                {fmt(devis.acompte_amount)}<span class="breakdown-unit"> F</span>
-              </div>
-            </div>
-            <div class="breakdown-item">
-              <div class="breakdown-key">Solde livraison</div>
-              <div class="breakdown-val">
-                {fmt(devis.solde_amount)}<span class="breakdown-unit"> F</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Validity strip -->
-        <div class="validity-strip">
-          <span class="validity-dot"></span>
-          <span class="validity-text">
-            Offre valable jusqu'au {devis.validity_until ? dateStr(devis.validity_until) : '—'}
-          </span>
-        </div>
-
         <!-- Status banners -->
         {devis.devis_status === 'accepte' && (
-          <div class="status-banner status-banner-accepted">
+          <div class="status-banner status-accepted">
             <div class="status-icon">✓</div>
             <div>
               <div class="status-title">Proposition acceptée</div>
@@ -956,9 +483,8 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
             </div>
           </div>
         )}
-
         {devis.devis_status === 'refuse' && (
-          <div class="status-banner status-banner-rejected">
+          <div class="status-banner status-rejected">
             <div class="status-icon">✗</div>
             <div>
               <div class="status-title">Proposition déclinée</div>
@@ -970,32 +496,168 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
           </div>
         )}
 
-        <!-- CTA -->
+        <!-- Main card -->
+        <div class="main-card">
+          <div class="stripe"></div>
+          <div class="main-inner">
+
+            <!-- Logo ↔ Numéro -->
+            <div class="top-row">
+              <div class="logo-block">
+                <div class="logo-name">Togolese.</div>
+                <div class="logo-sub">Vente &amp; Distribution</div>
+              </div>
+              <div class="number-block">
+                <div class="number-tag">Proposition commerciale</div>
+                <div class="number-value">{devis.devis_number}</div>
+                <div class="number-date">{devis.created_at ? dateStr(devis.created_at) : ''}</div>
+              </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Client + Livraison -->
+            <div class="info-grid">
+              <div>
+                <div class="info-label">Destinataire</div>
+                <div class="client-row">
+                  <div class="avatar">{devis.client_name.charAt(0).toUpperCase()}</div>
+                  <div>
+                    <div class="client-name">{devis.client_name}</div>
+                    <div class="client-phone">{devis.client_phone}</div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="info-label">Livraison</div>
+                <div class="delivery-pill">
+                  {devis.delivery_type === 'bateau' ? '🚢' : '✈️'}
+                  {devis.delivery_type === 'bateau' ? 'Économique — Bateau' : 'Express — Avion'}
+                  <span class="delivery-sub">
+                    {devis.delivery_type === 'bateau' ? '45 – 60 jours' : '4 – 14 jours'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Articles -->
+            <div class="products-label">Articles commandés</div>
+            {devis.products_summary && devis.products_summary.length > 0 ? (
+              devis.products_summary.map((p: any, i: number) => {
+                const qty   = p.quantity || p._qty || 1;
+                const price = p.price    || p._price || 0;
+                const subtotal = qty * price;
+                const photos: string[] = p.photos || [];
+                const emoji = p.name?.toLowerCase().includes('iphone') || p.name?.toLowerCase().includes('samsung') ? '📱'
+                            : p.name?.toLowerCase().includes('airpods') || p.name?.toLowerCase().includes('écouteur') || p.name?.toLowerCase().includes('casque') ? '🎧'
+                            : p.name?.toLowerCase().includes('mac') || p.name?.toLowerCase().includes('laptop') || p.name?.toLowerCase().includes('ordinateur') ? '💻'
+                            : p.name?.toLowerCase().includes('montre') || p.name?.toLowerCase().includes('watch') ? '⌚'
+                            : p.name?.toLowerCase().includes('tablette') || p.name?.toLowerCase().includes('ipad') ? '📱'
+                            : '📦';
+                return (
+                  <div class="product-row" key={i}>
+                    <div class="product-row-inner">
+                      <div class="product-left">
+                        <div class="product-icon">{emoji}</div>
+                        <div>
+                          <div class="p-name">{p.name}</div>
+                          <div class="p-meta">
+                            {p.state && <span class="p-tag">{p.state}</span>}
+                            {qty > 1 && <span>qté {qty}</span>}
+                            {qty > 1 && price > 0 && <span>· {fmt(price)} F/u</span>}
+                            {photos.length > 0 && <span style="color:#059669;font-weight:600">📸 {photos.length} photo{photos.length > 1 ? 's' : ''}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="p-price">
+                        {fmt(subtotal)} <span class="p-price-sub">FCFA</span>
+                      </div>
+                    </div>
+                    {photos.length > 0 && (
+                      <div class="photos-strip" data-product-idx={i}>
+                        {photos.map((src: string, pi: number) => (
+                          <img
+                            key={pi}
+                            src={src}
+                            alt={`${p.name} — photo ${pi + 1}`}
+                            class="photo-thumb"
+                            data-pi={pi}
+                            data-src={src}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <p style="font-size:14px; color:#9ca3af; font-style:italic; padding: 8px 0;">Aucun article renseigné</p>
+            )}
+
+            <!-- Total -->
+            <div class="total-block">
+              <div class="total-label-sm">Total estimé</div>
+              <div>
+                <span class="total-big">{fmt(devis.total_amount)}</span>
+                <span class="total-fcfa">FCFA</span>
+              </div>
+              <div class="total-note">Toutes taxes comprises — prix indicatifs</div>
+              <div class="bp-grid">
+                <div class="bp">
+                  <div class="bp-key">Acompte <span class="bp-pct">70%</span></div>
+                  <div class="bp-val">{fmt(devis.acompte_amount)}<span class="bp-unit"> F</span></div>
+                </div>
+                <div class="bp">
+                  <div class="bp-key">Solde livraison</div>
+                  <div class="bp-val">{fmt(devis.solde_amount)}<span class="bp-unit"> F</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Validity strip -->
+          <div class="validity-row">
+            <span class="v-dot"></span>
+            <span class="v-text">
+              Offre valable jusqu'au {devis.validity_until ? dateStr(devis.validity_until) : '—'}
+            </span>
+          </div>
+        </div>
+
+        <!-- CTA card -->
         {devis.devis_status === 'en_attente' && (
-          <div class="cta-wrap">
+          <div class="cta-card">
+            <div class="cta-title">Prêt à confirmer ?</div>
+            <div class="cta-sub">En acceptant cette proposition, notre équipe vous contactera pour organiser les détails de votre commande.</div>
             <form method="POST" style="width:100%">
               <button type="submit" name="action" value="accept" class="btn-accept">
                 ✓ &nbsp;Accepter cette proposition
               </button>
             </form>
-            <button id="btn-reject" class="btn-reject">
-              Décliner
-            </button>
+            <button id="btn-reject" class="btn-reject">Décliner la proposition</button>
           </div>
         )}
       </>
     )}
 
-    <!-- Footer -->
     <footer class="page-footer">
-      <div class="footer-logo">TOGOLESE</div>
-      <div class="footer-text">
-        <p>Proposition préparée par <strong>Togolese</strong> · Vente &amp; Distribution</p>
-        <p>Montants en francs CFA (FCFA), à titre indicatif</p>
-        <p><a href="/">togolese.fr</a> · <a href="/demande">Passer une commande</a></p>
-      </div>
+      <p>Proposition préparée par <strong>Togolese</strong> · Vente &amp; Distribution</p>
+      <p>Montants en francs CFA (FCFA), à titre indicatif · <a href="/">togolese.fr</a></p>
     </footer>
 
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox">
+    <div class="lb-overlay" id="lb-overlay">
+      <button class="lb-close" id="lb-close">✕</button>
+      <button class="lb-arrow lb-prev" id="lb-prev">‹</button>
+      <div class="lb-inner">
+        <img src="" alt="" class="lb-img" id="lb-img" />
+      </div>
+      <button class="lb-arrow lb-next" id="lb-next">›</button>
+      <div class="lb-counter" id="lb-counter"></div>
+    </div>
   </div>
 
   <!-- Reject modal -->
@@ -1009,12 +671,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
           </div>
           <div class="modal-body">
             <form method="POST">
-              <textarea
-                name="reason"
-                rows="4"
-                placeholder="Raison du refus (optionnel) — prix, délai, autre…"
-                class="modal-textarea"
-              ></textarea>
+              <textarea name="reason" rows="4" placeholder="Raison du refus (optionnel) — prix, délai, autre…" class="modal-textarea"></textarea>
               <div class="modal-actions">
                 <button type="button" id="btn-cancel" class="btn-modal-cancel">Annuler</button>
                 <button type="submit" name="action" value="reject" class="btn-modal-confirm">Confirmer le refus</button>
@@ -1027,15 +684,68 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
   )}
 
   <script>
+    // ── Reject modal ──
     const btnReject = document.getElementById('btn-reject');
     const btnCancel = document.getElementById('btn-cancel');
-    const modal = document.getElementById('reject-modal');
-    const overlay = document.getElementById('modal-overlay');
+    const modal     = document.getElementById('reject-modal');
+    const overlay   = document.getElementById('modal-overlay');
 
     btnReject?.addEventListener('click', () => modal?.classList.add('is-open'));
     btnCancel?.addEventListener('click', () => modal?.classList.remove('is-open'));
     overlay?.addEventListener('click', (e) => {
       if (e.target === overlay) modal?.classList.remove('is-open');
+    });
+
+    // ── Lightbox ──
+    let allPhotos: string[] = [];
+    let lbIndex = 0;
+
+    const lb        = document.getElementById('lightbox')!;
+    const lbOverlay = document.getElementById('lb-overlay')!;
+    const lbImg     = document.getElementById('lb-img') as HTMLImageElement;
+    const lbCounter = document.getElementById('lb-counter')!;
+    const lbClose   = document.getElementById('lb-close')!;
+    const lbPrev    = document.getElementById('lb-prev')!;
+    const lbNext    = document.getElementById('lb-next')!;
+
+    function openLightbox(photos: string[], startIndex: number) {
+      allPhotos = photos;
+      lbIndex   = startIndex;
+      showPhoto();
+      lb.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      lb.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function showPhoto() {
+      lbImg.src = allPhotos[lbIndex];
+      lbCounter.textContent = `${lbIndex + 1} / ${allPhotos.length}`;
+      lbPrev.style.display = allPhotos.length > 1 ? 'flex' : 'none';
+      lbNext.style.display = allPhotos.length > 1 ? 'flex' : 'none';
+    }
+
+    lbClose.addEventListener('click', closeLightbox);
+    lbOverlay.addEventListener('click', (e) => { if (e.target === lbOverlay) closeLightbox(); });
+    lbPrev.addEventListener('click', () => { lbIndex = (lbIndex - 1 + allPhotos.length) % allPhotos.length; showPhoto(); });
+    lbNext.addEventListener('click', () => { lbIndex = (lbIndex + 1) % allPhotos.length; showPhoto(); });
+    document.addEventListener('keydown', (e) => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape')      closeLightbox();
+      if (e.key === 'ArrowLeft')   { lbIndex = (lbIndex - 1 + allPhotos.length) % allPhotos.length; showPhoto(); }
+      if (e.key === 'ArrowRight')  { lbIndex = (lbIndex + 1) % allPhotos.length; showPhoto(); }
+    });
+
+    // Wire thumbnails — collect all photos per product strip
+    document.querySelectorAll('.photos-strip').forEach((strip) => {
+      const thumbs = strip.querySelectorAll<HTMLImageElement>('.photo-thumb');
+      const photos = Array.from(thumbs).map(t => t.dataset.src!);
+      thumbs.forEach((thumb, pi) => {
+        thumb.addEventListener('click', () => openLightbox(photos, pi));
+      });
     });
   </script>
 </body>

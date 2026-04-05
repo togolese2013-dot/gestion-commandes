@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-html, body { overflow-x: hidden; max-width: 100%; }
+html, body { overflow-x: clip; max-width: 100%; }
 
 /* Prevent iOS Safari from zooming on input focus (font-size < 16px triggers zoom) */
 input:not([type=checkbox]):not([type=radio]):not([type=range]),

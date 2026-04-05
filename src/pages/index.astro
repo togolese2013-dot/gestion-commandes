@@ -46,8 +46,8 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       --radius:      16px;
     }
 
-    html { scroll-behavior: smooth; overflow-x: hidden; }
-    body { overflow-x: hidden; max-width: 100%; }
+    html { scroll-behavior: smooth; overflow-x: clip; }
+    body { overflow-x: clip; max-width: 100%; }
     /* Prevent iOS Safari zoom on input focus (triggers when font-size < 16px) */
     input:not([type=checkbox]):not([type=radio]),
     textarea, select { font-size: max(16px, 1em); }
@@ -88,7 +88,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       font-weight: 800;
       color: var(--text);
       line-height: 1.2;
-      margin-bottom: 14px;
+      margin-bottom: 6px;
     }
     .section-sub {
       font-size: 16px;
