@@ -31,12 +31,19 @@ export function generateAccessToken(): string {
 }
 
 // Generate devis number format: DEV-2026-001, DEV-2026-002, etc.
+// Uses MAX instead of COUNT to avoid duplicates when previous devis were deleted.
 function generateDevisNumber(): string {
   const db = getDb();
   const year = new Date().getFullYear();
-  const count = (db.prepare(`SELECT COUNT(*) as c FROM devis WHERE devis_number LIKE ?`)
-    .get(`DEV-${year}-%`) as { c: number }).c;
-  return `DEV-${year}-${String(count + 1).padStart(3, '0')}`;
+  const rows = db.prepare(`SELECT devis_number FROM devis WHERE devis_number LIKE ?`)
+    .all(`DEV-${year}-%`) as { devis_number: string }[];
+  let maxNum = 0;
+  for (const row of rows) {
+    const parts = row.devis_number.split('-');
+    const num = parseInt(parts[2] || '0', 10);
+    if (num > maxNum) maxNum = num;
+  }
+  return `DEV-${year}-${String(maxNum + 1).padStart(3, '0')}`;
 }
 
 // Calculate delivery date based on transport type

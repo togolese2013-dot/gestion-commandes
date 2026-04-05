@@ -2,17 +2,26 @@
 import Layout from '../../layouts/Layout.astro';
 import { requireAuth } from '../../lib/auth';
 import { getAllInquiries, updateInquiry } from '../../lib/inquiries';
+import { getAllDevis } from '../../lib/devis';
 
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
 const inquiries = getAllInquiries();
+const allDevis = getAllDevis();
+
+// Map inquiry_id (as string) → devis info for client-side use
+const devisMap: Record<string, { status: string; token: string; id: number; number: string }> = {};
+allDevis.forEach(d => {
+  devisMap[String(d.inquiry_id)] = { status: d.devis_status, token: d.access_token || '', id: d.id!, number: d.devis_number };
+});
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   'en_attente': { label: 'En attente', color: 'yellow' },
   'acceptee':   { label: 'Acceptée',   color: 'green' },
   'refusee':    { label: 'Refusée',    color: 'red' },
   'annulee':    { label: 'Annulée',    color: 'gray' },
+  'convertie':  { label: 'Convertie',  color: 'blue' },
 };
 
 const fmt = (n: number) => n.toLocaleString('fr-FR');
@@ -23,6 +32,7 @@ const statusColors: Record<string, string> = {
   'green':  'bg-green-50 text-green-700 border-green-200',
   'red':    'bg-red-50 text-red-700 border-red-200',
   'gray':   'bg-gray-50 text-gray-500 border-gray-200',
+  'blue':   'bg-blue-50 text-blue-700 border-blue-200',
 };
 
 const statusBadgeColors: Record<string, string> = {
@@ -30,6 +40,7 @@ const statusBadgeColors: Record<string, string> = {
   'green':  'bg-green-100 text-green-800',
   'red':    'bg-red-100 text-red-800',
   'gray':   'bg-gray-100 text-gray-600',
+  'blue':   'bg-blue-100 text-blue-800',
 };
 
 function getDevisNumber(id: number): string {
@@ -106,7 +117,7 @@ function getDevisNumber(id: number): string {
         const status = inquiry.status || 'en_attente';
         const { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
         return (
-          <div class="inquiry-card bg-white rounded-2xl border border-gray-200 shadow-sm p-4" data-status={status}>
+          <div class="inquiry-card bg-white rounded-2xl border border-gray-200 shadow-sm p-4" data-status={status} data-id={inquiry.id}>
             <!-- Top row: n° devis + statut -->
             <div class="flex items-center justify-between mb-2">
               <span class="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md">
@@ -125,9 +136,21 @@ function getDevisNumber(id: number): string {
             </div>
             <!-- Actions -->
             <div class="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-gray-100">
-              <button class="confirm-btn p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors" data-id={inquiry.id} title="Confirmer le devis">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-              </button>
+              {/* Confirm / Modifier / Convertir buttons */}
+              {status === 'convertie' ? null : status === 'acceptee' ? (
+                <button class="confirm-btn p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors" data-id={inquiry.id} title="Modifier le devis">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+              ) : (
+                <button class="confirm-btn p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors" data-id={inquiry.id} title="Envoyer le devis">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                </button>
+              )}
+              {devisMap[String(inquiry.id)]?.status === 'accepte' && status !== 'convertie' && (
+                <button class="convert-btn p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors" data-id={inquiry.id} data-devis-id={devisMap[String(inquiry.id)].id} title="Convertir en commande">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                </button>
+              )}
               <button class="view-btn p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors" data-id={inquiry.id} title="Voir détails">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
               </button>
@@ -186,12 +209,27 @@ function getDevisNumber(id: number): string {
                     <td class="px-4 py-3 text-xs text-gray-600">{dateStr(inquiry.created_at!)}</td>
                     <td class="px-4 py-3 text-center">
                       <div class="flex items-center justify-center gap-1">
-                        <!-- Confirmer -->
-                        <button class="confirm-btn p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors" data-id={inquiry.id} title="Confirmer le devis">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                          </svg>
-                        </button>
+                        {/* Confirm / Modifier / Convertir */}
+                        {status === 'convertie' ? null : status === 'acceptee' ? (
+                          <button class="confirm-btn p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors" data-id={inquiry.id} title="Modifier le devis">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                          </button>
+                        ) : (
+                          <button class="confirm-btn p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors" data-id={inquiry.id} title="Envoyer le devis">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                            </svg>
+                          </button>
+                        )}
+                        {devisMap[String(inquiry.id)]?.status === 'accepte' && status !== 'convertie' && (
+                          <button class="convert-btn p-1.5 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors" data-id={inquiry.id} data-devis-id={devisMap[String(inquiry.id)].id} title="Convertir en commande">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                            </svg>
+                          </button>
+                        )}
                         <!-- Voir -->
                         <button class="view-btn text-blue-600 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg" data-id={inquiry.id} title="Voir détails">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,7 +275,7 @@ function getDevisNumber(id: number): string {
   <!-- ══════════════════════════════════════════════════
        LIGHTBOX
   ══════════════════════════════════════════════════ -->
-  <div id="lightbox" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] hidden">
+  <div id="lightbox" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[300] hidden">
     <button id="lb-close" class="absolute top-4 right-4 text-white/70 hover:text-white p-2">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
@@ -249,6 +287,137 @@ function getDevisNumber(id: number): string {
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     </button>
     <div id="lb-counter" class="absolute bottom-5 text-white/60 text-sm font-medium"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       MODAL CONVERTIR — Acompte + Mode de paiement
+  ══════════════════════════════════════════════════ -->
+  <div id="convert-modal" class="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[400] hidden px-4 pb-4 pt-16 sm:p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col" style="max-height:calc(100vh - 5rem)">
+      <!-- Header gradient (sticky) -->
+      <div class="bg-gradient-to-br from-purple-500 to-indigo-600 px-5 py-4 text-white rounded-t-2xl flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-base font-black">Convertir en commande</h3>
+            <p id="cm-client" class="text-purple-100 text-xs mt-0.5 font-medium truncate"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scrollable body -->
+      <div class="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+        <!-- Recap totaux -->
+        <div class="bg-gray-50 rounded-xl p-4 grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total devis</p>
+            <p id="cm-total" class="text-base font-black text-gray-900 mt-1"></p>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-purple-400 uppercase tracking-wider">Acompte prévu</p>
+            <p id="cm-acompte-prev" class="text-base font-black text-purple-600 mt-1"></p>
+          </div>
+        </div>
+
+        <!-- Acompte reçu -->
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1.5">
+            Acompte reçu <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <input id="cm-deposit" type="number" min="0" step="1"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-purple-400 transition-colors pr-16 bg-white"
+              placeholder="0" />
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">FCFA</span>
+          </div>
+          <button id="cm-use-acompte" type="button" class="mt-1.5 text-xs text-purple-600 hover:text-purple-800 font-semibold underline underline-offset-2">
+            Utiliser l'acompte prévu (70%)
+          </button>
+        </div>
+
+        <!-- Mode de paiement -->
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1.5">
+            Mode de paiement <span class="text-red-500">*</span>
+          </label>
+          <select id="cm-paymethod" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-purple-400 transition-colors bg-white">
+            <option value="">— Sélectionner —</option>
+            <option value="Espèces">Espèces</option>
+            <option value="Mix by Yas">Mix by Yas</option>
+            <option value="Moov Money">Moov Money</option>
+            <option value="Virement bancaire">Virement bancaire</option>
+          </select>
+        </div>
+
+        <!-- Solde restant (calculé) -->
+        <div class="flex items-center justify-between py-2 border-t border-gray-100">
+          <span class="text-sm font-semibold text-gray-500">Solde restant</span>
+          <span id="cm-solde" class="text-sm font-black text-gray-900">—</span>
+        </div>
+
+        <div id="cm-error" class="hidden text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2.5 border border-red-100"></div>
+      </div>
+
+      <!-- Footer (sticky) -->
+      <div class="px-5 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0 rounded-b-2xl bg-white">
+        <button id="cm-cancel" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-colors">
+          Annuler
+        </button>
+        <button id="cm-confirm" class="flex-1 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-purple-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+          Créer la commande
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       MODAL SUCCÈS — Devis envoyé au client
+  ══════════════════════════════════════════════════ -->
+  <div id="devis-success-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[400] hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <!-- Header gradient -->
+      <div class="bg-gradient-to-br from-emerald-500 to-teal-600 px-6 pt-8 pb-10 text-white text-center relative">
+        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-black tracking-tight">Devis envoyé !</h3>
+        <p id="dso-num" class="text-emerald-100 text-sm font-mono mt-1 font-semibold"></p>
+      </div>
+      <!-- Body (pulls up over header) -->
+      <div class="-mt-6 bg-white rounded-2xl mx-3 shadow-lg px-5 py-5 space-y-4">
+        <div>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Lien à partager avec le client</p>
+          <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
+            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+            <p id="dso-link" class="text-xs text-blue-600 font-mono break-all flex-1 leading-relaxed"></p>
+          </div>
+        </div>
+        <div class="flex gap-2.5 pt-1">
+          <button id="dso-copy" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+            </svg>
+            Copier le lien
+          </button>
+          <button id="dso-close" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-colors">
+            Fermer
+          </button>
+        </div>
+        <p class="text-center text-xs text-gray-400">Le lien a été copié automatiquement dans le presse-papiers</p>
+      </div>
+      <div class="h-4"></div>
+    </div>
   </div>
 
   <!-- ══════════════════════════════════════════════════
@@ -520,7 +689,7 @@ function getDevisNumber(id: number): string {
     })();
   </script>
 
-  <script define:vars={{ inquiries }}>
+  <script define:vars={{ inquiries, devisMap }}>
     const ACTIVE_MODAL = 'a'; // 'a', 'b', ou 'c' — à changer selon le choix
 
     function getDevisNum(id) {
@@ -714,12 +883,20 @@ function getDevisNumber(id: number): string {
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
-        if (!confirm('Êtes-vous sûr ?')) return;
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')) return;
         try {
           const res = await fetch(`/api/inquiries/${id}`, { method: 'DELETE' });
-          if (res.ok) document.querySelector(`tr[data-id="${id}"]`).remove();
-          else alert('Erreur');
-        } catch { alert('Erreur réseau'); }
+          if (res.ok) {
+            // Remove from desktop table AND mobile cards
+            document.querySelectorAll(`[data-id="${id}"]`).forEach(el => {
+              // Only remove top-level row/card elements, not buttons
+              if (el.tagName === 'TR' || el.classList.contains('inquiry-card')) el.remove();
+            });
+          } else {
+            const err = await res.json().catch(() => ({}));
+            showToast(err.error || 'Erreur lors de la suppression', 'error');
+          }
+        } catch { showToast('Erreur réseau', 'error'); }
       });
     });
 
@@ -1090,15 +1267,32 @@ function getDevisNumber(id: number): string {
             select.classList.add('bg-green-100', 'text-green-800');
           }
 
-          // Show success with devis link
+          // Use devis_number in the link (e.g. /devis/c/DEV-2026-001) — cleaner than the hex token
           const baseUrl = window.location.origin;
-          const devisLink = `${baseUrl}/devis/${data.access_token}`;
-          const message = `✓ Devis créé : ${data.devis_number}\n\nLien client :\n${devisLink}\n\n(Copié dans le presse-papiers)`;
+          const devisLink = `${baseUrl}/devis/c/${data.devis_number}`;
 
           // Copy link to clipboard
           navigator.clipboard.writeText(devisLink).catch(() => {});
 
-          alert(message);
+          // Show professional success modal
+          document.getElementById('dso-num').textContent = data.devis_number;
+          document.getElementById('dso-link').textContent = devisLink;
+          document.getElementById('devis-success-overlay').classList.remove('hidden');
+
+          // Change confirm button → pencil (modifier)
+          document.querySelectorAll(`.confirm-btn[data-id="${inquiry.id}"]`).forEach(btn => {
+            btn.title = 'Modifier le devis';
+            btn.classList.remove('text-emerald-600', 'hover:text-emerald-700', 'hover:bg-emerald-50');
+            btn.classList.add('text-amber-600', 'hover:text-amber-700', 'hover:bg-amber-50');
+            btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
+          });
+
+          // Update row/card status badge
+          document.querySelectorAll(`tr[data-id="${inquiry.id}"] .status-badge, .inquiry-card[data-id="${inquiry.id}"] .status-badge`).forEach(badge => {
+            badge.textContent = 'Acceptée';
+            badge.className = badge.className.replace(/bg-\w+-100|text-\w+-800/g, '');
+            badge.classList.add('bg-green-100', 'text-green-800');
+          });
         } else {
           const error = await res.json();
           alert(`Erreur : ${error.error || 'Confirmation échouée'}`);
@@ -1108,5 +1302,166 @@ function getDevisNumber(id: number): string {
         alert('Erreur réseau');
       }
     }
+
+    // ── Success overlay (devis sent) ───────────────────────────
+    const dsoOverlay = document.getElementById('devis-success-overlay');
+    const dsoCopy = document.getElementById('dso-copy');
+    const dsoClose = document.getElementById('dso-close');
+
+    dsoCopy?.addEventListener('click', () => {
+      const link = document.getElementById('dso-link').textContent;
+      navigator.clipboard.writeText(link).then(() => {
+        dsoCopy.textContent = '✓ Copié !';
+        setTimeout(() => {
+          dsoCopy.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg> Copier le lien`;
+        }, 2000);
+      });
+    });
+    dsoClose?.addEventListener('click', () => dsoOverlay?.classList.add('hidden'));
+    dsoOverlay?.addEventListener('click', e => {
+      if (e.target === dsoOverlay) dsoOverlay.classList.add('hidden');
+    });
+
+    // ── Convert devis → commande ───────────────────────────────
+    let _convertInquiryId = null;
+    let _convertDevisId   = null;
+    let _convertTotal     = 0;
+    let _convertAcompte   = 0;
+
+    const convertModal   = document.getElementById('convert-modal');
+    const cmDeposit      = document.getElementById('cm-deposit');
+    const cmPaymethod    = document.getElementById('cm-paymethod');
+    const cmSolde        = document.getElementById('cm-solde');
+    const cmError        = document.getElementById('cm-error');
+    const cmConfirmBtn   = document.getElementById('cm-confirm');
+
+    function fmtF(n) { return Number(n || 0).toLocaleString('fr-FR') + ' FCFA'; }
+
+    // Live solde restant
+    cmDeposit?.addEventListener('input', () => {
+      const dep = parseFloat(cmDeposit.value) || 0;
+      const solde = _convertTotal - dep;
+      cmSolde.textContent = fmtF(solde);
+      cmSolde.className = solde < 0 ? 'text-sm font-black text-red-600' : 'text-sm font-black text-gray-900';
+    });
+
+    document.getElementById('cm-use-acompte')?.addEventListener('click', () => {
+      cmDeposit.value = String(Math.round(_convertAcompte));
+      cmDeposit.dispatchEvent(new Event('input'));
+    });
+
+    document.getElementById('cm-cancel')?.addEventListener('click', () => convertModal?.classList.add('hidden'));
+    convertModal?.addEventListener('click', e => { if (e.target === convertModal) convertModal.classList.add('hidden'); });
+
+    function afterConvert(inquiryId, orderNumber) {
+      // Remove convert and modifier buttons
+      document.querySelectorAll(`.convert-btn[data-id="${inquiryId}"]`).forEach(b => b.remove());
+      document.querySelectorAll(`.confirm-btn[data-id="${inquiryId}"]`).forEach(b => b.remove());
+
+      // Update row data-status
+      document.querySelectorAll(`tr[data-id="${inquiryId}"], .inquiry-card[data-id="${inquiryId}"]`).forEach(el => {
+        el.setAttribute('data-status', 'convertie');
+      });
+
+      // Update status badge
+      document.querySelectorAll(`tr[data-id="${inquiryId}"] span[class*="rounded-full"], .inquiry-card[data-id="${inquiryId}"] span[class*="rounded-full"]`).forEach(badge => {
+        badge.textContent = 'Convertie';
+        badge.className = badge.className.replace(/bg-\w+-100|text-\w+-\d+/g, '');
+        badge.classList.add('bg-blue-100', 'text-blue-800');
+      });
+
+      // Toast
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl z-[500] flex items-center gap-2';
+      toast.innerHTML = `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Commande créée : ${orderNumber}`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    // Open modal on convert-btn click
+    document.querySelectorAll('.convert-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _convertInquiryId = btn.dataset.id;
+        _convertDevisId   = btn.dataset.devisId;
+
+        // Find inquiry data
+        const inq = inquiries.find(i => String(i.id) === String(_convertInquiryId));
+        const dev = devisMap[String(_convertInquiryId)];
+
+        // Fetch devis total from server if possible, else estimate
+        _convertTotal   = 0;
+        _convertAcompte = 0;
+
+        // Try to get from API then populate
+        fetch(`/api/devis/${_convertDevisId}`)
+          .then(r => r.json())
+          .then(d => {
+            _convertTotal   = d.total_amount || 0;
+            _convertAcompte = d.acompte_amount || (_convertTotal * 0.7);
+
+            document.getElementById('cm-client').textContent = `${d.client_name} · ${d.client_phone}`;
+            document.getElementById('cm-total').textContent  = fmtF(_convertTotal);
+            document.getElementById('cm-acompte-prev').textContent = fmtF(_convertAcompte);
+            cmDeposit.value = String(Math.round(_convertAcompte));
+            cmSolde.textContent = fmtF(_convertTotal - _convertAcompte);
+            cmPaymethod.value = '';
+            cmError.classList.add('hidden');
+          })
+          .catch(() => {
+            document.getElementById('cm-client').textContent = inq ? `${inq.client_name} · ${inq.client_phone}` : '';
+            document.getElementById('cm-total').textContent  = '—';
+            document.getElementById('cm-acompte-prev').textContent = '—';
+          });
+
+        convertModal?.classList.remove('hidden');
+      });
+    });
+
+    // Confirm convert
+    cmConfirmBtn?.addEventListener('click', async () => {
+      cmError.classList.add('hidden');
+
+      const deposit = parseFloat(cmDeposit.value);
+      const paymethod = cmPaymethod.value;
+
+      if (isNaN(deposit) || deposit < 0) {
+        cmError.textContent = 'Veuillez saisir un montant d\'acompte valide.';
+        cmError.classList.remove('hidden');
+        return;
+      }
+      if (!paymethod) {
+        cmError.textContent = 'Veuillez sélectionner un mode de paiement.';
+        cmError.classList.remove('hidden');
+        return;
+      }
+
+      cmConfirmBtn.disabled = true;
+      cmConfirmBtn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Création…`;
+
+      try {
+        const res = await fetch(`/api/devis/${_convertDevisId}/convert`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deposit, deposit_payment_method: paymethod }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          convertModal.classList.add('hidden');
+          afterConvert(_convertInquiryId, data.order_number);
+        } else {
+          const err = await res.json();
+          cmError.textContent = err.error || 'Erreur lors de la conversion.';
+          cmError.classList.remove('hidden');
+        }
+      } catch (e) {
+        console.error(e);
+        cmError.textContent = 'Erreur réseau. Veuillez réessayer.';
+        cmError.classList.remove('hidden');
+      } finally {
+        cmConfirmBtn.disabled = false;
+        cmConfirmBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Créer la commande`;
+      }
+    });
   </script>
 </Layout>

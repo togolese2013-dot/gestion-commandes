@@ -21,6 +21,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
   <style is:global>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html, body { overflow-x: hidden; max-width: 100%; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
       background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%);
@@ -183,7 +184,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       padding: 11px 14px;
       border: 1.5px solid #e5e7eb;
       border-radius: 10px;
-      font-size: 14px;
+      font-size: 16px; /* >= 16px prevents iOS Safari zoom on focus */
       font-family: inherit;
       color: #111827;
       background: #fff;
@@ -318,8 +319,8 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 10px;
     }
+    .photo-grid:not(:empty) { margin-top: 8px; }
     .photo-thumb {
       position: relative;
       width: 72px;
@@ -608,13 +609,13 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
             <input type="radio" name="delivery" value="avion" checked />
             <div class="delivery-icon">✈️</div>
             <div class="delivery-name">Express</div>
-            <div class="delivery-desc">Livraison par avion<br>Délai réduit</div>
+            <div class="delivery-desc">Livraison par avion<br>4 jours – 14 jours</div>
           </label>
           <label class="delivery-card" data-value="bateau">
             <input type="radio" name="delivery" value="bateau" />
             <div class="delivery-icon">🚢</div>
             <div class="delivery-name">Économique</div>
-            <div class="delivery-desc">Livraison par bateau<br>Tarif réduit</div>
+            <div class="delivery-desc">Livraison par bateau<br>30 jours – 45 jours</div>
           </label>
         </div>
       </div>
