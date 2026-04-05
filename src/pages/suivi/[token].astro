@@ -1,0 +1,256 @@
+---
+import { getDevisByToken, getDevisByNumber } from '../../lib/devis';
+import { getDb } from '../../lib/db';
+
+const { token } = Astro.params;
+const devis = token ? (getDevisByNumber(token) ?? getDevisByToken(token)) : null;
+
+// Try to find a linked order via inquiry_id
+let order: any = null;
+if (devis?.inquiry_id) {
+  const db = getDb();
+  order = db.prepare(`
+    SELECT o.* FROM orders o
+    JOIN inquiries i ON i.id = ?
+    WHERE o.client_phone = ? AND o.client_name = ?
+    ORDER BY o.created_at DESC LIMIT 1
+  `).get(devis.inquiry_id, devis.client_phone, devis.client_name) ?? null;
+}
+
+// Build timeline steps
+type StepStatus = 'done' | 'active' | 'pending';
+interface Step { label: string; sub: string; status: StepStatus; }
+
+function buildTimeline(): Step[] {
+  const steps: Step[] = [];
+
+  const push = (label: string, sub: string, status: StepStatus) =>
+    steps.push({ label, sub, status });
+
+  // 1. Demande reçue — always done if devis exists
+  push('Demande reçue', `Le ${new Date(devis!.created_at!).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`, 'done');
+
+  // 2. Devis envoyé — always done
+  push('Devis envoyé', `Ref. ${devis!.devis_number}`, 'done');
+
+  // 3. Devis accepté / en attente
+  if (devis!.devis_status === 'accepte') {
+    const d = devis!.accepted_at ? new Date(devis!.accepted_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : '';
+    push('Devis accepté', d ? `Le ${d}` : 'Confirmé', 'done');
+  } else if (devis!.devis_status === 'refuse') {
+    push('Devis refusé', 'Proposition déclinée', 'done');
+    push('Achat du produit', 'En attente de confirmation', 'pending');
+    push('Expédition & douane', '', 'pending');
+    push('Disponible / Livré', '', 'pending');
+    return steps;
+  } else {
+    push('En attente de votre réponse', 'Veuillez accepter ou décliner le devis', 'active');
+    push('Achat du produit', '', 'pending');
+    push('Expédition & douane', '', 'pending');
+    push('Disponible / Livré', '', 'pending');
+    return steps;
+  }
+
+  // 4. Achat (order created)
+  if (!order) {
+    push('Achat du produit', 'En cours de traitement', 'active');
+    push('Expédition & douane', '', 'pending');
+    push('Disponible / Livré', '', 'pending');
+    return steps;
+  }
+  push('Produit acheté', `Commande ${order.order_number}`, 'done');
+
+  // 5. Expédition / en douane
+  if (order.status === 'en_attente') {
+    push('Expédition & douane', `Mode : ${order.delivery_type === 'avion' ? '✈️ Avion' : '🚢 Bateau'}`, 'active');
+    push('Disponible / Livré', '', 'pending');
+    return steps;
+  }
+
+  push('Expédié & dédouané', '', 'done');
+
+  // 6. Disponible / récupéré
+  if (order.status === 'disponible') {
+    push('Disponible au retrait', 'Votre colis est arrivé — contactez-nous', 'active');
+  } else {
+    push('Livré ✅', 'Commande clôturée', 'done');
+  }
+
+  return steps;
+}
+
+const steps = devis ? buildTimeline() : [];
+const GA_ID = import.meta.env.PUBLIC_GA_ID;
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{devis ? `Suivi ${devis.devis_number}` : 'Suivi de commande'} — TOGOLESE</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  {GA_ID && (
+    <>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+      <script define:vars={{ GA_ID }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', GA_ID);
+      </script>
+    </>
+  )}
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #059669; --green-dark: #047857; --green-light: #ecfdf5;
+      --green-mid: #d1fae5; --green-border: #6ee7b7;
+      --text: #111827; --muted: #6b7280; --border: #e5e7eb;
+    }
+    html { overflow-x: clip; scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      background: #f0f9f4; min-height: 100vh; color: var(--text);
+      -webkit-font-smoothing: antialiased; overflow-x: clip;
+    }
+
+    /* Header */
+    .header { background: var(--green-dark); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+    .header-inner { max-width: 1120px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo { text-decoration: none; }
+    .logo-text { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -0.03em; }
+    .btn-nav-header {
+      padding: 9px 20px; background: #fff; color: var(--green-dark);
+      border-radius: 50px; font-size: 14px; font-weight: 700; text-decoration: none;
+    }
+
+    /* Page */
+    .page { max-width: 600px; margin: 0 auto; padding: 36px 20px 80px; }
+
+    /* Header card */
+    .track-header {
+      background: #fff; border-radius: 20px; padding: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 16px 48px rgba(4,120,87,0.09);
+      margin-bottom: 16px;
+    }
+    .track-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .track-number { font-size: 26px; font-weight: 900; color: var(--text); letter-spacing: 1px; margin-bottom: 4px; }
+    .track-client { font-size: 14px; color: var(--muted); }
+    .track-stripe { height: 4px; background: linear-gradient(90deg, #059669, #34d399, #6ee7b7, #059669); background-size: 200% 100%; animation: shimmer 3s linear infinite; border-radius: 0 0 20px 20px; margin: 16px -24px -24px; }
+    @keyframes shimmer { 0%{background-position:0 0} 100%{background-position:200% 0} }
+
+    /* Timeline */
+    .timeline-card {
+      background: #fff; border-radius: 20px; padding: 28px 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 16px 48px rgba(4,120,87,0.09);
+      margin-bottom: 16px;
+    }
+    .timeline-title { font-size: 13px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+    .timeline { display: flex; flex-direction: column; gap: 0; position: relative; }
+    .tl-item { display: flex; gap: 16px; position: relative; padding-bottom: 24px; }
+    .tl-item:last-child { padding-bottom: 0; }
+    .tl-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+    .tl-dot {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0; z-index: 1; position: relative;
+    }
+    .tl-dot.done { background: var(--green-light); border: 2px solid var(--green-border); }
+    .tl-dot.active { background: #fef3c7; border: 2px solid #fcd34d; animation: pulse-dot 2s infinite; }
+    .tl-dot.pending { background: #f9fafb; border: 2px dashed #e5e7eb; }
+    @keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0.4)} 50%{box-shadow:0 0 0 6px rgba(251,191,36,0)} }
+    .tl-line { flex: 1; width: 2px; background: #e5e7eb; margin: 4px 0; min-height: 16px; }
+    .tl-line.done { background: var(--green-border); }
+    .tl-item:last-child .tl-line { display: none; }
+    .tl-content { flex: 1; padding-top: 6px; }
+    .tl-label { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .tl-label.pending { color: #9ca3af; }
+    .tl-sub { font-size: 12px; color: var(--muted); }
+
+    /* Info card */
+    .info-card {
+      background: #fff; border-radius: 20px; padding: 20px 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 16px 48px rgba(4,120,87,0.09);
+      margin-bottom: 16px;
+    }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .info-item-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .info-item-value { font-size: 14px; font-weight: 600; color: var(--text); }
+
+    /* Error */
+    .error-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; }
+    .error-icon { font-size: 48px; }
+    .error-title { font-size: 20px; font-weight: 800; color: var(--text); }
+    .error-sub { font-size: 14px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo"><span class="logo-text">Togolese.</span></a>
+      <a href="/demande" class="btn-nav-header">Faire une demande</a>
+    </div>
+  </header>
+
+  <div class="page">
+    {!devis ? (
+      <div class="error-page">
+        <div class="error-icon">🔍</div>
+        <div class="error-title">Commande introuvable</div>
+        <div class="error-sub">Vérifiez le lien ou contactez-nous sur WhatsApp.</div>
+      </div>
+    ) : (
+      <>
+        <div class="track-header">
+          <div class="track-label">Suivi de commande</div>
+          <div class="track-number">{devis.devis_number}</div>
+          <div class="track-client">Client : {devis.client_name} · {devis.client_phone}</div>
+          <div class="track-stripe"></div>
+        </div>
+
+        <div class="timeline-card">
+          <div class="timeline-title">Progression de votre commande</div>
+          <div class="timeline">
+            {steps.map((step, i) => (
+              <div class="tl-item">
+                <div class="tl-left">
+                  <div class={`tl-dot ${step.status}`}>
+                    {step.status === 'done' ? '✓' : step.status === 'active' ? '⏳' : '○'}
+                  </div>
+                  <div class={`tl-line ${step.status === 'done' && i < steps.length - 1 ? 'done' : ''}`}></div>
+                </div>
+                <div class="tl-content">
+                  <div class={`tl-label ${step.status === 'pending' ? 'pending' : ''}`}>{step.label}</div>
+                  {step.sub && <div class="tl-sub">{step.sub}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-grid">
+            <div>
+              <div class="info-item-label">Livraison</div>
+              <div class="info-item-value">{devis.delivery_type === 'avion' ? '✈️ Express Avion' : '🚢 Économique Bateau'}</div>
+            </div>
+            <div>
+              <div class="info-item-label">Délai estimé</div>
+              <div class="info-item-value">{devis.estimated_delivery}</div>
+            </div>
+            <div>
+              <div class="info-item-label">Total</div>
+              <div class="info-item-value">{devis.total_amount.toLocaleString('fr-FR')} FCFA</div>
+            </div>
+            <div>
+              <div class="info-item-label">Acompte</div>
+              <div class="info-item-value">{devis.acompte_amount.toLocaleString('fr-FR')} FCFA</div>
+            </div>
+          </div>
+        </div>
+      </>
+    )}
+  </div>
+</body>
+</html>

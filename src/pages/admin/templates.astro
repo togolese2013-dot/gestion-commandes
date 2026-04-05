@@ -1,0 +1,234 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { requireAuth } from '../../lib/auth';
+import { getAllTemplates } from '../../lib/devis';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+
+const templates = getAllTemplates();
+const fmt = (n: number) => n.toLocaleString('fr-FR');
+---
+
+<Layout title="Modèles de devis" isAdmin>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+    <div class="flex items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Modèles de devis</h1>
+        <p class="text-sm text-gray-600 mt-1">Enregistrez vos configurations de produits récurrentes</p>
+      </div>
+      <button id="open-create-btn" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nouveau modèle
+      </button>
+    </div>
+
+    <!-- Templates list -->
+    <div id="templates-list" class="space-y-3">
+      {templates.length === 0 ? (
+        <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-400">
+          <p class="text-3xl mb-3">📋</p>
+          <p class="font-semibold">Aucun modèle enregistré</p>
+          <p class="text-sm mt-1">Créez votre premier modèle pour l'utiliser dans vos devis</p>
+        </div>
+      ) : templates.map(tpl => (
+        <div class="template-card bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5" data-id={tpl.id}>
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-bold text-gray-900">{tpl.name}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full font-semibold" style={tpl.delivery_type === 'avion' ? 'background:#ecfdf5;color:#059669;' : 'background:#eff6ff;color:#3b82f6;'}>
+                  {tpl.delivery_type === 'avion' ? '✈️ Avion' : '🚢 Bateau'}
+                </span>
+              </div>
+              <div class="flex flex-wrap gap-1.5 mt-2">
+                {tpl.products_summary.map((p: any) => (
+                  <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">
+                    {p.name} ×{p.quantity || 1}
+                    {(p.price || p.budget) ? ` · ${fmt(p.price || p.budget)} FCFA` : ''}
+                  </span>
+                ))}
+              </div>
+              {tpl.notes && <p class="text-xs text-gray-400 mt-2 italic">{tpl.notes}</p>}
+            </div>
+            <button class="delete-tpl-btn flex-shrink-0 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" data-id={tpl.id} title="Supprimer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- ── CREATE MODAL ── -->
+  <div id="create-modal" class="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-[200] hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 class="text-base font-bold text-gray-900">Nouveau modèle</h2>
+        <button id="close-create-modal" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="overflow-auto flex-1 px-6 py-5 space-y-5">
+        <!-- Name -->
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nom du modèle *</label>
+          <input id="tpl-name" type="text" placeholder="ex: iPhone 15 Pro Max, AirPods Pro..." class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-emerald-400 transition-colors"/>
+        </div>
+
+        <!-- Delivery -->
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Mode de livraison</label>
+          <select id="tpl-delivery" class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-emerald-400 transition-colors bg-white">
+            <option value="avion">✈️ Express (Avion)</option>
+            <option value="bateau">🚢 Économique (Bateau)</option>
+          </select>
+        </div>
+
+        <!-- Products -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Produits *</label>
+            <button id="add-tpl-product" class="text-xs font-semibold text-emerald-600 hover:text-emerald-800 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+              Ajouter
+            </button>
+          </div>
+          <div id="tpl-products-list" class="space-y-2">
+            <!-- injected by JS -->
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Notes (optionnel)</label>
+          <textarea id="tpl-notes" rows="2" placeholder="Informations complémentaires..." class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-400 transition-colors resize-none"></textarea>
+        </div>
+
+        <div id="tpl-error" class="hidden text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2.5 border border-red-100"></div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-gray-100 flex gap-3">
+        <button id="cancel-create" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-colors">Annuler</button>
+        <button id="save-tpl-btn" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ templates }}>
+    let tplProducts = [];
+
+    function renderProductRow(p, idx) {
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-2 bg-gray-50 rounded-xl p-2.5';
+      div.dataset.idx = idx;
+      div.innerHTML = `
+        <input type="text" placeholder="Nom du produit" value="${(p.name || '').replace(/"/g, '&quot;')}"
+          class="flex-1 min-w-0 px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-400 bg-white font-medium tpl-pname"/>
+        <input type="number" min="1" value="${p.quantity || 1}" placeholder="Qté"
+          class="w-14 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-400 bg-white text-center tpl-pqty"/>
+        <input type="number" min="0" value="${p.price || 0}" placeholder="Prix"
+          class="w-28 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-400 bg-white text-right tpl-pprice"/>
+        <span class="text-xs text-gray-400 flex-shrink-0">FCFA</span>
+        <button type="button" class="p-1 text-red-400 hover:text-red-600 flex-shrink-0 tpl-rm-product" data-idx="${idx}">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      `;
+      div.querySelector('.tpl-rm-product').addEventListener('click', () => {
+        tplProducts.splice(idx, 1);
+        renderAllProducts();
+      });
+      return div;
+    }
+
+    function renderAllProducts() {
+      const list = document.getElementById('tpl-products-list');
+      list.innerHTML = '';
+      tplProducts.forEach((p, i) => list.appendChild(renderProductRow(p, i)));
+    }
+
+    function collectProducts() {
+      return Array.from(document.querySelectorAll('#tpl-products-list > div')).map(div => ({
+        name: div.querySelector('.tpl-pname').value.trim(),
+        quantity: parseInt(div.querySelector('.tpl-pqty').value) || 1,
+        price: parseFloat(div.querySelector('.tpl-pprice').value) || 0,
+      }));
+    }
+
+    function openModal() {
+      tplProducts = [{ name: '', quantity: 1, price: 0 }];
+      document.getElementById('tpl-name').value = '';
+      document.getElementById('tpl-delivery').value = 'avion';
+      document.getElementById('tpl-notes').value = '';
+      document.getElementById('tpl-error').classList.add('hidden');
+      renderAllProducts();
+      document.getElementById('create-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('create-modal').classList.add('hidden');
+    }
+
+    document.getElementById('open-create-btn').addEventListener('click', openModal);
+    document.getElementById('close-create-modal').addEventListener('click', closeModal);
+    document.getElementById('cancel-create').addEventListener('click', closeModal);
+    document.getElementById('create-modal').addEventListener('click', e => {
+      if (e.target.id === 'create-modal') closeModal();
+    });
+
+    document.getElementById('add-tpl-product').addEventListener('click', () => {
+      const current = collectProducts();
+      tplProducts = [...current, { name: '', quantity: 1, price: 0 }];
+      renderAllProducts();
+    });
+
+    document.getElementById('save-tpl-btn').addEventListener('click', async () => {
+      const name = document.getElementById('tpl-name').value.trim();
+      const delivery_type = document.getElementById('tpl-delivery').value;
+      const notes = document.getElementById('tpl-notes').value.trim();
+      const products = collectProducts().filter(p => p.name);
+      const errEl = document.getElementById('tpl-error');
+
+      if (!name) { errEl.textContent = 'Le nom est requis.'; errEl.classList.remove('hidden'); return; }
+      if (products.length === 0) { errEl.textContent = 'Ajoutez au moins un produit.'; errEl.classList.remove('hidden'); return; }
+      errEl.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/templates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, delivery_type, products_summary: products, notes }),
+        });
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          const err = await res.json();
+          errEl.textContent = err.error || 'Erreur lors de la sauvegarde';
+          errEl.classList.remove('hidden');
+        }
+      } catch {
+        errEl.textContent = 'Erreur réseau';
+        errEl.classList.remove('hidden');
+      }
+    });
+
+    document.querySelectorAll('.delete-tpl-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Supprimer ce modèle ?')) return;
+        const id = btn.dataset.id;
+        const res = await fetch(`/api/templates?id=${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          btn.closest('.template-card')?.remove();
+        }
+      });
+    });
+  </script>
+</Layout>
