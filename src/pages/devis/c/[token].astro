@@ -80,7 +80,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       --border:       #e5e7eb;
     }
 
-    html { overflow-x: hidden; }
+    html { overflow-x: clip; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
       background: #f0f9f4;
@@ -88,7 +88,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       padding: 0 16px 80px;
       color: var(--text);
       -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+      overflow-x: clip;
     }
     input:not([type=checkbox]):not([type=radio]),
     textarea, select { font-size: max(16px, 1em); }
