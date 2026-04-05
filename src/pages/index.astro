@@ -7,10 +7,6 @@ if (isAuthenticated(Astro.request)) {
 }
 
 const GA_ID = import.meta.env.PUBLIC_GA_ID;
-const WHATSAPP_NUMBER = '22890226491';
-const WHATSAPP_TEXT = encodeURIComponent('Bonjour TOGOLESE, je souhaite demander un devis pour un produit.');
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_TEXT}`;
-const currentYear = new Date().getFullYear();
 ---
 
 <!DOCTYPE html>
@@ -41,14 +37,12 @@ const currentYear = new Date().getFullYear();
       --green-deep:  #064e3b;
       --green-light: #ecfdf5;
       --green-mid:   #d1fae5;
-      --green-soft:  #f6fbf8;
       --amber:       #f59e0b;
       --amber-dark:  #d97706;
       --text:        #111827;
       --muted:       #6b7280;
       --border:      #e5e7eb;
       --white:       #ffffff;
-      --surface:     rgba(255,255,255,0.78);
       --radius:      16px;
     }
 
@@ -57,9 +51,7 @@ const currentYear = new Date().getFullYear();
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
       color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(209,250,229,0.5), transparent 28%),
-        linear-gradient(180deg, #ffffff 0%, #f8fcfa 100%);
+      background: var(--white);
       -webkit-font-smoothing: antialiased;
     }
 
@@ -98,8 +90,7 @@ const currentYear = new Date().getFullYear();
       font-size: 16px;
       color: var(--muted);
       line-height: 1.7;
-      max-width: 620px;
-      text-wrap: balance;
+      max-width: 560px;
     }
 
     /* ─── HEADER (base.com style — blue background) ─── */
@@ -107,13 +98,10 @@ const currentYear = new Date().getFullYear();
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(4,120,87,0.94);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(18px);
-      transition: box-shadow 0.3s, background 0.3s;
+      background: var(--green-dark);
+      transition: box-shadow 0.3s;
     }
     .header.scrolled {
-      background: rgba(4,120,87,0.98);
       box-shadow: 0 2px 20px rgba(0,0,0,0.18);
     }
     .header-inner {
@@ -223,10 +211,7 @@ const currentYear = new Date().getFullYear();
       transform: translateY(-1px);
       box-shadow: 0 4px 16px rgba(0,0,0,0.15);
     }
-    @media (max-width: 640px) {
-      .btn-ghost { display: none; }
-      .btn-nav { padding: 8px 14px; font-size: 13px; }
-    }
+    @media (max-width: 640px) { .btn-ghost { display: none; } }
 
     /* Mobile hamburger */
     .burger {
@@ -248,51 +233,12 @@ const currentYear = new Date().getFullYear();
     }
     @media (max-width: 768px) { .burger { display: none; } }
 
-    .mobile-quicklinks {
-      display: none;
-      position: sticky;
-      top: 64px;
-      z-index: 95;
-      padding: 10px 20px 12px;
-      gap: 10px;
-      overflow-x: auto;
-      background: linear-gradient(180deg, rgba(4,120,87,0.98), rgba(4,120,87,0.9));
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      scrollbar-width: none;
-    }
-    .mobile-quicklinks::-webkit-scrollbar { display: none; }
-    .mobile-quicklinks a {
-      flex: 0 0 auto;
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.1);
-      color: white;
-      font-size: 13px;
-      font-weight: 600;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-    @media (max-width: 900px) { .mobile-quicklinks { display: flex; } }
-
     /* ─── HERO (base.com inspired) ─── */
     .hero {
       position: relative;
       padding: 0;
       overflow: hidden;
-      min-height: 760px;
-      isolation: isolate;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at 20% 18%, rgba(255,255,255,0.72), transparent 30%),
-        radial-gradient(circle at 82% 12%, rgba(245,158,11,0.12), transparent 16%),
-        linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
-      z-index: 0;
-      pointer-events: none;
+      min-height: 680px;
     }
 
     /* Canvas gradient background */
@@ -327,31 +273,13 @@ const currentYear = new Date().getFullYear();
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 86px 20px 112px;
-      max-width: 1040px;
+      padding: 80px 20px 100px;
+      max-width: 780px;
       margin: 0 auto;
       width: 100%;
     }
     @media (max-width: 640px) {
-      .hero-content { padding: 58px 16px 88px; }
-    }
-
-    .hero-copy-shell {
-      width: 100%;
-      max-width: 780px;
-      padding: 30px 32px 32px;
-      border-radius: 32px;
-      background: var(--surface);
-      border: 1px solid rgba(255,255,255,0.58);
-      box-shadow: 0 30px 80px rgba(4,78,59,0.15);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-    @media (max-width: 640px) {
-      .hero-copy-shell {
-        padding: 24px 18px 20px;
-        border-radius: 26px;
-      }
+      .hero-content { padding: 60px 20px 90px; }
     }
 
     .hero-eyebrow {
@@ -383,13 +311,11 @@ const currentYear = new Date().getFullYear();
 
     /* Large title — base.com style */
     .hero-title {
-      font-size: clamp(40px, 7vw, 72px);
+      font-size: clamp(40px, 7vw, 68px);
       font-weight: 900;
-      line-height: 1.04;
+      line-height: 1.08;
       color: var(--green-dark);
-      margin-bottom: 18px;
-      letter-spacing: -0.04em;
-      text-wrap: balance;
+      margin-bottom: 22px;
     }
     .hero-title-sub {
       display: block;
@@ -406,7 +332,7 @@ const currentYear = new Date().getFullYear();
       position: relative;
       height: 1.15em;
       overflow: hidden;
-      margin: 8px 0 10px;
+      margin: 4px 0;
     }
     .word-rotate-block span {
       display: block;
@@ -443,15 +369,13 @@ const currentYear = new Date().getFullYear();
     }
 
     .hero-sub {
-      font-size: 18px;
-      color: #334155;
-      line-height: 1.75;
-      margin: 0 auto 28px;
-      max-width: 620px;
+      font-size: 17px;
+      color: #374151;
+      line-height: 1.7;
+      margin-bottom: 36px;
+      max-width: 560px;
       text-align: center;
-      text-wrap: balance;
     }
-    .hero-sub strong { color: var(--green-deep); }
     @media (max-width: 640px) { .hero-sub { font-size: 15px; } }
 
     /* Hero form — centered card */
@@ -558,40 +482,12 @@ const currentYear = new Date().getFullYear();
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
       width: 100%;
-      max-width: 520px;
-    }
-    .hero-actions {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-      gap: 12px;
-      width: 100%;
+      max-width: 400px;
     }
     .hero-cta-wrap .btn-hero {
       width: 100%;
-    }
-    .btn-secondary-hero {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 15px;
-      border-radius: 50px;
-      border: 1.5px solid rgba(4,120,87,0.2);
-      background: rgba(255,255,255,0.72);
-      color: var(--green-deep);
-      font-size: 15px;
-      font-weight: 700;
-      text-decoration: none;
-      transition: all 0.25s;
-      box-shadow: 0 10px 24px rgba(4,78,59,0.08);
-    }
-    .btn-secondary-hero:hover {
-      transform: translateY(-2px);
-      border-color: rgba(4,120,87,0.38);
-      box-shadow: 0 14px 30px rgba(4,78,59,0.14);
     }
     .hero-cta-wrap .form-badges .form-badge {
       color: var(--green-deep);
@@ -600,67 +496,14 @@ const currentYear = new Date().getFullYear();
     .hero-cta-wrap .form-badge-check {
       color: var(--green-dark);
     }
-    .hero-note {
-      margin-top: 4px;
-      font-size: 13px;
-      color: #4b5563;
-      line-height: 1.6;
-    }
-
-    .hero-proof-grid {
-      width: 100%;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-      margin-top: 22px;
-    }
-    .hero-proof-card {
-      padding: 22px 20px;
-      border-radius: 22px;
-      text-align: left;
-      background: rgba(255,255,255,0.82);
-      border: 1px solid rgba(5,150,105,0.12);
-      box-shadow: 0 16px 40px rgba(4,78,59,0.08);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-    }
-    .hero-proof-card:nth-child(2) {
-      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(236,253,245,0.92));
-      border-color: rgba(5,150,105,0.2);
-    }
-    .hero-proof-kicker {
-      display: inline-flex;
-      align-items: center;
-      padding: 5px 10px;
-      border-radius: 999px;
-      background: rgba(5,150,105,0.1);
-      color: var(--green-dark);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    .hero-proof-card strong {
-      display: block;
-      font-size: 18px;
-      line-height: 1.25;
-      margin-bottom: 8px;
-      color: var(--green-deep);
-    }
-    .hero-proof-card p {
-      font-size: 13px;
-      line-height: 1.65;
-      color: #4b5563;
-    }
 
     /* Hero trust row */
     .hero-trust {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 14px;
-      margin-top: 18px;
+      gap: 28px;
+      margin-top: 28px;
       flex-wrap: wrap;
     }
     .hero-trust-item {
@@ -670,23 +513,20 @@ const currentYear = new Date().getFullYear();
       font-size: 13px;
       font-weight: 600;
       color: var(--green-deep);
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.64);
-      border: 1px solid rgba(5,150,105,0.12);
     }
     .hero-trust-icon {
       width: 32px; height: 32px;
-      background: rgba(5,150,105,0.1);
+      background: rgba(255,255,255,0.85);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 15px;
+      box-shadow: 0 2px 8px rgba(4,78,59,0.12);
     }
 
     /* ─── HOW IT WORKS ─── */
-    .how-section { background: linear-gradient(180deg, #ffffff 0%, var(--green-soft) 100%); }
+    .how-section { background: white; }
     .steps-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -755,32 +595,7 @@ const currentYear = new Date().getFullYear();
     }
 
     /* ─── CATEGORIES ─── */
-    .categories-section {
-      position: relative;
-      background: linear-gradient(180deg, #ecfdf5 0%, #dff7eb 100%);
-      overflow: hidden;
-    }
-    .categories-section::before,
-    .categories-section::after {
-      content: '';
-      position: absolute;
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    .categories-section::before {
-      width: 260px;
-      height: 260px;
-      left: -90px;
-      top: 40px;
-      background: radial-gradient(circle, rgba(245,158,11,0.14), transparent 70%);
-    }
-    .categories-section::after {
-      width: 360px;
-      height: 360px;
-      right: -140px;
-      bottom: -110px;
-      background: radial-gradient(circle, rgba(4,120,87,0.1), transparent 70%);
-    }
+    .categories-section { background: var(--green-light); }
     .categories-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -791,23 +606,22 @@ const currentYear = new Date().getFullYear();
     @media (max-width: 480px) { .categories-grid { grid-template-columns: 1fr 1fr; gap: 12px; } }
 
     .category-card {
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(10px);
+      background: white;
       border-radius: 16px;
       padding: 24px 20px;
       display: flex;
       align-items: center;
       gap: 14px;
-      border: 1.5px solid rgba(5,150,105,0.1);
+      border: 1.5px solid rgba(5,150,105,0.08);
       text-decoration: none;
       color: inherit;
       transition: all 0.2s;
-      box-shadow: 0 14px 28px rgba(4,78,59,0.06);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     .category-card:hover {
       border-color: var(--green);
-      transform: translateY(-6px);
-      box-shadow: 0 18px 34px rgba(5,150,105,0.15);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(5,150,105,0.15);
     }
     .category-emoji {
       font-size: 32px;
@@ -832,15 +646,9 @@ const currentYear = new Date().getFullYear();
       color: var(--green);
       font-weight: 600;
     }
-    @media (min-width: 769px) {
-      .categories-grid .category-card:nth-child(2),
-      .categories-grid .category-card:nth-child(5) {
-        margin-top: 18px;
-      }
-    }
 
     /* ─── TRUST ─── */
-    .trust-section { background: linear-gradient(180deg, #ffffff 0%, #f5fbf7 100%); }
+    .trust-section { background: white; }
     .trust-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -850,14 +658,12 @@ const currentYear = new Date().getFullYear();
     @media (max-width: 768px) { .trust-grid { grid-template-columns: 1fr; gap: 20px; } }
 
     .trust-card {
-      background: linear-gradient(180deg, #ffffff 0%, var(--green-light) 100%);
-      border: 1.5px solid rgba(5,150,105,0.14);
+      background: var(--green-light);
+      border: 1.5px solid var(--green-mid);
       border-radius: 20px;
       padding: 32px 28px;
       position: relative;
       overflow: hidden;
-      transition: transform 0.25s, box-shadow 0.25s;
-      box-shadow: 0 18px 40px rgba(4,78,59,0.06);
     }
     .trust-card::before {
       content: '';
@@ -865,16 +671,6 @@ const currentYear = new Date().getFullYear();
       top: 0; left: 0; right: 0;
       height: 4px;
       background: linear-gradient(90deg, var(--green), #10b981);
-    }
-    .trust-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 24px 44px rgba(4,78,59,0.1);
-    }
-    .trust-card:nth-child(2)::before {
-      background: linear-gradient(90deg, var(--amber), #fbbf24);
-    }
-    .trust-card:nth-child(3)::before {
-      background: linear-gradient(90deg, #0f766e, #14b8a6);
     }
     .trust-icon {
       font-size: 36px;
@@ -958,10 +754,7 @@ const currentYear = new Date().getFullYear();
     .origin-stat-l { font-size: 12px; opacity: 0.6; font-weight: 500; }
 
     /* ─── TESTIMONIALS ─── */
-    .testi-section {
-      position: relative;
-      background: linear-gradient(180deg, #f8faf9 0%, #eef8f1 100%);
-    }
+    .testi-section { background: #f9fafb; }
     .testi-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -1034,19 +827,14 @@ const currentYear = new Date().getFullYear();
       background: white;
       border-radius: 20px;
       padding: 22px;
-      box-shadow: 0 16px 34px rgba(4,78,59,0.06);
-      border: 1.5px solid rgba(5,150,105,0.08);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      border: 1.5px solid var(--border);
       display: flex;
       flex-direction: column;
-      transition: transform 0.25s, box-shadow 0.25s;
-    }
-    .testi-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 22px 40px rgba(4,78,59,0.1);
     }
 
     /* ─── DELIVERY MODES ─── */
-    .delivery-section { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); }
+    .delivery-section { background: white; }
     .delivery-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1059,12 +847,6 @@ const currentYear = new Date().getFullYear();
       padding: 32px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 20px 44px rgba(15,23,42,0.08);
-      transition: transform 0.25s, box-shadow 0.25s;
-    }
-    .delivery-mode-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 24px 50px rgba(15,23,42,0.12);
     }
     .delivery-avion {
       background: linear-gradient(135deg, #eff6ff, #dbeafe);
@@ -1123,7 +905,7 @@ const currentYear = new Date().getFullYear();
     }
 
     /* ─── FAQ ─── */
-    .faq-section { background: linear-gradient(180deg, #ecfdf5 0%, #f6fffb 100%); }
+    .faq-section { background: var(--green-light); }
     .faq-list {
       max-width: 720px;
       margin: 48px auto 0;
@@ -1136,12 +918,6 @@ const currentYear = new Date().getFullYear();
       border: 1.5px solid var(--green-mid);
       border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 10px 24px rgba(4,78,59,0.05);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .faq-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 30px rgba(4,78,59,0.08);
     }
     .faq-question {
       width: 100%;
@@ -1217,19 +993,7 @@ const currentYear = new Date().getFullYear();
       border-radius: 50%;
       pointer-events: none;
     }
-    .cta-inner {
-      position: relative;
-      z-index: 1;
-      max-width: 920px;
-      margin: 0 auto;
-      padding: 48px 36px;
-      border-radius: 32px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 30px 80px rgba(0,0,0,0.18);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
+    .cta-inner { position: relative; z-index: 1; }
     .cta-emoji { font-size: 56px; margin-bottom: 20px; }
     .cta-title {
       font-size: clamp(28px, 5vw, 44px);
@@ -1268,42 +1032,16 @@ const currentYear = new Date().getFullYear();
       transform: translateY(-3px);
       box-shadow: 0 14px 36px rgba(245,158,11,0.5);
     }
-    .cta-actions {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-    .btn-cta-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 18px 28px;
-      border-radius: 50px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.08);
-      color: white;
-      text-decoration: none;
-      font-size: 15px;
-      font-weight: 700;
-      transition: all 0.25s;
-    }
-    .btn-cta-secondary:hover {
-      transform: translateY(-3px);
-      background: rgba(255,255,255,0.14);
-      border-color: rgba(255,255,255,0.3);
-    }
     .cta-note {
       margin-top: 20px;
       font-size: 13px;
-      opacity: 0.72;
+      opacity: 0.5;
     }
     .cta-reassure {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 24px;
       margin-top: 32px;
       flex-wrap: wrap;
     }
@@ -1312,12 +1050,8 @@ const currentYear = new Date().getFullYear();
       align-items: center;
       gap: 7px;
       font-size: 13px;
-      opacity: 0.92;
-      font-weight: 600;
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
+      opacity: 0.7;
+      font-weight: 500;
     }
 
     /* ─── FOOTER ─── */
@@ -1463,13 +1197,10 @@ const currentYear = new Date().getFullYear();
       .hero-content { padding: 48px 16px 72px; }
       .hero-title { font-size: clamp(32px, 10vw, 48px); letter-spacing: -0.02em; }
       .hero-sub { font-size: 14px; }
-      .hero-actions { grid-template-columns: 1fr; }
-      .hero-proof-grid { grid-template-columns: 1fr; gap: 12px; margin-top: 16px; }
-      .hero-proof-card { padding: 18px 16px; border-radius: 18px; }
 
       /* Trust items en ligne plutôt qu'en colonne */
       .hero-trust { gap: 12px; }
-      .hero-trust-item { font-size: 12px; width: 100%; justify-content: center; }
+      .hero-trust-item { font-size: 12px; }
 
       /* Sections — padding réduit */
       .section { padding: 44px 0; }
@@ -1536,9 +1267,6 @@ const currentYear = new Date().getFullYear();
       /* CTA final */
       .cta-section { padding: 56px 0; }
       .cta-title { font-size: 28px !important; }
-      .cta-inner { padding: 34px 18px; border-radius: 24px; }
-      .cta-actions { gap: 10px; }
-      .btn-cta, .btn-cta-secondary { width: 100%; justify-content: center; padding: 15px 18px; }
 
       /* Footer — simplifier */
       .footer { padding: 40px 0 20px; }
@@ -1551,28 +1279,6 @@ const currentYear = new Date().getFullYear();
       /* Form badges — sur une ligne */
       .form-badges { gap: 10px; }
       .form-badge { font-size: 11px; }
-    }
-
-    @media (max-width: 768px) {
-      .hero-proof-grid { grid-template-columns: 1fr; }
-      .cta-inner { padding: 40px 24px; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      .hero-eyebrow-dot,
-      .word-rotate-block span,
-      .wa-fab { animation: none; }
-      .word-rotate-block {
-        height: auto;
-        overflow: visible;
-      }
-      .word-rotate-block span {
-        position: static;
-        opacity: 1;
-        transform: none;
-      }
-      .word-rotate-block span:not(:first-child) { display: none; }
     }
   </style>
 </head>
@@ -1609,14 +1315,6 @@ const currentYear = new Date().getFullYear();
     </div>
   </header>
 
-  <nav class="mobile-quicklinks" aria-label="Navigation rapide">
-    <a href="#fonctionnement">Processus</a>
-    <a href="#avantages">Avantages</a>
-    <a href="#livraison">Livraison</a>
-    <a href="#faq">FAQ</a>
-    <a href="/demande">Demander un devis</a>
-  </nav>
-
   <!-- ░░ HERO (base.com inspired — centered + canvas gradient) ░░ -->
   <section class="hero">
 
@@ -1625,63 +1323,41 @@ const currentYear = new Date().getFullYear();
 
     <!-- Centered content -->
     <div class="hero-content">
-      <div class="hero-copy-shell">
-        <div class="hero-eyebrow">
-          <span class="hero-eyebrow-dot"></span>
-          Service d'import au Togo · Depuis 2022
+
+      <div class="hero-eyebrow">
+        <span class="hero-eyebrow-dot"></span>
+        Service d'import au Togo · Depuis 2022
+      </div>
+
+      <h1 class="hero-title">
+        Commandez vos
+        <div class="word-rotate-block">
+          <span>iPhone 16 Pro</span>
+          <span>Appareils Photo</span>
+          <span>MacBook Air</span>
+          <span>PS5 &amp; Jeux</span>
         </div>
+        depuis l'étranger.
+      </h1>
 
-        <h1 class="hero-title">
-          Commandez vos
-          <div class="word-rotate-block">
-            <span>iPhone 16 Pro</span>
-            <span>Appareils Photo</span>
-            <span>MacBook Air</span>
-            <span>PS5 &amp; Jeux</span>
-          </div>
-          depuis l'étranger.
-        </h1>
+      <p class="hero-sub">
+        Dites-nous ce que vous voulez. On achète, on dédouane
+        et on livre directement chez vous au Togo.
+      </p>
 
-        <p class="hero-sub">
-          Dites-nous ce que vous voulez. <strong>On achète, on dédouane</strong> et on livre directement chez vous au Togo, avec un devis clair avant toute validation.
-        </p>
-
-        <div class="hero-cta-wrap">
-          <div class="hero-actions">
-            <a href="/demande" class="btn-hero">
-              🚀 Obtenir mon devis gratuit
-            </a>
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" class="btn-secondary-hero">
-              💬 Parler sur WhatsApp
-            </a>
-          </div>
-          <div class="form-badges">
-            <span class="form-badge"><span class="form-badge-check">✓</span> Gratuit</span>
-            <span class="form-badge"><span class="form-badge-check">✓</span> Sans engagement</span>
-            <span class="form-badge"><span class="form-badge-check">✓</span> Réponse en 24h</span>
-          </div>
-          <p class="hero-note">Recevez un devis complet avec prix du produit, transport, douane et délai estimé.</p>
+      <!-- CTA direct -->
+      <div class="hero-cta-wrap">
+        <a href="/demande" class="btn-hero">
+          🚀 Obtenir mon devis gratuit
+        </a>
+        <div class="form-badges">
+          <span class="form-badge"><span class="form-badge-check">✓</span> Gratuit</span>
+          <span class="form-badge"><span class="form-badge-check">✓</span> Sans engagement</span>
+          <span class="form-badge"><span class="form-badge-check">✓</span> Réponse en 24h</span>
         </div>
       </div>
 
-      <div class="hero-proof-grid">
-        <article class="hero-proof-card">
-          <span class="hero-proof-kicker">Clarté</span>
-          <strong>Prix total annoncé dès le départ</strong>
-          <p>On additionne produit, transport et douane pour éviter les mauvaises surprises à l'arrivée.</p>
-        </article>
-        <article class="hero-proof-card">
-          <span class="hero-proof-kicker">Suivi</span>
-          <strong>Un interlocuteur qui vous répond vraiment</strong>
-          <p>WhatsApp, confirmation d'achat, évolution de la livraison: vous restez informé du début à la fin.</p>
-        </article>
-        <article class="hero-proof-card">
-          <span class="hero-proof-kicker">Confiance</span>
-          <strong>Un service pensé pour les clients au Togo</strong>
-          <p>Livraison à domicile à Lomé et organisation simple pour les autres villes du pays.</p>
-        </article>
-      </div>
-
+      <!-- Trust row -->
       <div class="hero-trust">
         <div class="hero-trust-item">
           <span class="hero-trust-icon">📦</span> 500+ commandes livrées
@@ -1952,7 +1628,7 @@ const currentYear = new Date().getFullYear();
   </section>
 
   <!-- ░░ LIVRAISON ░░ -->
-  <section class="section delivery-section" id="livraison">
+  <section class="section delivery-section">
     <div class="container">
       <div style="text-align:center;">
         <div class="section-tag">🚚 Livraison</div>
@@ -2079,14 +1755,9 @@ const currentYear = new Date().getFullYear();
         <div class="cta-emoji">📦</div>
         <h2 class="cta-title">Vous avez un produit en tête ?</h2>
         <p class="cta-sub">La demande prend 2 minutes. Le devis est gratuit et sans engagement. On s'occupe du reste.</p>
-        <div class="cta-actions">
-          <a href="/demande" class="btn-cta">
-            🚀 Faire ma demande maintenant
-          </a>
-          <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" class="btn-cta-secondary">
-            💬 Poser une question rapide
-          </a>
-        </div>
+        <a href="/demande" class="btn-cta">
+          🚀 Faire ma demande maintenant
+        </a>
         <p class="cta-note">Gratuit · Sans engagement · Réponse sous 24h</p>
         <div class="cta-reassure">
           <span class="cta-r-item">🇹🇬 Service togolais</span>
@@ -2112,7 +1783,7 @@ const currentYear = new Date().getFullYear();
           </p>
           <div class="footer-socials">
             <!-- WhatsApp -->
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" class="social-icon" title="WhatsApp">
+            <a href="https://wa.me/22890226491" target="_blank" rel="noopener noreferrer" class="social-icon" title="WhatsApp">
               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             </a>
             <!-- Facebook -->
@@ -2167,14 +1838,14 @@ const currentYear = new Date().getFullYear();
       </div>
 
       <div class="footer-bottom">
-        <div class="footer-copy">© {currentYear} TOGOLESE. Tous droits réservés.</div>
+        <div class="footer-copy">© 2026 TOGOLESE. Tous droits réservés.</div>
         <div class="footer-badge">🇹🇬 Fait au Togo avec ❤️</div>
       </div>
     </div>
   </footer>
 
   <!-- ░░ WHATSAPP FAB ░░ -->
-  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" class="wa-fab" title="Contactez-nous sur WhatsApp">
+  <a href="https://wa.me/22800000000" target="_blank" rel="noopener noreferrer" class="wa-fab" title="Contactez-nous sur WhatsApp">
     💬
   </a>
 
@@ -2199,23 +1870,19 @@ const currentYear = new Date().getFullYear();
       });
     });
 
-    const header = document.getElementById('main-header');
-    const mobileQuicklinks = document.querySelector('.mobile-quicklinks');
-
     // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach((link) => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const target = document.querySelector(link.getAttribute('href') || '');
         if (target) {
-          const offset = (header?.offsetHeight || 0) + ((window.innerWidth <= 900 ? mobileQuicklinks?.clientHeight || 0 : 0) + 12);
-          const top = target.getBoundingClientRect().top + window.scrollY - offset;
-          window.scrollTo({ top, behavior: 'smooth' });
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
     });
 
     // Header scroll class
+    const header = document.getElementById('main-header');
     window.addEventListener('scroll', () => {
       if (window.scrollY > 12) {
         header?.classList.add('scrolled');
@@ -2240,8 +1907,6 @@ const currentYear = new Date().getFullYear();
       }
       resize();
       window.addEventListener('resize', resize, { passive: true });
-
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       // Animated blobs / gradient orbs
       const blobs = [
@@ -2279,7 +1944,7 @@ const currentYear = new Date().getFullYear();
           ctx.fill();
         });
 
-        if (!prefersReducedMotion) requestAnimationFrame(draw);
+        requestAnimationFrame(draw);
       }
       draw();
     })();
