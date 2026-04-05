@@ -1174,79 +1174,6 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       opacity: 0.4;
     }
 
-    /* ─── Calculateur ─── */
-    .calc-section { background: #f0f9f4; }
-    .calc-card {
-      max-width: 560px; margin: 40px auto 0;
-      background: #fff; border-radius: 24px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 16px 48px rgba(4,120,87,0.09);
-      overflow: hidden;
-    }
-    .calc-body { padding: 32px; }
-    .calc-row { margin-bottom: 20px; }
-    .calc-label {
-      display: block; font-size: 11px; font-weight: 700;
-      letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
-      margin-bottom: 8px;
-    }
-    .calc-currency-row { display: flex; gap: 8px; align-items: center; }
-    .calc-input {
-      flex: 1; padding: 13px 16px;
-      border: 1.5px solid var(--border); border-radius: 12px;
-      font-family: inherit; font-size: 16px; font-weight: 600; color: var(--text);
-      outline: none; transition: border-color 0.15s;
-    }
-    .calc-input:focus { border-color: var(--green); }
-    .calc-currency-toggle {
-      display: flex; border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden;
-    }
-    .calc-currency-toggle button {
-      padding: 12px 14px; background: none; border: none; cursor: pointer;
-      font-family: inherit; font-size: 13px; font-weight: 600; color: var(--muted);
-      transition: all 0.15s;
-    }
-    .calc-currency-toggle button.active { background: var(--green-light); color: var(--green-dark); }
-    .calc-mode-row { display: flex; gap: 10px; }
-    .calc-mode-btn {
-      flex: 1; padding: 12px; border: 1.5px solid var(--border); border-radius: 12px;
-      background: #fff; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600;
-      color: var(--muted); transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .calc-mode-btn.active { border-color: var(--green); background: var(--green-light); color: var(--green-dark); }
-    .calc-btn {
-      width: 100%; padding: 15px; background: linear-gradient(135deg, var(--green-dark), var(--green));
-      color: #fff; border: none; border-radius: 50px; font-family: inherit;
-      font-size: 15px; font-weight: 700; cursor: pointer;
-      box-shadow: 0 6px 20px rgba(4,120,87,0.28); margin-top: 8px; transition: opacity 0.15s;
-    }
-    .calc-btn:hover { opacity: 0.9; }
-    .calc-result {
-      display: none; border-top: 1px solid var(--border); padding: 24px 32px;
-      background: var(--green-light);
-    }
-    .calc-result.visible { display: block; }
-    .calc-result-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 7px 0; font-size: 14px; color: var(--muted);
-      border-bottom: 1px dashed #d1fae5;
-    }
-    .calc-result-row:last-of-type { border-bottom: none; }
-    .calc-result-row span:last-child { font-weight: 600; color: var(--text); }
-    .calc-total-row {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-top: 14px; padding: 14px 18px;
-      background: linear-gradient(135deg, var(--green-dark), var(--green));
-      border-radius: 14px; color: #fff;
-    }
-    .calc-total-label { font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; opacity: 0.7; }
-    .calc-total-value { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
-    .calc-cta-link {
-      display: block; text-align: center; margin-top: 16px;
-      color: var(--green-dark); font-size: 14px; font-weight: 700; text-decoration: none;
-    }
-    .calc-cta-link:hover { text-decoration: underline; }
-    .calc-note { font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; }
-
     /* ─── Pop-up WhatsApp ─── */
     .wa-popup {
       position: fixed; bottom: 96px; left: 24px; z-index: 190;
@@ -1462,7 +1389,6 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
           <a href="#fonctionnement">Comment ça marche <span class="nav-chevron">▾</span></a>
           <a href="#avantages">Avantages <span class="nav-chevron">▾</span></a>
           <a href="#livraison">Livraison</a>
-          <a href="#calculateur">Calculateur</a>
           <a href="#faq">FAQ</a>
         </nav>
 
@@ -1839,51 +1765,6 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
     </div>
   </section>
 
-  <!-- ░░ CALCULATEUR ░░ -->
-  <section class="section calc-section" id="calculateur">
-    <div class="container" style="text-align:center;">
-      <div class="section-tag">🧮 Estimation</div>
-      <h2 class="section-title">Combien ça va vous coûter ?</h2>
-      <p class="section-sub" style="margin:0 auto;">Entrez le prix du produit et choisissez votre livraison — on calcule une fourchette de prix total.</p>
-
-      <div class="calc-card">
-        <div class="calc-body">
-          <div class="calc-row">
-            <label class="calc-label" for="calc-price">Prix du produit</label>
-            <div class="calc-currency-row">
-              <input id="calc-price" class="calc-input" type="number" min="0" placeholder="Ex : 500 000" />
-              <div class="calc-currency-toggle">
-                <button id="btn-fcfa" class="active" onclick="setCurrency('FCFA')">FCFA</button>
-                <button id="btn-usd" onclick="setCurrency('USD')">USD</button>
-              </div>
-            </div>
-          </div>
-          <div class="calc-row">
-            <span class="calc-label">Mode de livraison</span>
-            <div class="calc-mode-row">
-              <button id="btn-avion" class="calc-mode-btn active" onclick="setMode('avion')">✈️ Express — Avion</button>
-              <button id="btn-bateau" class="calc-mode-btn" onclick="setMode('bateau')">🚢 Économique — Bateau</button>
-            </div>
-          </div>
-          <button class="calc-btn" onclick="calculate()">Calculer mon estimation →</button>
-        </div>
-
-        <div class="calc-result" id="calc-result">
-          <div class="calc-result-row"><span>Prix produit</span><span id="r-product">—</span></div>
-          <div class="calc-result-row"><span>Douane &amp; taxes (~25%)</span><span id="r-tax">—</span></div>
-          <div class="calc-result-row"><span id="r-ship-label">Frais livraison (Avion)</span><span id="r-ship">—</span></div>
-          <div class="calc-result-row"><span>Frais de service (~8%)</span><span id="r-fee">—</span></div>
-          <div class="calc-total-row">
-            <span class="calc-total-label">Total estimé</span>
-            <span class="calc-total-value" id="r-total">—</span>
-          </div>
-          <a href="/demande" class="calc-cta-link">Faire ma demande gratuite →</a>
-          <p class="calc-note">Estimation indicative ±10% · Devis précis gratuit sous 24h</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ░░ FAQ ░░ -->
   <section class="section faq-section" id="faq">
     <div class="container" style="text-align:center;">
@@ -2210,59 +2091,6 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
   </script>
 
   <script>
-    // ── Calculateur de prix ──
-    let calcCurrency = 'FCFA';
-    let calcMode = 'avion';
-    const USD_TO_FCFA = 600;
-
-    function setCurrency(c: string) {
-      calcCurrency = c;
-      (document.getElementById('btn-fcfa') as HTMLButtonElement).classList.toggle('active', c === 'FCFA');
-      (document.getElementById('btn-usd') as HTMLButtonElement).classList.toggle('active', c === 'USD');
-      (document.getElementById('calc-price') as HTMLInputElement).placeholder = c === 'USD' ? 'Ex : 800' : 'Ex : 500 000';
-    }
-
-    function setMode(m: string) {
-      calcMode = m;
-      (document.getElementById('btn-avion') as HTMLButtonElement).classList.toggle('active', m === 'avion');
-      (document.getElementById('btn-bateau') as HTMLButtonElement).classList.toggle('active', m === 'bateau');
-    }
-
-    function fmtFCFA(n: number) {
-      return Math.round(n).toLocaleString('fr-FR') + ' F';
-    }
-
-    function calculate() {
-      const raw = parseFloat((document.getElementById('calc-price') as HTMLInputElement).value);
-      if (!raw || raw <= 0) {
-        (document.getElementById('calc-price') as HTMLInputElement).focus();
-        return;
-      }
-      const productFCFA = calcCurrency === 'USD' ? raw * USD_TO_FCFA : raw;
-      const tax = productFCFA * 0.25;
-      const fee = productFCFA * 0.08;
-      const shipLow = calcMode === 'avion' ? 15000 : 5000;
-      const shipHigh = calcMode === 'avion' ? 25000 : 10000;
-      const shipMid = (shipLow + shipHigh) / 2;
-      const total = productFCFA + tax + shipMid + fee;
-      const low = Math.round(total * 0.92);
-      const high = Math.round(total * 1.08);
-
-      (document.getElementById('r-product') as HTMLElement).textContent = fmtFCFA(productFCFA);
-      (document.getElementById('r-tax') as HTMLElement).textContent = fmtFCFA(tax);
-      (document.getElementById('r-ship-label') as HTMLElement).textContent =
-        'Frais livraison (' + (calcMode === 'avion' ? 'Avion' : 'Bateau') + ')';
-      (document.getElementById('r-ship') as HTMLElement).textContent =
-        fmtFCFA(shipLow) + ' – ' + fmtFCFA(shipHigh);
-      (document.getElementById('r-fee') as HTMLElement).textContent = fmtFCFA(fee);
-      (document.getElementById('r-total') as HTMLElement).textContent =
-        Math.round(low).toLocaleString('fr-FR') + ' – ' + Math.round(high).toLocaleString('fr-FR') + ' F';
-
-      const result = document.getElementById('calc-result') as HTMLElement;
-      result.classList.add('visible');
-      result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
     function dismissPopup() {
       const popup = document.getElementById('wa-popup') as HTMLElement;
       popup.classList.add('hidden');
@@ -2270,14 +2098,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
     }
 
     // Expose to global scope for onclick handlers
-    (window as any).setCurrency = setCurrency;
-    (window as any).setMode = setMode;
-    (window as any).calculate = calculate;
     (window as any).dismissPopup = dismissPopup;
-
-    // Enter key triggers calculation
-    (document.getElementById('calc-price') as HTMLInputElement)
-      ?.addEventListener('keydown', (e: KeyboardEvent) => { if (e.key === 'Enter') calculate(); });
 
     // ── Pop-up WhatsApp ──
     if (!sessionStorage.getItem('wa_popup_dismissed')) {
