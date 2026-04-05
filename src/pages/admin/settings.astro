@@ -12,7 +12,7 @@ if (currentUser?.role !== 'admin') {
 }
 
 const db = getDb();
-const users = db.prepare('SELECT id, username, full_name, role, created_at FROM users ORDER BY created_at ASC').all() as any[];
+const users = db.prepare('SELECT id, username, full_name, role, email, phone, birthdate, created_at FROM users ORDER BY created_at ASC').all() as any[];
 
 function fmt(bytes: number) {
   if (bytes < 1024) return bytes + ' o';
@@ -59,25 +59,41 @@ try {
       <!-- Add user form -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Ajouter un utilisateur</h3>
-        <form id="add-user-form" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form id="add-user-form" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Identité -->
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet</label>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet *</label>
             <input type="text" name="full_name" required placeholder="Alice Martin"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Nom d'utilisateur</label>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Nom d'utilisateur *</label>
             <input type="text" name="username" required placeholder="alice"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Mot de passe</label>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Mot de passe *</label>
             <input type="text" name="password" required placeholder="motdepasse"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
           </div>
-          <div class="sm:col-span-3">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
-              Ajouter
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+            <input type="email" name="email" placeholder="alice@exemple.com"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Téléphone</label>
+            <input type="tel" name="phone" placeholder="+228 90 00 00 00"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Date de naissance</label>
+            <input type="date" name="birthdate"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+          </div>
+          <div class="sm:col-span-2">
+            <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
+              Ajouter l'utilisateur
             </button>
             <span id="add-error" class="ml-3 text-sm text-red-600 hidden"></span>
             <span id="add-success" class="ml-3 text-sm text-green-600 hidden">Utilisateur créé ✓</span>
@@ -109,7 +125,8 @@ try {
                 <td class="px-5 py-3 text-gray-500">{new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
                 <td class="px-5 py-3 text-right flex items-center justify-end gap-2">
                   <button class="edit-user-btn text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                    data-id={user.id} data-name={user.full_name}>Modifier</button>
+                    data-id={user.id} data-name={user.full_name}
+                    data-email={user.email || ''} data-phone={user.phone || ''} data-birthdate={user.birthdate || ''}>Modifier</button>
                   {user.id !== currentUser?.id && (
                     <button class="delete-user-btn text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors"
                       data-id={user.id} data-name={user.full_name}>Supprimer</button>
@@ -123,27 +140,54 @@ try {
     </section>
 
     <!-- Edit user modal -->
-    <div id="edit-modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden">
-      <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
-        <h2 class="text-base font-semibold text-gray-900 mb-4">Modifier l'utilisateur</h2>
-        <form id="edit-user-form" class="space-y-3">
-          <input type="hidden" name="id" />
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet</label>
-            <input type="text" name="full_name" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Nouveau mot de passe</label>
-            <input type="password" name="password" placeholder="Laisser vide pour ne pas changer"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <p id="edit-error" class="text-sm text-red-600 hidden"></p>
-          <div class="flex gap-2 pt-1">
-            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Enregistrer</button>
-            <button type="button" id="edit-cancel" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold py-2 rounded-lg transition-colors">Annuler</button>
-          </div>
-        </form>
+    <div id="edit-modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-[200] hidden p-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-auto flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 class="text-base font-semibold text-gray-900">Modifier l'utilisateur</h2>
+          <button type="button" id="edit-cancel" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <!-- Body -->
+        <div class="overflow-y-auto flex-1 px-6 py-5">
+          <form id="edit-user-form" class="space-y-3">
+            <input type="hidden" name="id" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Nom complet *</label>
+                <input type="text" name="full_name" required
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                <input type="email" name="email" placeholder="alice@exemple.com"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Téléphone</label>
+                <input type="tel" name="phone" placeholder="+228 90 00 00 00"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Date de naissance</label>
+                <input type="date" name="birthdate"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Nouveau mot de passe</label>
+                <input type="password" name="password" placeholder="Laisser vide pour ne pas changer"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600" />
+              </div>
+            </div>
+            <p id="edit-error" class="text-sm text-red-600 hidden"></p>
+          </form>
+        </div>
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-100 flex gap-2">
+          <button type="submit" form="edit-user-form" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors">Enregistrer</button>
+          <button type="button" id="edit-cancel-2" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold py-2.5 rounded-xl transition-colors">Annuler</button>
+        </div>
       </div>
     </div>
 
@@ -295,7 +339,7 @@ attachDeleteListeners();
 document.getElementById('add-user-form')!.addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target as HTMLFormElement;
-  const errorEl = document.getElementById('add-error')!;
+  const errorEl   = document.getElementById('add-error')!;
   const successEl = document.getElementById('add-success')!;
   errorEl.classList.add('hidden');
   successEl.classList.add('hidden');
@@ -303,6 +347,9 @@ document.getElementById('add-user-form')!.addEventListener('submit', async (e) =
     full_name: (form.querySelector('[name=full_name]') as HTMLInputElement).value.trim(),
     username:  (form.querySelector('[name=username]')  as HTMLInputElement).value.trim(),
     password:  (form.querySelector('[name=password]')  as HTMLInputElement).value.trim(),
+    email:     (form.querySelector('[name=email]')     as HTMLInputElement).value.trim(),
+    phone:     (form.querySelector('[name=phone]')     as HTMLInputElement).value.trim(),
+    birthdate: (form.querySelector('[name=birthdate]') as HTMLInputElement).value,
   };
   const res = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   if (res.ok) { successEl.classList.remove('hidden'); form.reset(); setTimeout(() => window.location.reload(), 800); }
@@ -313,17 +360,24 @@ const editModal = document.getElementById('edit-modal')!;
 const editForm  = document.getElementById('edit-user-form') as HTMLFormElement;
 const editError = document.getElementById('edit-error')!;
 
+const closeEditModal = () => editModal.classList.add('hidden');
+document.getElementById('edit-cancel')!.addEventListener('click', closeEditModal);
+document.getElementById('edit-cancel-2')!.addEventListener('click', closeEditModal);
+editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+
 document.querySelectorAll('.edit-user-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    (editForm.querySelector('[name=id]')        as HTMLInputElement).value = btn.getAttribute('data-id')!;
-    (editForm.querySelector('[name=full_name]') as HTMLInputElement).value = btn.getAttribute('data-name')!;
+    const el = btn as HTMLElement;
+    (editForm.querySelector('[name=id]')        as HTMLInputElement).value = el.dataset.id!;
+    (editForm.querySelector('[name=full_name]') as HTMLInputElement).value = el.dataset.name!;
+    (editForm.querySelector('[name=email]')     as HTMLInputElement).value = el.dataset.email ?? '';
+    (editForm.querySelector('[name=phone]')     as HTMLInputElement).value = el.dataset.phone ?? '';
+    (editForm.querySelector('[name=birthdate]') as HTMLInputElement).value = el.dataset.birthdate ?? '';
     (editForm.querySelector('[name=password]')  as HTMLInputElement).value = '';
     editError.classList.add('hidden');
     editModal.classList.remove('hidden');
   });
 });
-document.getElementById('edit-cancel')!.addEventListener('click', () => editModal.classList.add('hidden'));
-editModal.addEventListener('click', (e) => { if (e.target === editModal) editModal.classList.add('hidden'); });
 
 editForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -331,10 +385,13 @@ editForm.addEventListener('submit', async (e) => {
   const id        = (editForm.querySelector('[name=id]')        as HTMLInputElement).value;
   const full_name = (editForm.querySelector('[name=full_name]') as HTMLInputElement).value.trim();
   const password  = (editForm.querySelector('[name=password]')  as HTMLInputElement).value.trim();
-  const body: Record<string, string> = { full_name };
+  const email     = (editForm.querySelector('[name=email]')     as HTMLInputElement).value.trim();
+  const phone     = (editForm.querySelector('[name=phone]')     as HTMLInputElement).value.trim();
+  const birthdate = (editForm.querySelector('[name=birthdate]') as HTMLInputElement).value;
+  const body: Record<string, string> = { full_name, email, phone, birthdate };
   if (password) body.password = password;
   const res = await fetch(`/api/users/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (res.ok) { editModal.classList.add('hidden'); window.location.reload(); }
+  if (res.ok) { closeEditModal(); window.location.reload(); }
   else { const err = await res.json(); editError.textContent = err.error ?? 'Erreur'; editError.classList.remove('hidden'); }
 });
 

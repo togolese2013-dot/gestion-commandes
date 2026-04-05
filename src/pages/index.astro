@@ -755,6 +755,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
 
     /* ─── TESTIMONIALS ─── */
     .testi-section { background: #f9fafb; }
+    .testi-nav { display: none; } /* shown only in mobile media query */
     .testi-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -841,7 +842,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       gap: 24px;
       margin-top: 48px;
     }
-    @media (max-width: 640px) { .delivery-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .delivery-grid { grid-template-columns: 1fr 1fr; gap: 12px; } }
     .delivery-mode-card {
       border-radius: 20px;
       padding: 32px;
@@ -1069,7 +1070,11 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       margin-bottom: 28px;
     }
     @media (max-width: 1024px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 540px) { .footer-grid { grid-template-columns: 1fr; gap: 28px; } }
+    @media (max-width: 540px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+      .footer-grid > div:first-child { grid-column: 1 / -1; }
+      .footer-map { grid-column: 1 / -1; }
+    }
     .footer-map-title {
       font-size: 12px;
       font-weight: 700;
@@ -1250,15 +1255,67 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       /* Origins — cacher les stats chiffres sur mobile (garder texte) */
       .origins-numbers { display: none; }
       .origins-title { font-size: 24px; }
+      .origins-flags { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .origin-pill { justify-content: center; font-size: 12px; padding: 8px 10px; }
 
-      /* Témoignages — cacher le 2e et 3e, garder 1 seul visible */
-      .testi-grid .testi-card:nth-child(2),
-      .testi-grid .testi-card:nth-child(3) { display: none; }
-      .testi-grid { max-width: 100%; }
+      /* Témoignages — carousel */
+      .testi-grid {
+        display: flex !important;
+        overflow-x: scroll;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        gap: 0;
+        max-width: 100%;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        margin-top: 28px;
+      }
+      .testi-grid::-webkit-scrollbar { display: none; }
+      .testi-grid .testi-card {
+        flex-shrink: 0;
+        width: 100%;
+        scroll-snap-align: start;
+        border-radius: 16px;
+      }
+      .testi-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 20px;
+      }
+      .testi-nav-btn {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--green);
+        background: white;
+        color: var(--green);
+        font-size: 20px;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s;
+        line-height: 1;
+        padding: 0;
+      }
+      .testi-nav-btn:active { background: var(--green); color: white; }
+      .testi-dots { display: flex; gap: 6px; align-items: center; }
+      .testi-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--border);
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .testi-dot.active { background: var(--green); width: 20px; border-radius: 4px; }
 
-      /* Livraison — cards empilées */
-      .delivery-mode-card { padding: 22px 18px; }
-      .delivery-mode-icon { font-size: 36px; margin-bottom: 10px; }
+      /* Livraison — 2 cards côte à côte sur mobile */
+      .delivery-mode-card { padding: 16px 12px; border-radius: 14px; }
+      .delivery-mode-icon { font-size: 28px; margin-bottom: 8px; }
+      .delivery-mode-title { font-size: 15px; margin-bottom: 4px; }
+      .delivery-mode-delay { font-size: 12px; margin-bottom: 10px; }
+      .delivery-mode-points li { font-size: 11px; gap: 4px; }
+      .delivery-mode-tag { font-size: 9px; padding: 3px 7px; margin-bottom: 8px; }
 
       /* FAQ — padding réduit */
       .faq-question { padding: 14px 16px; font-size: 14px; }
@@ -1558,7 +1615,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
         <p class="section-sub" style="margin:0 auto;">Des vraies personnes, de vraies commandes, de vrais retours.</p>
       </div>
 
-      <div class="testi-grid">
+      <div class="testi-grid" id="testi-grid">
 
         <!-- Témoignage 1 -->
         <div class="testi-card">
@@ -1624,6 +1681,18 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
         </div>
 
       </div>
+
+      <!-- Navigation carousel (mobile uniquement) -->
+      <div class="testi-nav">
+        <button class="testi-nav-btn" id="testi-prev" aria-label="Précédent">&#8592;</button>
+        <div class="testi-dots">
+          <span class="testi-dot active" data-idx="0"></span>
+          <span class="testi-dot" data-idx="1"></span>
+          <span class="testi-dot" data-idx="2"></span>
+        </div>
+        <button class="testi-nav-btn" id="testi-next" aria-label="Suivant">&#8594;</button>
+      </div>
+
     </div>
   </section>
 
@@ -1851,6 +1920,35 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
 
   <!-- ░░ SCRIPTS ░░ -->
   <script>
+    // ── Testimonials carousel (mobile) ──
+    (function() {
+      const grid = document.getElementById('testi-grid') as HTMLElement;
+      const prevBtn = document.getElementById('testi-prev');
+      const nextBtn = document.getElementById('testi-next');
+      const dots = document.querySelectorAll('.testi-dot');
+      if (!grid || !prevBtn || !nextBtn) return;
+
+      let current = 0;
+      const total = grid.children.length;
+
+      function goTo(idx: number) {
+        current = ((idx % total) + total) % total;
+        grid.scrollTo({ left: current * grid.offsetWidth, behavior: 'smooth' });
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+      }
+
+      prevBtn.addEventListener('click', () => goTo(current - 1));
+      nextBtn.addEventListener('click', () => goTo(current + 1));
+      dots.forEach((d) => d.addEventListener('click', () => goTo(parseInt((d as HTMLElement).dataset.idx || '0'))));
+
+      // Update dot on manual swipe
+      grid.addEventListener('scrollend', () => {
+        const idx = Math.round(grid.scrollLeft / grid.offsetWidth);
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        current = idx;
+      }, { passive: true });
+    })();
+
     // FAQ accordion
     document.querySelectorAll('.faq-question').forEach((btn) => {
       btn.addEventListener('click', () => {

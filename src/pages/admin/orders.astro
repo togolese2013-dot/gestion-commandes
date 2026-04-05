@@ -30,7 +30,7 @@ const statusColor: Record<string, string> = {
         <h1 class="text-2xl font-bold text-gray-900">Commandes</h1>
         <p class="text-sm text-gray-500 mt-0.5">{orders.length} commande{orders.length !== 1 ? 's' : ''} au total</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 ml-auto">
         <a
           href="/api/orders/export?format=xlsx"
           class="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-2.5 rounded-lg transition-colors shadow-sm"
@@ -85,24 +85,6 @@ const statusColor: Record<string, string> = {
       </div>
     </div>
 
-    <!-- Status Filters -->
-    <div class="flex gap-2 flex-wrap">
-      {[
-        { key: 'all', label: `Toutes`, count: orders.length },
-        { key: 'en_attente', label: 'En attente', count: orders.filter(o => o.status === 'en_attente').length },
-        { key: 'disponible', label: 'Disponible', count: orders.filter(o => o.status === 'disponible').length },
-        { key: 'recupere', label: 'Récupéré', count: orders.filter(o => o.status === 'recupere').length },
-      ].map(f => (
-        <button
-          class={`filter-btn px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${f.key === 'all' ? 'active' : ''}`}
-          data-filter={f.key}
-        >
-          {f.label}
-          <span class="ml-1.5 bg-black/10 px-1.5 py-0.5 rounded-full text-xs">{f.count}</span>
-        </button>
-      ))}
-    </div>
-
     <!-- Search -->
     <div class="relative">
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,6 +98,44 @@ const statusColor: Record<string, string> = {
       />
     </div>
     <p id="search-count" class="text-xs text-gray-400 -mt-4 hidden"></p>
+
+    <!-- Status Filters — icônes (mobile) -->
+    <div class="flex md:hidden gap-2">
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0 active" data-filter="all" title="Toutes">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h7"/></svg>
+        <span class="text-xs font-bold">{orders.length}</span>
+      </button>
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="en_attente" title="En attente">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{orders.filter(o => o.status === 'en_attente').length}</span>
+      </button>
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="disponible" title="Disponible">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="text-xs font-bold">{orders.filter(o => o.status === 'disponible').length}</span>
+      </button>
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="recupere" title="Récupéré">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+        <span class="text-xs font-bold">{orders.filter(o => o.status === 'recupere').length}</span>
+      </button>
+    </div>
+
+    <!-- Status Filters — texte (tablette/desktop) -->
+    <div class="hidden md:flex gap-2 flex-wrap">
+      {[
+        { key: 'all',        label: 'Toutes',     count: orders.length },
+        { key: 'en_attente', label: 'En attente', count: orders.filter(o => o.status === 'en_attente').length },
+        { key: 'disponible', label: 'Disponible', count: orders.filter(o => o.status === 'disponible').length },
+        { key: 'recupere',   label: 'Récupéré',   count: orders.filter(o => o.status === 'recupere').length },
+      ].map(f => (
+        <button
+          class={`filter-btn px-4 py-1.5 rounded-full text-sm font-medium border transition-all whitespace-nowrap shrink-0 ${f.key === 'all' ? 'active' : ''}`}
+          data-filter={f.key}
+        >
+          {f.label}
+          <span class="ml-1.5 bg-black/10 px-1.5 py-0.5 rounded-full text-xs">{f.count}</span>
+        </button>
+      ))}
+    </div>
 
     {orders.length === 0 ? (
       <div class="text-center py-20 bg-white rounded-2xl border border-gray-200">
@@ -351,7 +371,7 @@ const statusColor: Record<string, string> = {
   </div>
 
   <!-- View Modal -->
-  <div id="view-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div id="view-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
         <h2 class="text-base font-bold text-gray-900">Détail commande</h2>
@@ -366,7 +386,7 @@ const statusColor: Record<string, string> = {
   </div>
 
   <!-- Edit Modal -->
-  <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
         <h2 class="text-base font-bold text-gray-900">Modifier la commande</h2>
@@ -465,7 +485,7 @@ const statusColor: Record<string, string> = {
   </div>
 
   <!-- Payment Modal -->
-  <div id="payment-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div id="payment-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <h2 class="text-base font-bold text-gray-900">💰 Enregistrer un paiement</h2>
@@ -528,7 +548,7 @@ const statusColor: Record<string, string> = {
   </div>
 
   <!-- Notify Available Modal -->
-  <div id="notify-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div id="notify-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <div>
@@ -555,7 +575,7 @@ const statusColor: Record<string, string> = {
   </div>
 
   <!-- Reminder Modal -->
-  <div id="remind-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div id="remind-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <div>
@@ -582,7 +602,7 @@ const statusColor: Record<string, string> = {
   </div>
 
   <!-- Confirm Action Modal -->
-  <div id="confirm-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div id="confirm-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <div id="confirm-icon-wrap" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"></div>
       <h2 id="confirm-title" class="text-base font-bold text-gray-900 text-center mb-2"></h2>

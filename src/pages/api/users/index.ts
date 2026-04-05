@@ -17,7 +17,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
   try {
     const body = await request.json();
-    const { username, password, full_name } = body;
+    const { username, password, full_name, email, phone, birthdate } = body;
     if (!username?.trim() || !password?.trim() || !full_name?.trim()) {
       return new Response(JSON.stringify({ error: 'Tous les champs sont requis' }), { status: 400 });
     }
@@ -26,8 +26,9 @@ export const POST: APIRoute = async ({ request }) => {
     if (existing) {
       return new Response(JSON.stringify({ error: 'Ce nom d\'utilisateur existe déjà' }), { status: 409 });
     }
-    db.prepare('INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)').run(
-      username.trim(), password.trim(), full_name.trim(), 'admin'
+    db.prepare('INSERT INTO users (username, password, full_name, role, email, phone, birthdate) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      username.trim(), password.trim(), full_name.trim(), 'admin',
+      email?.trim() ?? '', phone?.trim() ?? '', birthdate ?? ''
     );
     return new Response(JSON.stringify({ success: true }), { status: 201 });
   } catch (err) {

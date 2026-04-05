@@ -11,25 +11,33 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
   }
   const currentUser = getCurrentUser(request);
-  // Users can only edit themselves (unless they are admin role)
   if (currentUser?.id !== id && currentUser?.role !== 'admin') {
     return new Response(JSON.stringify({ error: 'Non autorisé' }), { status: 403 });
   }
   const body = await request.json();
-  const full_name = body.full_name?.trim();
-  const password = body.password?.trim();
+  const full_name = body.full_name?.trim() || null;
+  const password  = body.password?.trim()  || null;
+  const email     = body.email     !== undefined ? String(body.email).trim()     : null;
+  const phone     = body.phone     !== undefined ? String(body.phone).trim()     : null;
+  const birthdate = body.birthdate !== undefined ? String(body.birthdate).trim() : null;
+  const avatar    = body.avatar    !== undefined ? String(body.avatar)           : null;
 
-  if (!full_name && !password) {
+  const db = getDb();
+  // Build dynamic SET clause
+  const sets: string[] = [];
+  const vals: any[]    = [];
+  if (full_name !== null) { sets.push('full_name = ?'); vals.push(full_name); }
+  if (password  !== null) { sets.push('password = ?');  vals.push(password); }
+  if (email     !== null) { sets.push('email = ?');     vals.push(email); }
+  if (phone     !== null) { sets.push('phone = ?');     vals.push(phone); }
+  if (birthdate !== null) { sets.push('birthdate = ?'); vals.push(birthdate); }
+  if (avatar    !== null) { sets.push('avatar = ?');    vals.push(avatar); }
+
+  if (sets.length === 0) {
     return new Response(JSON.stringify({ error: 'Aucune modification fournie' }), { status: 400 });
   }
-  const db = getDb();
-  if (full_name && password) {
-    db.prepare('UPDATE users SET full_name = ?, password = ? WHERE id = ?').run(full_name, password, id);
-  } else if (full_name) {
-    db.prepare('UPDATE users SET full_name = ? WHERE id = ?').run(full_name, id);
-  } else {
-    db.prepare('UPDATE users SET password = ? WHERE id = ?').run(password, id);
-  }
+  vals.push(id);
+  db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).run(...vals);
   return new Response(JSON.stringify({ success: true }));
 };
 
@@ -41,7 +49,6 @@ export const DELETE: APIRoute = async ({ request, params }) => {
   if (!id || isNaN(id)) {
     return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
   }
-  // Prevent deleting yourself
   const currentUser = getCurrentUser(request);
   if (currentUser?.id === id) {
     return new Response(JSON.stringify({ error: 'Impossible de supprimer votre propre compte' }), { status: 400 });
