@@ -10,11 +10,13 @@ let success = '';
 let successType = '';
 
 if (!token) {
-  error = 'Token invalide';
+  error = 'Lien invalide';
 } else {
-  devis = getDevisByToken(token);
+  // Support both devis_number (DEV-2026-001) and legacy access_token
+  const { getDevisByNumber } = await import('../../../lib/devis');
+  devis = getDevisByNumber(token) ?? getDevisByToken(token);
   if (!devis) {
-    error = 'Devis introuvable';
+    error = 'Devis introuvable ou lien invalide';
   }
 }
 
