@@ -1,5 +1,5 @@
 ---
-import { getDevisByToken, updateDevisStatus } from '../../../lib/devis';
+import { getDevisByToken, updateDevisStatus, saveClientCounterProposal } from '../../../lib/devis';
 import type { Devis } from '../../../lib/devis';
 
 const { token } = Astro.params;
@@ -37,6 +37,18 @@ if (Astro.request.method === 'POST') {
         devis = updated;
         success = "Votre retour a bien été enregistré. Nous vous recontacterons pour explorer d'autres options.";
         successType = 'reject';
+      }
+    } else if (action === 'counterpropose') {
+      const message = formData.get('counter_message') as string;
+      const priceStr = formData.get('counter_price') as string;
+      const counterPrice = priceStr ? parseFloat(priceStr) : null;
+      if (message?.trim()) {
+        const updated = saveClientCounterProposal(devis.id!, message.trim(), counterPrice);
+        if (updated) {
+          devis = updated;
+          success = 'Votre message a bien été envoyé. Notre équipe vous répondra très prochainement.';
+          successType = 'counter';
+        }
       }
     }
   }
@@ -326,6 +338,58 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       transition: all 0.15s;
     }
     .btn-reject:hover { background: #f3f4f6; color: #374151; }
+
+    /* Payment button */
+    .btn-payment {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff; border: none; border-radius: 50px;
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      text-decoration: none; margin-bottom: 10px;
+      box-shadow: 0 4px 16px rgba(245,158,11,0.3);
+      transition: all 0.2s;
+    }
+    .btn-payment:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Counter-proposal card */
+    .counter-card {
+      background: #fff; border-radius: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 12px 40px rgba(4,120,87,0.08);
+      padding: 24px; margin-bottom: 16px;
+    }
+    .counter-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .counter-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+    .counter-field { margin-bottom: 12px; }
+    .counter-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .counter-textarea {
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--border-color);
+      border-radius: 12px; font-family: inherit; font-size: 14px; color: var(--text);
+      resize: vertical; min-height: 90px; outline: none; transition: border-color 0.15s;
+    }
+    .counter-textarea:focus { border-color: var(--green); }
+    .counter-price-row { display: flex; gap: 10px; align-items: center; }
+    .counter-input {
+      flex: 1; padding: 11px 14px; border: 1.5px solid var(--border-color);
+      border-radius: 12px; font-family: inherit; font-size: 14px; color: var(--text);
+      outline: none; transition: border-color 0.15s;
+    }
+    .counter-input:focus { border-color: var(--green); }
+    .counter-unit { font-size: 13px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+    .btn-counter {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 13px; margin-top: 4px;
+      background: var(--green-light); color: var(--green-dark);
+      border: 1.5px solid var(--green-border); border-radius: 50px;
+      font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-counter:hover { background: var(--green-mid); }
+    .counter-sent {
+      display: flex; align-items: center; gap: 8px; padding: 14px 16px;
+      background: var(--green-light); border: 1px solid var(--green-border);
+      border-radius: 12px; font-size: 13px; color: var(--green-dark); font-weight: 600;
+    }
 
     /* Error page */
     .error-page {
@@ -624,6 +688,17 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
           </div>
         </div>
 
+        <!-- Payment button (accepté + lien disponible) -->
+        {devis.devis_status === 'accepte' && devis.payment_link && (
+          <div class="cta-card">
+            <div class="cta-title">💳 Payer l'acompte</div>
+            <div class="cta-sub">Réglez l'acompte de <strong>{fmt(devis.acompte_amount)} FCFA</strong> pour lancer votre commande.</div>
+            <a href={devis.payment_link} target="_blank" rel="noopener noreferrer" class="btn-payment">
+              💸 &nbsp;Payer via Wave / Moov Money
+            </a>
+          </div>
+        )}
+
         <!-- CTA card -->
         {devis.devis_status === 'en_attente' && (
           <div class="cta-card">
@@ -635,6 +710,36 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
               </button>
             </form>
             <button id="btn-reject" class="btn-reject">Décliner la proposition</button>
+          </div>
+        )}
+
+        <!-- Counter-proposal card -->
+        {devis.devis_status === 'en_attente' && (
+          <div class="counter-card">
+            <div class="counter-title">💬 Une question ou une contre-proposition ?</div>
+            <div class="counter-sub">Vous pouvez nous envoyer un message ou proposer un autre prix. Notre équipe vous répondra rapidement.</div>
+            {devis.client_message ? (
+              <div class="counter-sent">
+                ✅ &nbsp;Message envoyé — notre équipe revient vers vous très prochainement.
+              </div>
+            ) : (
+              <form method="POST">
+                <div class="counter-field">
+                  <label class="counter-label" for="counter_message">Votre message</label>
+                  <textarea id="counter_message" name="counter_message" class="counter-textarea" placeholder="Ex : Le prix est un peu élevé, pouvez-vous faire mieux ? Ou : Quel est le délai exact ?" required></textarea>
+                </div>
+                <div class="counter-field">
+                  <label class="counter-label" for="counter_price">Votre budget (optionnel)</label>
+                  <div class="counter-price-row">
+                    <input id="counter_price" name="counter_price" type="number" min="0" class="counter-input" placeholder="Ex : 450 000" />
+                    <span class="counter-unit">FCFA</span>
+                  </div>
+                </div>
+                <button type="submit" name="action" value="counterpropose" class="btn-counter">
+                  📨 &nbsp;Envoyer mon message
+                </button>
+              </form>
+            )}
           </div>
         )}
       </>

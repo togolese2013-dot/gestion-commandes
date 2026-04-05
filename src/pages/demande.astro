@@ -450,7 +450,39 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
     }
     .devis-badge-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
     .devis-badge-number { font-size: 28px; font-weight: 900; color: #047857; letter-spacing: 2px; }
-    .devis-info { font-size: 13px; color: #6b7280; margin-bottom: 28px; line-height: 1.6; }
+    .devis-info { font-size: 13px; color: #6b7280; margin-bottom: 24px; line-height: 1.6; }
+    .success-steps {
+      display: flex; flex-direction: column; gap: 0;
+      text-align: left; margin-bottom: 24px;
+      border: 1px solid #d1fae5; border-radius: 14px; overflow: hidden;
+    }
+    .success-step {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 16px; background: #f9fffe;
+      border-bottom: 1px solid #ecfdf5; font-size: 13px; color: #374151;
+    }
+    .success-step:last-child { border-bottom: none; }
+    .success-step-icon {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 13px;
+    }
+    .step-done { background: #d1fae5; }
+    .step-active { background: #fef3c7; }
+    .step-pending { background: #f3f4f6; }
+    .success-step-text { flex: 1; font-weight: 500; }
+    .success-step-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 2px 7px; border-radius: 20px;
+    }
+    .badge-done { background: #d1fae5; color: #047857; }
+    .badge-active { background: #fef3c7; color: #92400e; }
+    .badge-pending { background: #f3f4f6; color: #9ca3af; }
+    .success-wa {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 20px; background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 12px; font-size: 13px; color: #15803d; font-weight: 600;
+      margin-bottom: 20px;
+    }
     .btn-new-request {
       display: inline-flex;
       align-items: center;
@@ -635,9 +667,25 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
         <div class="devis-badge-label">Numéro de devis</div>
         <div class="devis-badge-number" id="devis-number">—</div>
       </div>
-      <div class="devis-info">
-        Conservez ce numéro pour suivre votre demande.<br>
-        Notre équipe vous contactera dans les plus brefs délais.
+      <div class="success-steps">
+        <div class="success-step">
+          <div class="success-step-icon step-done">✅</div>
+          <span class="success-step-text">Demande reçue</span>
+          <span class="success-step-badge badge-done">Fait</span>
+        </div>
+        <div class="success-step">
+          <div class="success-step-icon step-active">⏳</div>
+          <span class="success-step-text">Devis en cours de préparation</span>
+          <span class="success-step-badge badge-active">En cours</span>
+        </div>
+        <div class="success-step">
+          <div class="success-step-icon step-pending">📱</div>
+          <span class="success-step-text">Vous recevez votre devis par WhatsApp</span>
+          <span class="success-step-badge badge-pending">Sous 24h</span>
+        </div>
+      </div>
+      <div class="success-wa">
+        💬 &nbsp;Réponse garantie sous 24h · +228 90 22 64 91
       </div>
       <button type="button" class="btn-new-request" id="btn-new-request">
         + Nouvelle demande
