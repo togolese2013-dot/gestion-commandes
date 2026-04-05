@@ -12,22 +12,19 @@ const allDevis = getAllDevis();
 const templates = getAllTemplates();
 
 // Map inquiry_id (as string) → devis info for client-side use
-const devisMap: Record<string, { status: string; token: string; id: number; number: string; payment_link: string; client_message: string | null; client_counter_price: number | null }> = {};
+const devisMap: Record<string, { status: string; token: string; id: number; number: string }> = {};
 allDevis.forEach(d => {
   devisMap[String(d.inquiry_id)] = {
     status: d.devis_status,
     token: d.access_token || '',
     id: d.id!,
     number: d.devis_number,
-    payment_link: d.payment_link || '',
-    client_message: d.client_message ?? null,
-    client_counter_price: d.client_counter_price ?? null,
   };
 });
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   'en_attente': { label: 'En attente', color: 'yellow' },
-  'acceptee':   { label: 'Acceptée',   color: 'green' },
+  'acceptee':   { label: 'Devis envoyé', color: 'blue' },
   'refusee':    { label: 'Refusée',    color: 'red' },
   'annulee':    { label: 'Annulée',    color: 'gray' },
   'convertie':  { label: 'Convertie',  color: 'blue' },
@@ -82,7 +79,7 @@ function getDevisNumber(id: number): string {
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span class="text-xs font-bold">{inquiries.filter(i => (i.status || 'en_attente') === 'en_attente').length}</span>
       </button>
-      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="acceptee" title="Acceptée" style="background:white;color:#6b7280;border-color:#e5e7eb;">
+      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="acceptee" title="Devis envoyé" style="background:white;color:#6b7280;border-color:#e5e7eb;">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'acceptee').length}</span>
       </button>
@@ -101,7 +98,7 @@ function getDevisNumber(id: number): string {
       {[
         { key: 'toutes',     label: 'Toutes',     count: inquiries.length },
         { key: 'en_attente', label: 'En attente', count: inquiries.filter(i => (i.status || 'en_attente') === 'en_attente').length },
-        { key: 'acceptee',   label: 'Acceptée',   count: inquiries.filter(i => i.status === 'acceptee').length },
+        { key: 'acceptee',   label: 'Devis envoyé', count: inquiries.filter(i => i.status === 'acceptee').length },
         { key: 'refusee',    label: 'Refusée',    count: inquiries.filter(i => i.status === 'refusee').length },
         { key: 'annulee',    label: 'Annulée',    count: inquiries.filter(i => i.status === 'annulee').length },
       ].map(({ key, label, count }) => (
@@ -426,15 +423,6 @@ function getDevisNumber(id: number): string {
             </svg>
             <p id="dso-link" class="text-xs text-blue-600 font-mono break-all flex-1 leading-relaxed"></p>
           </div>
-        </div>
-        <!-- Payment link field -->
-        <div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Lien de paiement Wave/Moov (optionnel)</p>
-          <div class="flex gap-2">
-            <input id="dso-payment-link" type="url" placeholder="https://pay.wave.com/..." class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-400 font-mono"/>
-            <button id="dso-save-link" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors whitespace-nowrap">Enregistrer</button>
-          </div>
-          <p id="dso-link-saved" class="hidden text-xs text-emerald-600 font-semibold mt-1">✓ Lien enregistré</p>
         </div>
         <div class="flex gap-2.5 pt-1">
           <button id="dso-copy" class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors">
@@ -890,16 +878,6 @@ function getDevisNumber(id: number): string {
             </div>
             ${globalPhotosHtml}
             ${inquiry.notes ? `<div class="bg-blue-50 rounded-xl p-3"><p class="text-xs font-bold text-blue-400 uppercase">Notes</p><p class="text-sm text-blue-900 mt-1">${inquiry.notes}</p></div>` : ''}
-            ${(() => {
-              const dev = devisMap[String(inquiry.id)];
-              if (!dev || !dev.client_message) return '';
-              const price = dev.client_counter_price ? ` · Contre-offre : <strong>${Number(dev.client_counter_price).toLocaleString('fr-FR')} FCFA</strong>` : '';
-              return `<div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <p class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2">💬 Message du client</p>
-                <p class="text-sm text-gray-800">${dev.client_message}</p>
-                ${dev.client_counter_price ? `<p class="text-sm font-bold text-amber-700 mt-2">Contre-proposition : ${Number(dev.client_counter_price).toLocaleString('fr-FR')} FCFA</p>` : ''}
-              </div>`;
-            })()}
           </div>
         `;
 
@@ -1344,7 +1322,7 @@ function getDevisNumber(id: number): string {
           if (select) {
             select.value = 'acceptee';
             select.className = select.className.replace(/bg-\w+-100|text-\w+-800/g, '');
-            select.classList.add('bg-green-100', 'text-green-800');
+            select.classList.add('bg-blue-100', 'text-blue-800');
           }
 
           // Use devis_number in the link (e.g. /devis/c/DEV-2026-001) — cleaner than the hex token
@@ -1355,11 +1333,8 @@ function getDevisNumber(id: number): string {
           navigator.clipboard.writeText(devisLink).catch(() => {});
 
           // Show professional success modal
-          _currentDevisId = data.devis_id || null;
           document.getElementById('dso-num').textContent = data.devis_number;
           document.getElementById('dso-link').textContent = devisLink;
-          document.getElementById('dso-payment-link').value = '';
-          document.getElementById('dso-link-saved').classList.add('hidden');
           document.getElementById('devis-success-overlay').classList.remove('hidden');
 
           // Change confirm button → pencil (modifier)
@@ -1372,9 +1347,9 @@ function getDevisNumber(id: number): string {
 
           // Update row/card status badge
           document.querySelectorAll(`tr[data-id="${inquiry.id}"] .status-badge, .inquiry-card[data-id="${inquiry.id}"] .status-badge`).forEach(badge => {
-            badge.textContent = 'Acceptée';
+            badge.textContent = 'Devis envoyé';
             badge.className = badge.className.replace(/bg-\w+-100|text-\w+-800/g, '');
-            badge.classList.add('bg-green-100', 'text-green-800');
+            badge.classList.add('bg-blue-100', 'text-blue-800');
           });
         } else {
           const error = await res.json();
@@ -1390,7 +1365,6 @@ function getDevisNumber(id: number): string {
     const dsoOverlay = document.getElementById('devis-success-overlay');
     const dsoCopy = document.getElementById('dso-copy');
     const dsoClose = document.getElementById('dso-close');
-    let _currentDevisId = null;
 
     dsoCopy?.addEventListener('click', () => {
       const link = document.getElementById('dso-link').textContent;
@@ -1404,22 +1378,6 @@ function getDevisNumber(id: number): string {
     dsoClose?.addEventListener('click', () => dsoOverlay?.classList.add('hidden'));
     dsoOverlay?.addEventListener('click', e => {
       if (e.target === dsoOverlay) dsoOverlay.classList.add('hidden');
-    });
-
-    document.getElementById('dso-save-link')?.addEventListener('click', async () => {
-      if (!_currentDevisId) return;
-      const link = document.getElementById('dso-payment-link').value.trim();
-      try {
-        const res = await fetch(`/api/devis/${_currentDevisId}/payment-link`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment_link: link }),
-        });
-        if (res.ok) {
-          document.getElementById('dso-link-saved').classList.remove('hidden');
-          setTimeout(() => document.getElementById('dso-link-saved')?.classList.add('hidden'), 3000);
-        }
-      } catch {}
     });
 
     // ── Convert devis → commande ───────────────────────────────
