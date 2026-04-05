@@ -47,6 +47,10 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
     }
 
     html { scroll-behavior: smooth; overflow-x: hidden; }
+    body { overflow-x: hidden; max-width: 100%; }
+    /* Prevent iOS Safari zoom on input focus (triggers when font-size < 16px) */
+    input:not([type=checkbox]):not([type=radio]),
+    textarea, select { font-size: max(16px, 1em); }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
@@ -1073,7 +1077,8 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
     @media (max-width: 540px) {
       .footer-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
       .footer-grid > div:first-child { grid-column: 1 / -1; }
-      .footer-map { grid-column: 1 / -1; }
+      .footer-map { grid-column: 1 / -1; max-width: 260px; margin-left: 0; }
+      .footer-map iframe { height: 130px; }
     }
     .footer-map-title {
       font-size: 12px;
@@ -1255,9 +1260,6 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       /* Origins — cacher les stats chiffres sur mobile (garder texte) */
       .origins-numbers { display: none; }
       .origins-title { font-size: 24px; }
-      .origins-flags { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-      .origin-pill { justify-content: center; font-size: 12px; padding: 8px 10px; }
-
       /* Témoignages — carousel */
       .testi-grid {
         display: flex !important;
@@ -1581,7 +1583,6 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
             <div class="origin-pill">🇨🇳 Chine</div>
             <div class="origin-pill">🇦🇪 Dubaï</div>
             <div class="origin-pill">🇹🇷 Turquie</div>
-            <div class="origin-pill">🇬🇧 Royaume-Uni</div>
           </div>
         </div>
         <div class="origins-numbers">
