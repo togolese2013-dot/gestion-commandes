@@ -121,7 +121,8 @@ function getDevisNumber(id: number): string {
         </div>
       ) : inquiries.map((inquiry) => {
         const status = inquiry.status || 'en_attente';
-        const { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
+        let { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
+        if (devisMap[String(inquiry.id)]?.status === 'accepte') { label = 'Acceptée'; color = 'green'; }
         return (
           <div class="inquiry-card bg-white rounded-2xl border border-gray-200 shadow-sm p-4" data-status={status} data-id={inquiry.id}>
             <!-- Top row: n° devis + statut -->
@@ -200,7 +201,8 @@ function getDevisNumber(id: number): string {
             ) : (
               inquiries.map((inquiry) => {
                 const status = inquiry.status || 'en_attente';
-                const { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
+                let { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
+                if (devisMap[String(inquiry.id)]?.status === 'accepte') { label = 'Acceptée'; color = 'green'; }
                 const products = inquiry.products || [];
                 return (
                   <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-id={inquiry.id} data-status={status}>
@@ -934,13 +936,36 @@ function getDevisNumber(id: number): string {
       return products.reduce((sum, p) => sum + (parseFloat(p._price || 0) * parseInt(p._qty || p.quantity || 1)), 0);
     }
 
-    function openConfirmModal(inquiry) {
-      const products = (inquiry.products || []).map(p => ({
-        ...p,
-        _price: 0,
-        _qty: p.quantity || 1,
-      }));
-      inquiry._editProducts = products;
+    async function openConfirmModal(inquiry) {
+      const devisInfo = devisMap[String(inquiry.id)];
+      if (devisInfo) {
+        try {
+          const res = await fetch(`/api/devis/${devisInfo.id}`);
+          const devisData = await res.json();
+          inquiry._editProducts = (devisData.products_summary || []).map(p => ({
+            name: p.name,
+            state: p.state || '',
+            quantity: p.quantity || 1,
+            _price: p.price || 0,
+            _qty: p.quantity || 1,
+            photos: p.photos || [],
+          }));
+          inquiry._prefillDelivery = devisData.delivery_type || inquiry.delivery_type || 'avion';
+          inquiry._prefillNote = inquiry.notes || '';
+        } catch (e) {
+          inquiry._editProducts = (inquiry.products || []).map(p => ({
+            ...p, _price: p.price || 0, _qty: p.quantity || 1,
+          }));
+          inquiry._prefillDelivery = inquiry.delivery_type || 'avion';
+          inquiry._prefillNote = inquiry.notes || '';
+        }
+      } else {
+        inquiry._editProducts = (inquiry.products || []).map(p => ({
+          ...p, _price: 0, _qty: p.quantity || 1,
+        }));
+        inquiry._prefillDelivery = inquiry.delivery_type || 'avion';
+        inquiry._prefillNote = '';
+      }
 
       if (ACTIVE_MODAL === 'a') openModalA(inquiry);
       else if (ACTIVE_MODAL === 'b') openModalB(inquiry);
@@ -948,10 +973,10 @@ function getDevisNumber(id: number): string {
     }
 
     document.querySelectorAll('.confirm-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
         const inquiry = inquiries.find(i => i.id == id);
-        if (inquiry) openConfirmModal(inquiry);
+        if (inquiry) await openConfirmModal(inquiry);
       });
     });
 
@@ -968,7 +993,7 @@ function getDevisNumber(id: number): string {
       document.getElementById('cma-devis-num').textContent = getDevisNum(inquiry.id);
       document.getElementById('cma-client').textContent = inquiry.client_name;
       document.getElementById('cma-phone').textContent = inquiry.client_phone;
-      document.getElementById('cma-delivery').value = inquiry.delivery_type || 'avion';
+      document.getElementById('cma-delivery').value = inquiry._prefillDelivery || inquiry.delivery_type || 'avion';
 
       const container = document.getElementById('cma-products-container');
       container.innerHTML = '';
@@ -1003,7 +1028,7 @@ function getDevisNumber(id: number): string {
           </div>
           <div>
             <p class="text-xs font-bold text-gray-500 uppercase mb-1">Prix unit. (FCFA)</p>
-            <input type="number" min="0" value="0" placeholder="0" class="w-full text-right border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-medium focus:outline-none focus:border-emerald-400 cma-price" data-idx="${i}"/>
+            <input type="number" min="0" value="${p._price || 0}" placeholder="0" class="w-full text-right border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-medium focus:outline-none focus:border-emerald-400 cma-price" data-idx="${i}"/>
           </div>
         `;
         card.appendChild(qtyPriceDiv);
@@ -1113,6 +1138,7 @@ function getDevisNumber(id: number): string {
         if (!tpl) return;
         // Update delivery type
         document.getElementById('cma-delivery').value = tpl.delivery_type;
+        inquiry._prefillDelivery = tpl.delivery_type;
         // Replace products
         inquiry._editProducts = (tpl.products_summary || []).map(p => ({
           ...p,
@@ -1125,6 +1151,7 @@ function getDevisNumber(id: number): string {
         tplSelect.value = '';
       };
 
+      document.getElementById('cma-note').value = inquiry._prefillNote || '';
       document.getElementById('cma-send').onclick = () => sendConfirm(inquiry, 'a');
       document.getElementById('confirm-modal-a').classList.remove('hidden');
     }
