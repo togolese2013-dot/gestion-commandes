@@ -56,7 +56,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://app.togolese.fr/api/orders/by-phone?phone={{ encodeURIComponent($json.phoneFrom) }}",
+        "url": "=https://togolese.fr/api/orders/by-phone?phone={{ encodeURIComponent($json.phoneFrom) }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
