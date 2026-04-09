@@ -1087,7 +1087,18 @@ function getDevisNumber(id: number): string {
             thumb.innerHTML = `<span class="text-xs text-gray-400">⏳</span>`;
             photoGrid.appendChild(thumb);
 
-            // Upload immediately
+            // Preview local immediately via FileReader
+            const reader = new FileReader();
+            reader.onload = e => {
+              const img = document.createElement('img');
+              img.src = e.target.result;
+              img.className = 'w-full h-full object-cover';
+              thumb.innerHTML = '';
+              thumb.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+
+            // Upload in background
             const fd = new FormData();
             fd.append('file', file);
             try {
@@ -1096,13 +1107,16 @@ function getDevisNumber(id: number): string {
               if (data.url) {
                 p.photos = p.photos || [];
                 p.photos.push(data.url);
-                thumb.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover"/>
-                  <button type="button" class="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 text-white rounded text-[11px] flex items-center justify-center font-bold cma-rm-photo hover:bg-black/90">✕</button>`;
-                thumb.querySelector('.cma-rm-photo').addEventListener('click', (ev) => {
+                const rmBtn = document.createElement('button');
+                rmBtn.type = 'button';
+                rmBtn.className = 'absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 text-white rounded text-[11px] flex items-center justify-center font-bold cma-rm-photo hover:bg-black/90';
+                rmBtn.textContent = '✕';
+                rmBtn.addEventListener('click', (ev) => {
                   ev.preventDefault();
                   p.photos = p.photos.filter(u => u !== data.url);
                   thumb.remove();
                 });
+                thumb.appendChild(rmBtn);
               } else {
                 thumb.remove();
               }
