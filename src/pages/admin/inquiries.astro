@@ -944,9 +944,9 @@ function getDevisNumber(id: number): string {
           const devisData = await res.json();
           inquiry._editProducts = (devisData.products_summary || []).map(p => ({
             name: p.name,
-            state: p.state || '',
+            state: p.state || p.condition || '',
             quantity: p.quantity || 1,
-            _price: p.price || 0,
+            _price: p.price || p.budget || 0,
             _qty: p.quantity || 1,
             photos: [],
           }));
@@ -1075,27 +1075,41 @@ function getDevisNumber(id: number): string {
         // Wire up file input
         const fileInput = card.querySelector('.cma-file-input');
         const photoGrid = card.querySelector('.cma-photo-grid');
-        fileInput.addEventListener('change', () => {
-          Array.from(fileInput.files).forEach(file => {
-            if (!file.type.startsWith('image/')) return;
-            p._newPhotos.push(file);
-            const reader = new FileReader();
-            reader.onload = e => {
-              const thumb = document.createElement('div');
-              thumb.className = 'relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 flex-shrink-0 bg-gray-100';
-              const fileRef = file;
-              thumb.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover"/>
-                <button type="button" class="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 text-white rounded text-[11px] flex items-center justify-center font-bold cma-rm-photo hover:bg-black/90">✕</button>`;
-              thumb.querySelector('.cma-rm-photo').addEventListener('click', (ev) => {
-                ev.preventDefault();
-                p._newPhotos = p._newPhotos.filter(f => f !== fileRef);
-                thumb.remove();
-              });
-              photoGrid.appendChild(thumb);
-            };
-            reader.readAsDataURL(file);
-          });
+        fileInput.addEventListener('change', async () => {
+          const files = Array.from(fileInput.files);
           fileInput.value = '';
+          for (const file of files) {
+            if (!file.type.startsWith('image/')) continue;
+
+            // Show loading placeholder
+            const thumb = document.createElement('div');
+            thumb.className = 'relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 flex-shrink-0 bg-gray-100 flex items-center justify-center';
+            thumb.innerHTML = `<span class="text-xs text-gray-400">⏳</span>`;
+            photoGrid.appendChild(thumb);
+
+            // Upload immediately
+            const fd = new FormData();
+            fd.append('file', file);
+            try {
+              const res = await fetch('/api/upload', { method: 'POST', body: fd });
+              const data = await res.json();
+              if (data.url) {
+                p.photos = p.photos || [];
+                p.photos.push(data.url);
+                thumb.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover"/>
+                  <button type="button" class="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 text-white rounded text-[11px] flex items-center justify-center font-bold cma-rm-photo hover:bg-black/90">✕</button>`;
+                thumb.querySelector('.cma-rm-photo').addEventListener('click', (ev) => {
+                  ev.preventDefault();
+                  p.photos = p.photos.filter(u => u !== data.url);
+                  thumb.remove();
+                });
+              } else {
+                thumb.remove();
+              }
+            } catch (err) {
+              thumb.remove();
+            }
+          }
         });
       });
 
