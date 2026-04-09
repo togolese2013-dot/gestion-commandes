@@ -1075,54 +1075,58 @@ function getDevisNumber(id: number): string {
         // Wire up file input
         const fileInput = card.querySelector('.cma-file-input');
         const photoGrid = card.querySelector('.cma-photo-grid');
-        fileInput.addEventListener('change', async () => {
+        fileInput.addEventListener('change', () => {
           const files = Array.from(fileInput.files);
           fileInput.value = '';
           for (const file of files) {
             if (!file.type.startsWith('image/')) continue;
 
-            // Show loading placeholder
-            const thumb = document.createElement('div');
-            thumb.className = 'relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 flex-shrink-0 bg-gray-100 flex items-center justify-center';
-            thumb.innerHTML = `<span class="text-xs text-gray-400">⏳</span>`;
-            photoGrid.appendChild(thumb);
-
-            // Preview local immediately via FileReader
+            // Resize + convert to base64 (no server upload needed)
             const reader = new FileReader();
             reader.onload = e => {
-              const img = document.createElement('img');
-              img.src = e.target.result;
-              img.className = 'w-full h-full object-cover';
-              thumb.innerHTML = '';
-              thumb.appendChild(img);
-            };
-            reader.readAsDataURL(file);
+              const originalDataUrl = e.target.result;
 
-            // Upload in background
-            const fd = new FormData();
-            fd.append('file', file);
-            try {
-              const res = await fetch('/api/upload', { method: 'POST', body: fd });
-              const data = await res.json();
-              if (data.url) {
+              // Resize to max 800px to keep base64 small
+              const imgEl = new Image();
+              imgEl.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX = 800;
+                let w = imgEl.width, h = imgEl.height;
+                if (w > MAX || h > MAX) {
+                  if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                  else { w = Math.round(w * MAX / h); h = MAX; }
+                }
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+                const base64 = canvas.toDataURL('image/jpeg', 0.75);
+
+                // Store base64 in p.photos
                 p.photos = p.photos || [];
-                p.photos.push(data.url);
+                p.photos.push(base64);
+
+                // Show thumb
+                const thumb = document.createElement('div');
+                thumb.className = 'relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 flex-shrink-0 bg-gray-100';
+                const imgThumb = document.createElement('img');
+                imgThumb.src = base64;
+                imgThumb.className = 'w-full h-full object-cover';
                 const rmBtn = document.createElement('button');
                 rmBtn.type = 'button';
-                rmBtn.className = 'absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 text-white rounded text-[11px] flex items-center justify-center font-bold cma-rm-photo hover:bg-black/90';
+                rmBtn.className = 'absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 text-white rounded text-[11px] flex items-center justify-center font-bold hover:bg-black/90';
                 rmBtn.textContent = '✕';
                 rmBtn.addEventListener('click', (ev) => {
                   ev.preventDefault();
-                  p.photos = p.photos.filter(u => u !== data.url);
+                  p.photos = p.photos.filter(u => u !== base64);
                   thumb.remove();
                 });
+                thumb.appendChild(imgThumb);
                 thumb.appendChild(rmBtn);
-              } else {
-                thumb.remove();
-              }
-            } catch (err) {
-              thumb.remove();
-            }
+                photoGrid.appendChild(thumb);
+              };
+              imgEl.src = originalDataUrl;
+            };
+            reader.readAsDataURL(file);
           }
         });
       });
