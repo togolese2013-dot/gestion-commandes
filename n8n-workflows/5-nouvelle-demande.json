@@ -16,7 +16,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $input.first().json.body ?? $input.first().json;\n\nconst delivery = d.delivery_type === 'avion' ? '✈️ Express (avion)' : '🚢 Économique (bateau)';\nconst count = d.products_count ?? 1;\nconst products = d.products_text ?? '—';\n\nconst message = [\n  '🛎️ *Nouvelle demande — Action requise*',\n  '',\n  `👤 *${d.client_name}*`,\n  `📞 ${d.client_phone}`,\n  '',\n  `📦 *Produits (${count}) :*`,\n  products,\n  '',\n  `🚚 ${delivery}`,\n  '',\n  '👉 togolese.fr/admin/inquiries'\n].join('\\n');\n\nreturn [{ json: { message, client_phone: d.client_phone } }];"
+"jsCode": "const d = $input.first().json.body ?? $input.first().json;\n\nconst delivery = d.delivery_type === 'avion' ? 'Express (avion)' : 'Economique (bateau)';\nconst count = String(d.products_count ?? 1);\nconst products = d.products_text ?? '—';\n\nreturn [{\n  json: {\n    client_name: d.client_name,\n    client_phone: d.client_phone,\n    count,\n    products,\n    delivery\n  }\n}];"
       },
       "id": "co-001-001-001-001-000000000002",
       "name": "Préparer notification",
@@ -43,7 +43,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"22890226491\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $json.message }}\"\n  }\n}",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"22890226491\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"nouvelle_demande\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $json.client_name }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.client_phone }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.count }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.products }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.delivery }}\" }\n        ]\n      }\n    ]\n  }\n}",
         "options": {}
       },
       "id": "ht-001-001-001-001-000000000003",
