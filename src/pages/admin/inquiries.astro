@@ -948,7 +948,7 @@ function getDevisNumber(id: number): string {
             quantity: p.quantity || 1,
             _price: p.price || 0,
             _qty: p.quantity || 1,
-            photos: p.photos || [],
+            photos: [],
           }));
           inquiry._prefillDelivery = devisData.delivery_type || inquiry.delivery_type || 'avion';
           inquiry._prefillNote = inquiry.notes || '';
@@ -1060,25 +1060,9 @@ function getDevisNumber(id: number): string {
             <span class="text-sm font-semibold text-emerald-700">📸 Ajouter des photos</span>
             <input type="file" accept="image/*" multiple class="hidden cma-file-input" data-idx="${i}"/>
           </label>
-          <div class="flex flex-wrap gap-2 cma-existing-photos" data-idx="${i}"></div>
           <div class="flex flex-wrap gap-2 cma-photo-grid" data-idx="${i}"></div>
         `;
         card.appendChild(photoDiv);
-
-        // Show existing photos with delete button
-        const existingGrid = card.querySelector('.cma-existing-photos');
-        (p.photos || []).forEach((src, pi) => {
-          const thumb = document.createElement('div');
-          thumb.className = 'relative w-16 h-16 rounded-lg overflow-hidden border border-blue-300 flex-shrink-0 bg-gray-100';
-          thumb.innerHTML = `<img src="${src}" class="w-full h-full object-cover"/>
-            <button type="button" class="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 text-white rounded text-[11px] flex items-center justify-center font-bold cma-rm-existing hover:bg-red-600">✕</button>`;
-          thumb.querySelector('.cma-rm-existing').addEventListener('click', (ev) => {
-            ev.preventDefault();
-            p.photos = p.photos.filter(s => s !== src);
-            thumb.remove();
-          });
-          existingGrid.appendChild(thumb);
-        });
 
         // Subtotal
         const subtotalDiv = document.createElement('div');
