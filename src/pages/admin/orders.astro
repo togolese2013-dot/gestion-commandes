@@ -228,10 +228,6 @@ const statusColor: Record<string, string> = {
                         Facture
                       </a>
                       <div class="h-px bg-gray-100"></div>
-                      <a href={`/admin/print/proforma/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700">
-                        Proforma
-                      </a>
-                      <div class="h-px bg-gray-100"></div>
                       {order.status === 'recupere' ? (
                         <a href={`/admin/print/livraison/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700">
                           Bon de livraison
@@ -339,10 +335,6 @@ const statusColor: Record<string, string> = {
                         <div class="print-menu hidden absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
                           <a href={`/admin/print/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700">
                             Facture
-                          </a>
-                          <div class="h-px bg-gray-100"></div>
-                          <a href={`/admin/print/proforma/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700">
-                            Proforma
                           </a>
                           <div class="h-px bg-gray-100"></div>
                           {order.status === 'recupere' ? (
