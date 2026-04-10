@@ -719,7 +719,7 @@ const estimatedDeliveryStr = order
             <div class="company-contact">
               <div>Kégué derrière l'hôtel O'Balkan, Lomé - TOGO</div>
               <div><strong>Tél :</strong> +228 90 22 64 91</div>
-              <div><strong>Email :</strong> Contact@togolesegroup.com</div>
+              <div><strong>Email :</strong> contact@togolese.fr</div>
             </div>
           </div>
 
@@ -838,7 +838,7 @@ const estimatedDeliveryStr = order
               </div>
               <div class={`summary-row ${order.remaining_balance > 0 ? 'remaining-row remaining-positive' : 'remaining-zero-row remaining-zero'}`}>
                 <span class="summary-label" style="font-weight:700;">Reste à payer</span>
-                <span class="summary-value" style="font-size:15px;">{fmt(order.remaining_balance)} FCFA</span>
+                <span class="summary-value" style={`font-size:15px; color:${order.remaining_balance > 0 ? '#dc2626' : '#059669'};`}>{fmt(order.remaining_balance)} FCFA</span>
               </div>
             </div>
           </div>
@@ -875,7 +875,7 @@ const estimatedDeliveryStr = order
           <!-- Footer recto -->
           <div class="footer">
             <strong>Merci pour votre confiance !</strong>
-            TOGOLESE &mdash; Kégué derrière l'hôtel O'Balkan, Lomé - TOGO &mdash; Tél : +228 90 22 64 91 &mdash; Contact@togolesegroup.com
+            TOGOLESE &mdash; Kégué derrière l'hôtel O'Balkan, Lomé - TOGO &mdash; Tél : +228 90 22 64 91 &mdash; contact@togolese.fr
           </div>
         </>
       )}
@@ -909,7 +909,7 @@ const estimatedDeliveryStr = order
 
           <div class="back-footer">
             <strong>Merci pour votre confiance !</strong>
-            TOGOLESE &mdash; Kégué derrière l'hôtel O'Balkan, Lomé - TOGO &mdash; Tél : +228 90 22 64 91 &mdash; Contact@togolesegroup.com
+            TOGOLESE &mdash; Kégué derrière l'hôtel O'Balkan, Lomé - TOGO &mdash; Tél : +228 90 22 64 91 &mdash; contact@togolese.fr
           </div>
         </div>
       </>
