@@ -55,7 +55,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Send WhatsApp notification to client
     const siteUrl = getEnv('PUBLIC_SITE_URL');
-    const share_url = `${siteUrl}/devis/c/${devis.access_token}`;
+    const share_url = `${siteUrl}/d/${devis.devis_number}`;
     await sendDevisWebhook(inquiry, devis.devis_number, share_url);
 
     // Return devis with access token for creating client link

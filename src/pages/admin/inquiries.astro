@@ -31,7 +31,7 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 };
 
 const fmt = (n: number) => n.toLocaleString('fr-FR');
-const dateStr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+const dateStr = (d: string) => new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 const statusColors: Record<string, string> = {
   'yellow': 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -61,12 +61,21 @@ function getDevisNumber(id: number): string {
         <h1 class="text-2xl font-bold text-gray-900">Demandes de Devis</h1>
         <p class="text-sm text-gray-600 mt-1">{inquiries.length} demande{inquiries.length !== 1 ? 's' : ''}</p>
       </div>
-      <a href="/demande" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium text-sm transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-        </svg>
-        Voir formulaire
-      </a>
+      <div class="flex items-center gap-2">
+        <div class="relative hidden md:block">
+          <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input id="search-input" type="text" placeholder="Rechercher…" class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-green-400 bg-white w-48" />
+        </div>
+        <button id="btn-refresh" onclick="window.location.reload()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" title="Rafraîchir">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+        <a href="/demande" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium text-sm transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          Voir formulaire
+        </a>
+      </div>
     </div>
 
     <!-- Filtres — icônes (mobile uniquement) -->
@@ -129,7 +138,7 @@ function getDevisNumber(id: number): string {
               <span class={`status-badge text-xs font-semibold px-2.5 py-1 rounded-full ${statusColors[color]}`}>{label}</span>
             </div>
             <!-- Client -->
-            <div class="font-semibold text-gray-900 text-sm">{inquiry.client_name}</div>
+            <div class="font-semibold text-gray-900 text-sm uppercase">{inquiry.client_name}</div>
             <div class="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
               <span>{inquiry.client_phone}</span>
               <span>·</span>
@@ -154,8 +163,8 @@ function getDevisNumber(id: number): string {
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                 </button>
               )}
-              {devisMap[String(inquiry.id)]?.token && (
-                <button class="copy-link-btn p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors" data-token={devisMap[String(inquiry.id)].token} title="Copier le lien client">
+              {devisMap[String(inquiry.id)]?.number && (
+                <button class="copy-link-btn p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors" data-number={devisMap[String(inquiry.id)].number} title="Copier le lien client">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                 </button>
               )}
@@ -214,7 +223,7 @@ function getDevisNumber(id: number): string {
                       </span>
                     </td>
                     <td class="px-4 py-3 text-sm">
-                      <div class="font-medium text-gray-900">{inquiry.client_name}</div>
+                      <div class="font-medium text-gray-900 uppercase">{inquiry.client_name}</div>
                       <div class="text-xs text-gray-500">{inquiry.client_phone}</div>
                     </td>
                     <td class="px-4 py-3 text-sm text-gray-700">
@@ -248,8 +257,8 @@ function getDevisNumber(id: number): string {
                           </button>
                         )}
                         <!-- Lien client -->
-                        {devisMap[String(inquiry.id)]?.token && (
-                          <button class="copy-link-btn p-1.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors" data-token={devisMap[String(inquiry.id)].token} title="Copier le lien client">
+                        {devisMap[String(inquiry.id)]?.number && (
+                          <button class="copy-link-btn p-1.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors" data-number={devisMap[String(inquiry.id)].number} title="Copier le lien client">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                           </button>
                         )}
@@ -923,11 +932,11 @@ function getDevisNumber(id: number): string {
     });
 
     // ── Delete ─────────────────────────────────────────────────
-    // Copy client devis link to clipboard
+    // Copy short client devis link to clipboard
     document.querySelectorAll('.copy-link-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const token = btn.dataset.token;
-        const url = `${window.location.origin}/devis/c/${token}`;
+        const number = btn.dataset.number;
+        const url = `${window.location.origin}/d/${number}`;
         navigator.clipboard.writeText(url).then(() => {
           showToast('Lien copié dans le presse-papiers !', 'success');
         }).catch(() => {
@@ -935,6 +944,20 @@ function getDevisNumber(id: number): string {
         });
       });
     });
+
+    // Search bar filtering
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('tbody tr[data-id]');
+        const cards = document.querySelectorAll('.inquiry-card[data-id]');
+        [...rows, ...cards].forEach(el => {
+          const text = el.textContent?.toLowerCase() || '';
+          (el as HTMLElement).style.display = (!q || text.includes(q)) ? '' : 'none';
+        });
+      });
+    }
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
