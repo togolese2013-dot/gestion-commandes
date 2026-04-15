@@ -953,8 +953,8 @@ function getDevisNumber(id: number): string {
         const rows = document.querySelectorAll('tbody tr[data-id]');
         const cards = document.querySelectorAll('.inquiry-card[data-id]');
         [...rows, ...cards].forEach(el => {
-          const text = el.textContent?.toLowerCase() || '';
-          (el as HTMLElement).style.display = (!q || text.includes(q)) ? '' : 'none';
+          const text = (el.textContent || '').toLowerCase();
+          el.style.display = (!q || text.includes(q)) ? '' : 'none';
         });
       });
     }
