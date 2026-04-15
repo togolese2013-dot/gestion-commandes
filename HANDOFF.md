@@ -1,7 +1,7 @@
 # Handoff — Togolese · Gestion Commandes
 
 > Document de transfert complet à destination d'un développeur reprenant le projet.
-> Généré le 2026-04-07.
+> Dernière mise à jour : 2026-04-15.
 
 ---
 
@@ -272,9 +272,9 @@ Gestion des demandes entrantes.
 
 ### `/demande`
 Formulaire public de demande :
-- Nom, téléphone, produits (avec photos et liens)
+- Nom, **sélecteur de code pays séparé** + numéro de téléphone (combinés à l'envoi)
+- Produits (avec photos et liens)
 - Choix livraison (avion / bateau)
-- Captcha ou pas (à vérifier)
 
 ### `/devis/c/[token]`
 Page devis publique (accès par lien partagé) :
@@ -376,7 +376,24 @@ La base SQLite est persistante via un volume Railway monté à `DB_PATH`.
 
 ---
 
-## 13. Points d'attention / Dettes techniques
+## 13. Changelog récent (depuis 2026-04-07)
+
+| Date | Changement |
+|------|-----------|
+| 2026-04-15 | Champ téléphone `/demande` : sélecteur code pays séparé du numéro |
+| 2026-04-15 | Pages impression : logo T bleu, couleurs vertes, email contact@togolese.fr |
+| 2026-04-15 | Bon de commande (`/admin/print/[numero]`) : thème bleu, header avec logo |
+| 2026-04-15 | Suppression de la page Proforma du menu impression |
+| 2026-04-14 | Bon de livraison (`/admin/print/livraison/[numero]`) ajouté |
+| 2026-04-14 | Photos stockées en base64 dans la DB (plus de fichiers serveur) |
+| 2026-04-14 | Prévisualisation photos via FileReader dans la modal devis |
+| 2026-04-14 | Pré-remplissage prix/état produits lors de l'édition d'un devis |
+| 2026-04-14 | Notification WhatsApp nouvelles demandes via template N8N |
+| 2026-04-14 | Système multi-utilisateurs avec traçabilité des opérations |
+
+---
+
+## 14. Points d'attention / Dettes techniques
 
 | Point | Détail |
 |-------|--------|
@@ -391,7 +408,7 @@ La base SQLite est persistante via un volume Railway monté à `DB_PATH`.
 
 ---
 
-## 14. Commandes utiles
+## 15. Commandes utiles
 
 ```bash
 npm run dev          # Démarrer le serveur de développement
@@ -404,4 +421,4 @@ npm run preview      # Prévisualiser le build
 
 ---
 
-*Fin du document de handoff — Togolese Gestion Commandes — 2026-04-07*
+*Fin du document de handoff — Togolese Gestion Commandes — 2026-04-15*
