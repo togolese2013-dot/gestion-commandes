@@ -1,0 +1,83 @@
+{
+  "name": "6 — Devis envoyé (notification client WhatsApp)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "devis-envoye",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh-006-001-001-001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json.body ?? $input.first().json;\n\n// Strip leading + for WhatsApp API (expects digits only)\nconst phone = String(d.client_phone ?? '').replace(/^\\+/, '');\n\nreturn [{\n  json: {\n    client_name: d.client_name,\n    client_phone: phone,\n    devis_number: d.devis_number,\n    share_url: d.share_url\n  }\n}];"
+      },
+      "id": "co-006-001-001-001-000000000002",
+      "name": "Préparer données",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v20.0/1108545832334279/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.client_phone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"devis_envoye\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $json.client_name }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.devis_number }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.share_url }}\" }\n        ]\n      }\n    ]\n  }\n}",
+        "options": {}
+      },
+      "id": "ht-006-001-001-001-000000000003",
+      "name": "Envoyer WhatsApp client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true }",
+        "options": {}
+      },
+      "id": "re-006-001-001-001-000000000004",
+      "name": "Répondre",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Préparer données", "type": "main", "index": 0 }]]
+    },
+    "Préparer données": {
+      "main": [[{ "node": "Envoyer WhatsApp client", "type": "main", "index": 0 }]]
+    },
+    "Envoyer WhatsApp client": {
+      "main": [[{ "node": "Répondre", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "WhatsApp" }, { "name": "Devis" }],
+  "versionId": "6-devis-envoye-v1"
+}

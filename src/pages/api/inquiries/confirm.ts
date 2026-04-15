@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getInquiryById, updateInquiry } from '../../../lib/inquiries';
 import { createDevisFromData } from '../../../lib/devis';
+import { sendDevisWebhook } from '../../../lib/webhook';
+import { getEnv } from '../../../lib/env';
 
 export const POST: APIRoute = async ({ request }) => {
   if (request.method !== 'POST') {
@@ -50,6 +52,11 @@ export const POST: APIRoute = async ({ request }) => {
       notes: note,
       status: 'acceptee', // Mark as accepted (devis sent)
     });
+
+    // Send WhatsApp notification to client
+    const siteUrl = getEnv('PUBLIC_SITE_URL');
+    const share_url = `${siteUrl}/devis/c/${devis.access_token}`;
+    await sendDevisWebhook(inquiry, devis.devis_number, share_url);
 
     // Return devis with access token for creating client link
     return new Response(

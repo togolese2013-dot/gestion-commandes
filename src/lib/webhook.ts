@@ -119,10 +119,9 @@ export async function sendNewInquiryWebhook(inquiry: Inquiry): Promise<void> {
 }
 
 export async function sendDevisWebhook(inquiry: Inquiry, devis_number: string, share_url: string): Promise<void> {
-  const url = getEnv('N8N_WEBHOOK_NEW_ORDER');
+  const url = getEnv('N8N_WEBHOOK_DEVIS_SENT');
   if (!url || url.includes('your-n8n-instance')) return;
 
-  const siteUrl = getEnv('PUBLIC_SITE_URL');
   await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
