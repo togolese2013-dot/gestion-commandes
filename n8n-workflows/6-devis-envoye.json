@@ -8,32 +8,62 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "wh-006-001-001-001-000000000001",
+      "id": "85c0d9ff-6270-4a86-a4e2-ffe39180a568",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300]
+      "position": [0, 0],
+      "webhookId": "43b74ed6-b395-4d33-aeb3-598032d0956a"
     },
     {
       "parameters": {
-        "jsCode": "const d = $input.first().json.body ?? $input.first().json;\n\n// Strip leading + for WhatsApp API (expects digits only)\nconst phone = String(d.client_phone ?? '').replace(/^\\+/, '');\n\nreturn [{\n  json: {\n    client_name: d.client_name,\n    client_phone: phone,\n    devis_number: d.devis_number,\n    share_url: d.share_url\n  }\n}];"
+        "jsCode": "const d = $input.first().json.body ?? $input.first().json;\n\n// Strip ALL non-digit characters (spaces, dashes, +, parentheses)\nconst phone = String(d.client_phone ?? '').replace(/\\D/g, '');\n\nreturn [{\n  json: {\n    client_name: String(d.client_name ?? '').trim(),\n    client_phone: phone,\n    devis_number: String(d.devis_number ?? '').trim(),\n    share_url: String(d.share_url ?? '').trim(),\n    phone_valid: phone.length >= 8\n  }\n}];"
       },
-      "id": "co-006-001-001-001-000000000002",
+      "id": "e869f13d-32db-4653-b026-55d7a6567c93",
       "name": "Préparer données",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300]
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "phone-check",
+              "leftValue": "={{ $json.phone_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-phone-valid",
+      "name": "Numéro valide ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [480, 0]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v20.0/1108545832334279/messages",
+        "url": "=https://graph.facebook.com/v20.0/1052966444567428/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer EAANQHulGRzIBRIOPZCI10qVwD4fa1wRxbWvbWxc9V2qg3hGqXbB5ZCIFZB73Pq4r5ZAktZAyIIkyZA1Tj5S8T0plbV2hZAlDVTpWfWggH4b0ELt5nbdrSNaIs1jZAWrGcHSuZBcx8BXMTvYc5AZBSwL7edmiAwZAzmAAypd5bufAeUEZCGgAi8ARZAZBIzgG5y3A023gZDZD"
+              "value": "=Bearer EAAZAy0MSBLkABROm5TYe86Rv7eAQnUt1isZC8LYx8eSzBBuGORnbXKcmgTyZBzdyqWcGhvzCOIsruJo4OV7eTwTQNbt6ZAyRJc6rZB4ReWkZAdCf6kCIzTby5f5FZARPi8q4LV1g3ubTG10y6j9dcYVslqHRI6ouynxgSf5adIuCorrwq4dFSavUFa7rbkNZAgZDZD"
             },
             {
               "name": "Content-Type",
@@ -44,13 +74,30 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.client_phone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"devis_envoye\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $json.client_name }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.devis_number }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.share_url }}\" }\n        ]\n      }\n    ]\n  }\n}",
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
       },
-      "id": "ht-006-001-001-001-000000000003",
+      "id": "554f15fe-a193-4c63-a71b-a04cbbb6ca57",
       "name": "Envoyer WhatsApp client",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 300]
+      "position": [720, -80],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconsole.error('[devis-envoye] Numéro invalide ou manquant:', JSON.stringify(input));\nreturn [{ json: { error: 'phone_invalid', phone: input.client_phone, name: input.client_name } }];"
+      },
+      "id": "log-invalid-phone",
+      "name": "Log numéro invalide",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 120]
     },
     {
       "parameters": {
@@ -58,26 +105,53 @@
         "responseBody": "={ \"ok\": true }",
         "options": {}
       },
-      "id": "re-006-001-001-001-000000000004",
+      "id": "c7eda307-b530-457c-b692-bb17da1aa494",
       "name": "Répondre",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [900, 300]
+      "position": [960, 0]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{ "node": "Préparer données", "type": "main", "index": 0 }]]
+      "main": [
+        [{ "node": "Préparer données", "type": "main", "index": 0 }]
+      ]
     },
     "Préparer données": {
-      "main": [[{ "node": "Envoyer WhatsApp client", "type": "main", "index": 0 }]]
+      "main": [
+        [{ "node": "Numéro valide ?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Numéro valide ?": {
+      "main": [
+        [{ "node": "Envoyer WhatsApp client", "type": "main", "index": 0 }],
+        [{ "node": "Log numéro invalide", "type": "main", "index": 0 }]
+      ]
     },
     "Envoyer WhatsApp client": {
-      "main": [[{ "node": "Répondre", "type": "main", "index": 0 }]]
+      "main": [
+        [{ "node": "Répondre", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log numéro invalide": {
+      "main": [
+        [{ "node": "Répondre", "type": "main", "index": 0 }]
+      ]
     }
   },
-  "active": false,
-  "settings": { "executionOrder": "v1" },
-  "tags": [{ "name": "WhatsApp" }, { "name": "Devis" }],
-  "versionId": "6-devis-envoye-v1"
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "90d9b4b0-eae4-4dd5-aa7b-d392bffa3eb7",
+  "meta": {
+    "instanceId": "231f5ef285dc1247417bee1b9ab2b7097625859afc3a7b5c73eeeed1471bb909"
+  },
+  "id": "GbkenUWOLYYXZpfm",
+  "tags": [
+    { "id": "C6I8TeO1JaFpKOI1", "name": "Devis" },
+    { "id": "SX6GoKL1rrchox0L", "name": "WhatsApp" }
+  ]
 }
