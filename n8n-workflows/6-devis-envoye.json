@@ -77,13 +77,7 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.client_phone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"devis_envoye\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $json.client_name }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.devis_number }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $json.share_url }}\" }\n        ]\n      }\n    ]\n  }\n}",
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
-        }
+        "options": {}
       },
       "id": "554f15fe-a193-4c63-a71b-a04cbbb6ca57",
       "name": "Envoyer WhatsApp",
@@ -99,7 +93,7 @@
           "conditions": [
             {
               "id": "check-messages",
-              "leftValue": "={{ $json.messages !== undefined && $json.messages.length > 0 }}",
+              "leftValue": "={{ Array.isArray($json.messages) && $json.messages.length > 0 && $json.error === undefined }}",
               "rightValue": true,
               "operator": { "type": "boolean", "operation": "true" }
             }
