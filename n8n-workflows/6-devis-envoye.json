@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $input.first().json.body ?? $input.first().json;\n\n// Strip ALL non-digit characters (spaces, dashes, +, parentheses)\nconst phone = String(d.client_phone ?? '').replace(/\\D/g, '');\n\nreturn [{\n  json: {\n    client_name: String(d.client_name ?? '').trim(),\n    client_phone: phone,\n    devis_number: String(d.devis_number ?? '').trim(),\n    share_url: String(d.share_url ?? '').trim(),\n    phone_valid: phone.length >= 8\n  }\n}];"
+        "jsCode": "const d = $input.first().json.body ?? $input.first().json;\n\n// Reset static data for this execution\nconst sd = $getWorkflowStaticData('global');\nsd.whatsapp_sent = false;\n\n// Strip ALL non-digit characters\nconst phone = String(d.client_phone ?? '').replace(/\\D/g, '');\n\n// Create 3 items = 3 max attempts for the loop\nconst item = {\n  client_name: String(d.client_name ?? '').trim(),\n  client_phone: phone,\n  devis_number: String(d.devis_number ?? '').trim(),\n  share_url: String(d.share_url ?? '').trim(),\n  phone_valid: phone.length >= 8\n};\n\nreturn [{ json: { ...item, attempt: 1 } }, { json: { ...item, attempt: 2 } }, { json: { ...item, attempt: 3 } }];"
       },
       "id": "e869f13d-32db-4653-b026-55d7a6567c93",
       "name": "Préparer données",
@@ -27,32 +27,35 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "phone-check",
-              "leftValue": "={{ $json.phone_valid }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
         "options": {}
       },
-      "id": "if-phone-valid",
-      "name": "Numéro valide ?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "id": "loop-001",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
       "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Skip this iteration if already sent successfully\nconst sd = $getWorkflowStaticData('global');\nif (sd.whatsapp_sent) {\n  return []; // stops this iteration\n}\nconst item = $input.first().json;\nif (!item.phone_valid) {\n  console.error('[devis-envoye] Numéro invalide:', item.client_phone);\n  return [];\n}\nreturn [$input.first()];"
+      },
+      "id": "check-sent",
+      "name": "Déjà envoyé ?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 0]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "seconds"
+      },
+      "id": "wait-001",
+      "name": "Attendre 1s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [960, 0],
+      "webhookId": "wait-webhook-devis-001"
     },
     {
       "parameters": {
@@ -83,21 +86,43 @@
         }
       },
       "id": "554f15fe-a193-4c63-a71b-a04cbbb6ca57",
-      "name": "Envoyer WhatsApp client",
+      "name": "Envoyer WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [720, -80],
+      "position": [1200, 0],
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nconsole.error('[devis-envoye] Numéro invalide ou manquant:', JSON.stringify(input));\nreturn [{ json: { error: 'phone_invalid', phone: input.client_phone, name: input.client_name } }];"
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "check-messages",
+              "leftValue": "={{ $json.messages !== undefined && $json.messages.length > 0 }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
-      "id": "log-invalid-phone",
-      "name": "Log numéro invalide",
+      "id": "if-success",
+      "name": "Succès ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1440, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mark as sent so remaining loop iterations are skipped\nconst sd = $getWorkflowStaticData('global');\nsd.whatsapp_sent = true;\nreturn [$input.first()];"
+      },
+      "id": "mark-sent",
+      "name": "Marquer envoyé",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [720, 120]
+      "position": [1680, -100]
     },
     {
       "parameters": {
@@ -109,7 +134,7 @@
       "name": "Répondre",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [960, 0]
+      "position": [1920, 0]
     }
   ],
   "connections": {
@@ -120,21 +145,37 @@
     },
     "Préparer données": {
       "main": [
-        [{ "node": "Numéro valide ?", "type": "main", "index": 0 }]
+        [{ "node": "Loop Over Items", "type": "main", "index": 0 }]
       ]
     },
-    "Numéro valide ?": {
+    "Loop Over Items": {
       "main": [
-        [{ "node": "Envoyer WhatsApp client", "type": "main", "index": 0 }],
-        [{ "node": "Log numéro invalide", "type": "main", "index": 0 }]
-      ]
-    },
-    "Envoyer WhatsApp client": {
-      "main": [
+        [{ "node": "Déjà envoyé ?", "type": "main", "index": 0 }],
         [{ "node": "Répondre", "type": "main", "index": 0 }]
       ]
     },
-    "Log numéro invalide": {
+    "Déjà envoyé ?": {
+      "main": [
+        [{ "node": "Attendre 1s", "type": "main", "index": 0 }]
+      ]
+    },
+    "Attendre 1s": {
+      "main": [
+        [{ "node": "Envoyer WhatsApp", "type": "main", "index": 0 }]
+      ]
+    },
+    "Envoyer WhatsApp": {
+      "main": [
+        [{ "node": "Succès ?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Succès ?": {
+      "main": [
+        [{ "node": "Marquer envoyé", "type": "main", "index": 0 }],
+        [{ "node": "Loop Over Items", "type": "main", "index": 0 }]
+      ]
+    },
+    "Marquer envoyé": {
       "main": [
         [{ "node": "Répondre", "type": "main", "index": 0 }]
       ]
