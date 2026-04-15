@@ -1,0 +1,12 @@
+---
+import { getDevisByNumber } from '../../lib/devis';
+
+const { numero } = Astro.params;
+const devis = getDevisByNumber(numero!);
+
+if (!devis || !devis.access_token) {
+  return Astro.redirect('/404');
+}
+
+return Astro.redirect(`/devis/c/${devis.access_token}`, 301);
+---

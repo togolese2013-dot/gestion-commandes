@@ -85,11 +85,7 @@ function getDevisNumber(id: number): string {
       </button>
       <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="refusee" title="Refusée" style="background:white;color:#6b7280;border-color:#e5e7eb;">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'refusee').length}</span>
-      </button>
-      <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="annulee" title="Annulée" style="background:white;color:#6b7280;border-color:#e5e7eb;">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-        <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'annulee').length}</span>
+        <span class="text-xs font-bold">{inquiries.filter(i => i.status === 'refusee' || devisMap[String(i.id)]?.status === 'refuse').length}</span>
       </button>
     </div>
 
@@ -99,8 +95,7 @@ function getDevisNumber(id: number): string {
         { key: 'toutes',     label: 'Toutes',     count: inquiries.length },
         { key: 'en_attente', label: 'En attente', count: inquiries.filter(i => (i.status || 'en_attente') === 'en_attente').length },
         { key: 'acceptee',   label: 'Devis envoyé', count: inquiries.filter(i => i.status === 'acceptee').length },
-        { key: 'refusee',    label: 'Refusée',    count: inquiries.filter(i => i.status === 'refusee').length },
-        { key: 'annulee',    label: 'Annulée',    count: inquiries.filter(i => i.status === 'annulee').length },
+        { key: 'refusee',    label: 'Refusée',    count: inquiries.filter(i => i.status === 'refusee' || devisMap[String(i.id)]?.status === 'refuse').length },
       ].map(({ key, label, count }) => (
         <button
           class="filter-btn flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors whitespace-nowrap shrink-0"
@@ -123,9 +118,9 @@ function getDevisNumber(id: number): string {
         const status = inquiry.status || 'en_attente';
         let { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
         if (devisMap[String(inquiry.id)]?.status === 'accepte') { label = 'Acceptée'; color = 'green'; }
-        if (devisMap[String(inquiry.id)]?.status === 'refuse') { label = 'Client a refusé'; color = 'red'; }
+        if (devisMap[String(inquiry.id)]?.status === 'refuse') { label = 'Refusée'; color = 'red'; }
         return (
-          <div class="inquiry-card bg-white rounded-2xl border border-gray-200 shadow-sm p-4" data-status={status} data-id={inquiry.id}>
+          <div class="inquiry-card bg-white rounded-2xl border border-gray-200 shadow-sm p-4" data-status={status} data-id={inquiry.id} data-devis-refuse={devisMap[String(inquiry.id)]?.status === 'refuse' ? 'true' : 'false'}>
             <!-- Top row: n° devis + statut -->
             <div class="flex items-center justify-between mb-2">
               <span class="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md">
@@ -209,10 +204,10 @@ function getDevisNumber(id: number): string {
                 const status = inquiry.status || 'en_attente';
                 let { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
                 if (devisMap[String(inquiry.id)]?.status === 'accepte') { label = 'Acceptée'; color = 'green'; }
-                if (devisMap[String(inquiry.id)]?.status === 'refuse') { label = 'Client a refusé'; color = 'red'; }
+                if (devisMap[String(inquiry.id)]?.status === 'refuse') { label = 'Refusée'; color = 'red'; }
                 const products = inquiry.products || [];
                 return (
-                  <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-id={inquiry.id} data-status={status}>
+                  <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-id={inquiry.id} data-status={status} data-devis-refuse={devisMap[String(inquiry.id)]?.status === 'refuse' ? 'true' : 'false'}>
                     <td class="px-4 py-3">
                       <span class="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">
                         {getDevisNumber(inquiry.id!)}
@@ -726,7 +721,11 @@ function getDevisNumber(id: number): string {
           // Filtrer lignes tableau + cartes mobile
           [...rows, ...cards].forEach(el => {
             const status = el.getAttribute('data-status');
-            (el as HTMLElement).style.display = (filter === 'toutes' || status === filter) ? '' : 'none';
+            const devisRefuse = el.getAttribute('data-devis-refuse') === 'true';
+            const visible = filter === 'toutes'
+              || status === filter
+              || (filter === 'refusee' && devisRefuse);
+            (el as HTMLElement).style.display = visible ? '' : 'none';
           });
         });
       });
