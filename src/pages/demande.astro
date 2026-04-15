@@ -174,6 +174,30 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
     }
     .req { color: #ef4444; }
 
+    .phone-row {
+      display: flex;
+      gap: 8px;
+    }
+    .phone-country-select {
+      flex: 0 0 110px;
+      padding: 12px 8px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 14px;
+      background: #fff;
+      color: #1f2937;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .phone-country-select:focus {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+    }
+    .phone-row input[type="tel"] {
+      flex: 1;
+    }
+
     input[type="text"],
     input[type="tel"],
     input[type="number"],
@@ -597,7 +621,33 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
         </div>
         <div class="field-group">
           <label class="field-label">Téléphone <span class="req">*</span></label>
-          <input type="tel" id="client-phone" placeholder="+228 XX XX XX XX" required />
+          <div class="phone-row">
+            <select id="phone-country" class="phone-country-select">
+              <option value="+228">🇹🇬 +228</option>
+              <option value="+229">🇧🇯 +229</option>
+              <option value="+226">🇧🇫 +226</option>
+              <option value="+225">🇨🇮 +225</option>
+              <option value="+221">🇸🇳 +221</option>
+              <option value="+223">🇲🇱 +223</option>
+              <option value="+227">🇳🇪 +227</option>
+              <option value="+234">🇳🇬 +234</option>
+              <option value="+233">🇬🇭 +233</option>
+              <option value="+237">🇨🇲 +237</option>
+              <option value="+242">🇨🇬 +242</option>
+              <option value="+243">🇨🇩 +243</option>
+              <option value="+241">🇬🇦 +241</option>
+              <option value="+212">🇲🇦 +212</option>
+              <option value="+216">🇹🇳 +216</option>
+              <option value="+213">🇩🇿 +213</option>
+              <option value="+20">🇪🇬 +20</option>
+              <option value="+33">🇫🇷 +33</option>
+              <option value="+32">🇧🇪 +32</option>
+              <option value="+41">🇨🇭 +41</option>
+              <option value="+1">🇺🇸 +1</option>
+              <option value="+44">🇬🇧 +44</option>
+            </select>
+            <input type="tel" id="client-phone" placeholder="90 12 34 56" required />
+          </div>
         </div>
       </div>
     </div>
@@ -948,9 +998,11 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
     // ── Submit ────────────────────────────────────────────────────
     async function submitForm() {
       const name = document.getElementById('client-name').value.trim();
-      const phone = document.getElementById('client-phone').value.trim();
+      const countryCode = document.getElementById('phone-country').value;
+      const phoneNumber = document.getElementById('client-phone').value.trim();
+      const phone = phoneNumber ? countryCode + phoneNumber.replace(/^0+/, '') : '';
 
-      if (!name || !phone) {
+      if (!name || !phoneNumber) {
         showError('Veuillez renseigner votre nom et téléphone.');
         return;
       }
@@ -1035,6 +1087,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       document.querySelectorAll('.section-card').forEach(c => c.style.display = 'block');
       document.getElementById('client-name').value = '';
       document.getElementById('client-phone').value = '';
+      document.getElementById('phone-country').value = '+228';
       products = [];
       productCounter = 0;
       addProduct();
