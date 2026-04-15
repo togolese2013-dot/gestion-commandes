@@ -123,6 +123,7 @@ function getDevisNumber(id: number): string {
         const status = inquiry.status || 'en_attente';
         let { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
         if (devisMap[String(inquiry.id)]?.status === 'accepte') { label = 'Acceptée'; color = 'green'; }
+        if (devisMap[String(inquiry.id)]?.status === 'refuse') { label = 'Client a refusé'; color = 'red'; }
         return (
           <div class="inquiry-card bg-white rounded-2xl border border-gray-200 shadow-sm p-4" data-status={status} data-id={inquiry.id}>
             <!-- Top row: n° devis + statut -->
@@ -156,6 +157,11 @@ function getDevisNumber(id: number): string {
               {devisMap[String(inquiry.id)]?.status === 'accepte' && status !== 'convertie' && (
                 <button class="convert-btn p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors" data-id={inquiry.id} data-devis-id={devisMap[String(inquiry.id)].id} title="Convertir en commande">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                </button>
+              )}
+              {devisMap[String(inquiry.id)]?.token && (
+                <button class="copy-link-btn p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors" data-token={devisMap[String(inquiry.id)].token} title="Copier le lien client">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                 </button>
               )}
               {devisMap[String(inquiry.id)] && (
@@ -203,6 +209,7 @@ function getDevisNumber(id: number): string {
                 const status = inquiry.status || 'en_attente';
                 let { label, color } = statusLabels[status] ?? statusLabels['en_attente'];
                 if (devisMap[String(inquiry.id)]?.status === 'accepte') { label = 'Acceptée'; color = 'green'; }
+                if (devisMap[String(inquiry.id)]?.status === 'refuse') { label = 'Client a refusé'; color = 'red'; }
                 const products = inquiry.products || [];
                 return (
                   <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-id={inquiry.id} data-status={status}>
@@ -243,6 +250,12 @@ function getDevisNumber(id: number): string {
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                             </svg>
+                          </button>
+                        )}
+                        <!-- Lien client -->
+                        {devisMap[String(inquiry.id)]?.token && (
+                          <button class="copy-link-btn p-1.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors" data-token={devisMap[String(inquiry.id)].token} title="Copier le lien client">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                           </button>
                         )}
                         <!-- PDF -->
@@ -911,6 +924,19 @@ function getDevisNumber(id: number): string {
     });
 
     // ── Delete ─────────────────────────────────────────────────
+    // Copy client devis link to clipboard
+    document.querySelectorAll('.copy-link-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const token = btn.dataset.token;
+        const url = `${window.location.origin}/devis/c/${token}`;
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Lien copié dans le presse-papiers !', 'success');
+        }).catch(() => {
+          prompt('Copiez ce lien :', url);
+        });
+      });
+    });
+
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
