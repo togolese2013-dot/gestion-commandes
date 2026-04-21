@@ -161,10 +161,10 @@ PUBLIC_SITE_URL=https://togolese.fr
 PUBLIC_GA_ID=G-NTZP3Y9C2B
 
 # N8N Webhooks
-N8N_WEBHOOK_NEW_ORDER=https://n8n.togolese.net/webhook/commande
-N8N_WEBHOOK_NEW_INQUIRY=https://n8n.togolese.net/webhook/nouvelle-demande
-N8N_WEBHOOK_ORDER_READY=https://n8n.togolese.net/webhook/commande_disponible1
-N8N_WEBHOOK_PAYMENT=https://n8n.togolese.net/webhook/paiement
+N8N_WEBHOOK_NEW_ORDER=https://n8n.togolese.fr/webhook/commande
+N8N_WEBHOOK_NEW_INQUIRY=https://n8n.togolese.fr/webhook/nouvelle-demande
+N8N_WEBHOOK_ORDER_READY=https://n8n.togolese.fr/webhook/commande_disponible1
+N8N_WEBHOOK_PAYMENT=https://n8n.togolese.fr/webhook/paiement
 N8N_API_SECRET=                     # Secret partagé N8N
 ```
 
