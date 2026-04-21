@@ -97,25 +97,35 @@ export async function sendOrderReadyWebhook(order: Order): Promise<void> {
 
 export async function sendNewInquiryWebhook(inquiry: Inquiry): Promise<void> {
   const url = getEnv('N8N_WEBHOOK_NEW_INQUIRY');
-  if (!url) return;
+  console.log('[Webhook new_inquiry] URL:', url || 'NON DEFINIE');
+  if (!url) { console.error('[Webhook new_inquiry] Variable N8N_WEBHOOK_NEW_INQUIRY manquante'); return; }
+  if (url.includes('your-n8n-instance')) { console.error('[Webhook new_inquiry] URL placeholder détectée'); return; }
 
   const products_text = (inquiry.products ?? [])
     .map((p: any) => `• ${p.name}${p.quantity > 1 ? ` (x${p.quantity})` : ''}`)
     .join('\n') || inquiry.description || '—';
 
-  await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      event: 'new_inquiry',
-      inquiry_id: inquiry.id,
-      client_name: inquiry.client_name,
-      client_phone: inquiry.client_phone,
-      delivery_type: inquiry.delivery_type ?? 'avion',
-      products_text,
-      products_count: (inquiry.products ?? []).length || 1,
-    }),
-  }).catch(err => console.error('[Webhook new_inquiry]', err));
+  const payload = {
+    event: 'new_inquiry',
+    inquiry_id: inquiry.id,
+    client_name: inquiry.client_name,
+    client_phone: inquiry.client_phone,
+    delivery_type: inquiry.delivery_type ?? 'avion',
+    products_text,
+    products_count: (inquiry.products ?? []).length || 1,
+  };
+
+  console.log('[Webhook new_inquiry] Envoi vers:', url);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    console.log('[Webhook new_inquiry] Réponse HTTP:', res.status);
+  } catch (err) {
+    console.error('[Webhook new_inquiry] Erreur fetch:', err);
+  }
 }
 
 export async function sendDevisWebhook(inquiry: Inquiry, devis_number: string, share_url: string): Promise<void> {

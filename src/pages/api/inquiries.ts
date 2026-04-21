@@ -84,7 +84,7 @@ export const POST: APIRoute = async (context) => {
     });
 
     // Notify owner via WhatsApp (fire-and-forget)
-    sendNewInquiryWebhook(inquiry).catch(() => {});
+    sendNewInquiryWebhook(inquiry).catch((err) => console.error('[inquiries.ts] Webhook error:', err));
 
     return new Response(JSON.stringify(inquiry), { status: 201 });
   } catch (error) {
