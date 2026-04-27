@@ -464,27 +464,33 @@ const isAdminRole = currentUser?.role === 'admin';
             }
           });
         }
-        async function updatePendingBadge() {
-          try {
-            const res = await fetch('/api/orders/count');
-            if (!res.ok) return;
-            const { en_attente } = await res.json();
-            setBadge(['pending-badge', 'mob-pending-badge'], en_attente);
-          } catch { /* silent */ }
-        }
-        updatePendingBadge();
-        setInterval(updatePendingBadge, 30_000);
+        // ── SSE — badges temps réel ───────────────────────────────────────────
+        let sseSource: EventSource | null = null;
 
-        async function updateInquiryBadge() {
-          try {
-            const res = await fetch('/api/inquiries/count');
-            if (!res.ok) return;
-            const { en_attente } = await res.json();
-            setBadge(['inquiry-badge', 'mob-inquiry-badge'], en_attente);
-          } catch { /* silent */ }
+        function connectSSE() {
+          if (sseSource) sseSource.close();
+          sseSource = new EventSource('/api/sse');
+
+          sseSource.addEventListener('badge_update', (e: MessageEvent) => {
+            try {
+              const data = JSON.parse(e.data);
+              setBadge(['pending-badge',  'mob-pending-badge'],  data.orders_pending    ?? 0);
+              setBadge(['inquiry-badge',  'mob-inquiry-badge'],  data.inquiries_pending ?? 0);
+            } catch { /* ignore parse error */ }
+          });
+
+          sseSource.onerror = () => {
+            sseSource?.close();
+            sseSource = null;
+            // Reconnect after 5s
+            setTimeout(connectSSE, 5_000);
+          };
         }
-        updateInquiryBadge();
-        setInterval(updateInquiryBadge, 30_000);
+
+        connectSSE();
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => sseSource?.close());
 
         // ── Recherche globale ─────────────────────────────────────────────────
         const globalSearch  = document.getElementById('global-search') as HTMLInputElement | null;
