@@ -6,27 +6,31 @@ const { numero } = Astro.params;
 const order = numero ? getOrderByNumber(numero) : null;
 const payments = order?.id ? getPaymentsByOrderId(order.id) : [];
 
+const isPaid = !!order?.products_paid_at;
+
 const statusConfig: Record<string, { label: string; color: string; icon: string; description: string; step: number }> = {
   en_attente: {
-    label: 'En cours de traitement',
-    color: 'bg-amber-50 border-amber-200 text-amber-900',
-    icon: '⏳',
-    description: 'Votre commande est en cours de préparation. Vous serez contacté(e) via WhatsApp dès que vos colis seront disponibles à la boutique (Togo).',
-    step: 1,
+    label: isPaid ? 'Produits achetés — En acheminement' : 'En cours de traitement',
+    color: isPaid ? 'bg-blue-50 border-blue-200 text-blue-900' : 'bg-amber-50 border-amber-200 text-amber-900',
+    icon: isPaid ? '🛍️' : '⏳',
+    description: isPaid
+      ? 'Vos produits ont été achetés et sont en cours d\'acheminement vers le Togo. Vous serez contacté(e) dès leur arrivée.'
+      : 'Votre commande est en cours de préparation. Vous serez contacté(e) via WhatsApp dès que vos colis seront disponibles à la boutique (Togo).',
+    step: isPaid ? 2 : 1,
   },
   disponible: {
     label: 'Prête à récupérer',
     color: 'bg-green-50 border-green-200 text-green-900',
     icon: '✅',
     description: 'Bonne nouvelle ! Votre commande est prête. Venez la récupérer avec votre numéro de commande.',
-    step: 2,
+    step: 3,
   },
   recupere: {
     label: 'Commande récupérée',
     color: 'bg-gray-50 border-gray-200 text-gray-700',
     icon: '📦',
     description: 'Cette commande a été récupérée et soldée. Merci pour votre confiance !',
-    step: 3,
+    step: 4,
   },
 };
 
@@ -96,8 +100,9 @@ const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? status
         <div class="flex items-center justify-between px-2 py-4">
           {[
             { label: 'Commande reçue', step: 1 },
-            { label: 'Disponible', step: 2 },
-            { label: 'Récupérée', step: 3 },
+            { label: 'Produits achetés', step: 2 },
+            { label: 'Disponible', step: 3 },
+            { label: 'Récupérée', step: 4 },
           ].map((s, i) => (
             <div class="flex items-center flex-1">
               <div class="flex flex-col items-center flex-1">
@@ -112,11 +117,11 @@ const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? status
                     </svg>
                   ) : s.step.toString()}
                 </div>
-                <span class={`text-xs mt-1.5 font-medium text-center leading-tight ${
+                <span class={`text-[10px] mt-1.5 font-medium text-center leading-tight ${
                   s.step <= (statusInfo?.step ?? 1) ? 'text-blue-700' : 'text-gray-400'
                 }`}>{s.label}</span>
               </div>
-              {i < 2 && (
+              {i < 3 && (
                 <div class={`h-0.5 flex-1 mx-1 mb-5 rounded transition-all ${
                   s.step < (statusInfo?.step ?? 1) ? 'bg-blue-400' : 'bg-gray-200'
                 }`}></div>

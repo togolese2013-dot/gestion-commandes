@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAuthenticated } from '../../../lib/auth';
-import { getOrderById } from '../../../lib/orders';
+import { getOrderById, markOrderProductsPaid } from '../../../lib/orders';
 import { sendProductsPaidWhatsApp } from '../../../lib/whatsapp';
 
 export const POST: APIRoute = async ({ request }) => {
@@ -27,7 +27,12 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
+    // Send WhatsApp notification
     await sendProductsPaidWhatsApp(order);
+
+    // Mark products_paid_at in DB so the button disappears and the tracking step activates
+    markOrderProductsPaid(Number(order_id));
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { 'Content-Type': 'application/json' },
     });

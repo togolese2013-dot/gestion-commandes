@@ -178,6 +178,8 @@ function runMigrations(db: Database.Database) {
     `ALTER TABLE devis ADD COLUMN client_counter_price REAL DEFAULT NULL`,
     // Payment link for Wave/Moov Money
     `ALTER TABLE devis ADD COLUMN payment_link TEXT DEFAULT ''`,
+    // Track when admin notified client that products are paid
+    `ALTER TABLE orders ADD COLUMN products_paid_at TEXT DEFAULT NULL`,
     // Devis templates table
     `CREATE TABLE IF NOT EXISTS devis_templates (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

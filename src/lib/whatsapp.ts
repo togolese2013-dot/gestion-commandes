@@ -105,7 +105,7 @@ export async function sendProductsPaidWhatsApp(order: Order): Promise<void> {
 
   await sendTemplate(
     order.client_phone,
-    'produits_payes',
+    'produits_payes1',
     'fr',
     components
   );

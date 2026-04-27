@@ -33,6 +33,7 @@ export interface Order {
   created_by?: string;
   marked_available_by?: string;
   picked_up_by?: string;
+  products_paid_at?: string | null;
   created_at?: string;
   updated_at?: string;
   products?: Product[];
@@ -352,4 +353,14 @@ export function deleteOrder(id: number): boolean {
   const db = getDb();
   const result = db.prepare(`DELETE FROM orders WHERE id = ?`).run(id);
   return result.changes > 0;
+}
+
+/** Mark order products as paid (set products_paid_at timestamp). */
+export function markOrderProductsPaid(id: number): Order | null {
+  if (!id || isNaN(id)) return null;
+  const db = getDb();
+  db.prepare(
+    `UPDATE orders SET products_paid_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`
+  ).run(id);
+  return getOrderById(id);
 }
