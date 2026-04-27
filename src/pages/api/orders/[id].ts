@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { isAuthenticated } from '../../../lib/auth';
 import { getOrderById, updateOrder, deleteOrder } from '../../../lib/orders';
+import { broadcastToAdmins, broadcastBadgeUpdate } from '../../../lib/sse';
 
 function parseId(raw: string | undefined): number | null {
   const id = Number(raw);
@@ -43,6 +44,8 @@ export const PUT: APIRoute = async ({ request, params }) => {
 
     const updated = updateOrder(id, body);
     if (!updated) return new Response(JSON.stringify({ error: 'Commande introuvable' }), { status: 404 });
+    broadcastToAdmins('order_updated', updated);
+    broadcastBadgeUpdate();
     return new Response(JSON.stringify(updated), { headers: { 'Content-Type': 'application/json' } });
   } catch (err) {
     console.error('[PUT /api/orders/:id]', err);
@@ -58,5 +61,7 @@ export const DELETE: APIRoute = async ({ request, params }) => {
   if (!id) return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
   const deleted = deleteOrder(id);
   if (!deleted) return new Response(JSON.stringify({ error: 'Commande introuvable' }), { status: 404 });
+  broadcastToAdmins('order_deleted', { id });
+  broadcastBadgeUpdate();
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 };

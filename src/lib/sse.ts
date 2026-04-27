@@ -3,6 +3,9 @@
  * Module-level state persists across requests in Node.js standalone mode.
  */
 
+import { getAllOrders } from './orders';
+import { getAllInquiries } from './inquiries';
+
 export type SSEController = ReadableStreamDefaultController<Uint8Array>;
 
 interface SSEClient {
@@ -68,6 +71,16 @@ export function broadcastToOrder(orderNumber: string, event: string, data: unkno
       clients.delete(id);
     }
   }
+}
+
+/** Recompute pending counts and broadcast badge_update to all admin clients. */
+export function broadcastBadgeUpdate(): void {
+  if (adminClients.size === 0) return;
+  const orders     = getAllOrders();
+  const inquiries  = getAllInquiries();
+  const orders_pending    = orders.filter(o => o.status === 'en_attente').length;
+  const inquiries_pending = inquiries.filter(i => i.status === 'en_attente').length;
+  broadcastToAdmins('badge_update', { orders_pending, inquiries_pending });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

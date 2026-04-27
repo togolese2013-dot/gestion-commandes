@@ -1331,6 +1331,94 @@ document.getElementById('do-notify')!.addEventListener('click', async () => {
   }
 });
 
+// ── SSE: mises à jour temps réel des commandes ───────────────────────────────
+(function () {
+  const STATUS_LABEL: Record<string, string> = {
+    en_attente: 'En attente',
+    disponible:  'Disponible',
+    recupere:    'Récupéré',
+  };
+  const STATUS_COLOR: Record<string, string> = {
+    en_attente: 'bg-yellow-100 text-yellow-800',
+    disponible:  'bg-green-100 text-green-800',
+    recupere:    'bg-gray-100 text-gray-600',
+  };
+
+  // -- Refresh banner (shown when a new order arrives) -------------------------
+  function showRefreshBanner() {
+    if (document.getElementById('sse-refresh-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'sse-refresh-banner';
+    banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[300] bg-blue-600 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3';
+    banner.innerHTML = `
+      <span>🆕 Nouvelle commande reçue</span>
+      <button class="bg-white text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors">Rafraîchir</button>
+      <button class="text-blue-200 hover:text-white text-lg leading-none ml-1">✕</button>
+    `;
+    (banner.querySelectorAll('button')[0] as HTMLButtonElement).addEventListener('click', () => window.location.reload());
+    (banner.querySelectorAll('button')[1] as HTMLButtonElement).addEventListener('click', () => banner.remove());
+    document.body.appendChild(banner);
+  }
+
+  // -- Patch a single .order-row in the DOM -----------------------------------
+  function patchRow(row: HTMLElement, order: any) {
+    const status = order.status ?? 'en_attente';
+    const remaining = Number(order.remaining_balance ?? 0);
+
+    // Update data attribute used by filters
+    row.dataset.status = status;
+
+    // Status badge — card view: span.rounded-full.font-semibold (first match)
+    // Table view: span.rounded-full.text-xs.font-semibold (inline-flex)
+    row.querySelectorAll<HTMLElement>('span[class*="rounded-full"]').forEach(badge => {
+      const txt = badge.textContent?.trim() ?? '';
+      if (Object.values(STATUS_LABEL).includes(txt)) {
+        // Remove old color classes
+        badge.classList.remove(
+          'bg-yellow-100', 'text-yellow-800',
+          'bg-green-100',  'text-green-800',
+          'bg-gray-100',   'text-gray-600',
+        );
+        const colors = (STATUS_COLOR[status] ?? 'bg-gray-100 text-gray-600').split(' ');
+        badge.classList.add(...colors);
+        badge.textContent = STATUS_LABEL[status] ?? status;
+      }
+    });
+
+    // Remaining balance — look for the colored amount span
+    row.querySelectorAll<HTMLElement>('span.text-red-600, span.text-green-600').forEach(span => {
+      const txt = span.textContent?.trim() ?? '';
+      if (txt.includes('FCFA')) {
+        span.classList.toggle('text-red-600',   remaining > 0);
+        span.classList.toggle('text-green-600',  remaining <= 0);
+        span.classList.toggle('font-bold',       true);
+        span.classList.toggle('font-semibold',   true);
+        span.textContent = `${remaining.toLocaleString('fr-FR')} FCFA`;
+      }
+    });
+  }
+
+  // -- new_order event --------------------------------------------------------
+  window.addEventListener('sse:new_order', (e: Event) => {
+    const order = (e as CustomEvent).detail;
+    window.__showToast?.(`🆕 Nouvelle commande : ${order.order_number} — ${order.client_name}`, 'success', 8000);
+    showRefreshBanner();
+  });
+
+  // -- order_updated event ----------------------------------------------------
+  window.addEventListener('sse:order_updated', (e: Event) => {
+    const order = (e as CustomEvent).detail;
+    const rows = document.querySelectorAll<HTMLElement>(`.order-row[data-order-id="${order.id}"]`);
+    rows.forEach(row => patchRow(row, order));
+  });
+
+  // -- order_deleted event ----------------------------------------------------
+  window.addEventListener('sse:order_deleted', (e: Event) => {
+    const { id } = (e as CustomEvent).detail;
+    document.querySelectorAll<HTMLElement>(`.order-row[data-order-id="${id}"]`).forEach(r => r.remove());
+  });
+})();
+
 // ── Rappels automatiques ─────────────────────────────────────────────────────
 const remindModal    = document.getElementById('remind-modal')!;
 const remindList     = document.getElementById('remind-list')!;

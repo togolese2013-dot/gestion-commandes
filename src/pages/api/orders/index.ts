@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { isAuthenticated, getCurrentUser } from '../../../lib/auth';
 import { createOrder, getAllOrders } from '../../../lib/orders';
 import { sendNewOrderWebhook } from '../../../lib/webhook';
+import { broadcastToAdmins, broadcastBadgeUpdate } from '../../../lib/sse';
 import { getDb } from '../../../lib/db';
 
 export const GET: APIRoute = async ({ request }) => {
@@ -96,6 +97,8 @@ export const POST: APIRoute = async ({ request }) => {
     }, performedBy);
 
     sendNewOrderWebhook(order);
+    broadcastToAdmins('new_order', order);
+    broadcastBadgeUpdate();
 
     return new Response(JSON.stringify(order), {
       status: 201,

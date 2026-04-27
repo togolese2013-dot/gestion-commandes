@@ -479,6 +479,16 @@ const isAdminRole = currentUser?.role === 'admin';
             } catch { /* ignore parse error */ }
           });
 
+          // Relay all SSE events to window so page scripts can subscribe without a second connection
+          const relayedEvents = ['new_order', 'order_updated', 'order_deleted', 'inquiry_new', 'inquiry_updated'];
+          relayedEvents.forEach(evt => {
+            sseSource!.addEventListener(evt, (e: MessageEvent) => {
+              try {
+                window.dispatchEvent(new CustomEvent(`sse:${evt}`, { detail: JSON.parse(e.data) }));
+              } catch { /* ignore */ }
+            });
+          });
+
           sseSource.onerror = () => {
             sseSource?.close();
             sseSource = null;
