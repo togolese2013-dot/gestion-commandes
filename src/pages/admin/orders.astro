@@ -22,15 +22,15 @@ const statusColor: Record<string, string> = {
 ---
 
 <Layout title="Gestion des commandes" isAdmin={true}>
-  <div class="space-y-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
     <!-- Header -->
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Commandes</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{orders.length} commande{orders.length !== 1 ? 's' : ''} au total</p>
+        <p class="text-sm text-gray-500 mt-1">{orders.length} commande{orders.length !== 1 ? 's' : ''} au total</p>
       </div>
-      <div class="flex items-center gap-2 ml-auto">
+      <div class="flex items-center gap-2 shrink-0">
         <a
           href="/api/orders/export?format=xlsx"
           class="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-2.5 rounded-lg transition-colors shadow-sm"

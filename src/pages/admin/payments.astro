@@ -80,12 +80,14 @@ const methodColor: Record<string, string> = {
 ---
 
 <Layout title="Paiements" isAdmin={true}>
-  <div class="space-y-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
     <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Historique des paiements</h1>
-      <p class="text-sm text-gray-500 mt-1">{payments.length} encaissement{payments.length > 1 ? 's' : ''} au total</p>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Historique des paiements</h1>
+        <p class="text-sm text-gray-500 mt-1">{payments.length} encaissement{payments.length > 1 ? 's' : ''} au total</p>
+      </div>
     </div>
 
     <!-- KPIs -->

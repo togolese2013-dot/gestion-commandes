@@ -55,13 +55,13 @@ function getDevisNumber(id: number): string {
 ---
 
 <Layout title="Demandes" isAdmin>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-    <div class="flex items-center justify-between gap-4 mb-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Demandes de Devis</h1>
-        <p class="text-sm text-gray-600 mt-1">{inquiries.length} demande{inquiries.length !== 1 ? 's' : ''}</p>
+        <p class="text-sm text-gray-500 mt-1">{inquiries.length} demande{inquiries.length !== 1 ? 's' : ''}</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 shrink-0">
         <div class="relative hidden md:block">
           <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           <input id="search-input" type="text" placeholder="Rechercher…" class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-green-400 bg-white w-48" />
@@ -79,7 +79,7 @@ function getDevisNumber(id: number): string {
     </div>
 
     <!-- Filtres — icônes (mobile uniquement) -->
-    <div class="flex md:hidden gap-2 mb-6">
+    <div class="flex md:hidden gap-2">
       <button class="filter-btn flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0" data-filter="toutes" title="Toutes" style="background:#047857;color:white;border-color:#047857;">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h7"/></svg>
         <span class="text-xs font-bold">{inquiries.length}</span>

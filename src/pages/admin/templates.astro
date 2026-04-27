@@ -11,18 +11,20 @@ const fmt = (n: number) => n.toLocaleString('fr-FR');
 ---
 
 <Layout title="Modèles de devis" isAdmin>
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6">
-    <div class="flex items-center justify-between gap-4 mb-6">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Modèles de devis</h1>
-        <p class="text-sm text-gray-600 mt-1">Enregistrez vos configurations de produits récurrentes</p>
+        <p class="text-sm text-gray-500 mt-1">Enregistrez vos configurations de produits récurrentes</p>
       </div>
-      <button id="open-create-btn" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-        </svg>
-        Nouveau modèle
-      </button>
+      <div class="shrink-0">
+        <button id="open-create-btn" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nouveau modèle
+        </button>
+      </div>
     </div>
 
     <!-- Templates list -->

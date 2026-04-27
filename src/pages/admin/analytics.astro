@@ -13,28 +13,30 @@ const GA_BASE    = 'https://analytics.google.com/analytics/web/';
 ---
 
 <Layout title="Statistiques" isAdmin={true}>
-  <div class="space-y-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
     <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">📊 Statistiques visiteurs</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Statistiques visiteurs</h1>
         <p class="text-sm text-gray-500 mt-1">Analyse du trafic · Google Analytics 4 — <span class="font-mono text-xs text-emerald-700">{GA_ID}</span></p>
       </div>
-      <a
-        href={GA_BASE}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors"
-        style="background:#047857;"
-        onmouseover="this.style.background='#065f46'"
-        onmouseout="this.style.background='#047857'"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-        </svg>
-        Ouvrir GA4
-      </a>
+      <div class="shrink-0">
+        <a
+          href={GA_BASE}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors"
+          style="background:#047857;"
+          onmouseover="this.style.background='#065f46'"
+          onmouseout="this.style.background='#047857'"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          Ouvrir GA4
+        </a>
+      </div>
     </div>
 
     {LOOKER_URL ? (
