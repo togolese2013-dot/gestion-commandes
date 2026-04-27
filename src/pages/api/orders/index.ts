@@ -3,6 +3,7 @@ import { isAuthenticated, getCurrentUser } from '../../../lib/auth';
 import { createOrder, getAllOrders } from '../../../lib/orders';
 import { sendNewOrderWebhook } from '../../../lib/webhook';
 import { broadcastToAdmins, broadcastBadgeUpdate } from '../../../lib/sse';
+import { logActivity } from '../../../lib/audit';
 import { getDb } from '../../../lib/db';
 
 export const GET: APIRoute = async ({ request }) => {
@@ -99,6 +100,7 @@ export const POST: APIRoute = async ({ request }) => {
     sendNewOrderWebhook(order);
     broadcastToAdmins('new_order', order);
     broadcastBadgeUpdate();
+    logActivity({ action: 'order.created', entity_type: 'order', entity_id: order.id, entity_ref: order.order_number, performed_by: performedBy, details: { client: order.client_name, total: order.total_amount } });
 
     return new Response(JSON.stringify(order), {
       status: 201,

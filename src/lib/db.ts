@@ -189,6 +189,19 @@ function runMigrations(db: Database.Database) {
       notes TEXT DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
+    // Activity / audit log table
+    `CREATE TABLE IF NOT EXISTS activity_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL DEFAULT 'system',
+      entity_id INTEGER,
+      entity_ref TEXT DEFAULT '',
+      performed_by TEXT DEFAULT '',
+      details TEXT DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_activity_logs_entity_type ON activity_logs(entity_type)`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* column already exists or constraint issue */ }

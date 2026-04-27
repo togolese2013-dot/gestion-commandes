@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getInquiryById, updateInquiry, deleteInquiry } from '../../../lib/inquiries';
 import { requireAuth } from '../../../lib/auth';
 import { broadcastToAdmins, broadcastBadgeUpdate } from '../../../lib/sse';
+import { logActivity } from '../../../lib/audit';
 
 export const GET: APIRoute = async (context) => {
   try {
@@ -37,6 +38,7 @@ export const PATCH: APIRoute = async (context) => {
 
     broadcastToAdmins('inquiry_updated', inquiry);
     broadcastBadgeUpdate();
+    logActivity({ action: 'inquiry.updated', entity_type: 'inquiry', entity_id: id, entity_ref: inquiry.client_name });
     return new Response(JSON.stringify(inquiry), { status: 200 });
   } catch (error) {
     console.error('Error updating inquiry:', error);
@@ -60,6 +62,7 @@ export const DELETE: APIRoute = async (context) => {
 
     broadcastToAdmins('inquiry_deleted', { id });
     broadcastBadgeUpdate();
+    logActivity({ action: 'inquiry.deleted', entity_type: 'inquiry', entity_id: id });
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (error) {
     console.error('Error deleting inquiry:', error);

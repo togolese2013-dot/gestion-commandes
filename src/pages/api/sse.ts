@@ -3,6 +3,10 @@ import { isAuthenticated } from '../../lib/auth';
 import { addAdminClient, removeAdminClient, createSSEId, encodeSSE, encodeHeartbeat } from '../../lib/sse';
 import { getAllOrders } from '../../lib/orders';
 import { getAllInquiries } from '../../lib/inquiries';
+import { startScheduler } from '../../lib/scheduler';
+
+// Start the 24h auto-backup scheduler the first time any admin connects
+startScheduler();
 
 export const GET: APIRoute = async ({ request }) => {
   if (!isAuthenticated(request)) {

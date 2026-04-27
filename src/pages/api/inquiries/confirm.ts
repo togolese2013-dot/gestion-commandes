@@ -4,6 +4,7 @@ import { createDevisFromData } from '../../../lib/devis';
 import { sendDevisWebhook } from '../../../lib/webhook';
 import { getEnv } from '../../../lib/env';
 import { broadcastToAdmins, broadcastBadgeUpdate } from '../../../lib/sse';
+import { logActivity } from '../../../lib/audit';
 
 export const POST: APIRoute = async ({ request }) => {
   if (request.method !== 'POST') {
@@ -56,6 +57,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (updatedInquiry) {
       broadcastToAdmins('inquiry_updated', updatedInquiry);
       broadcastBadgeUpdate();
+      logActivity({ action: 'inquiry.devis_sent', entity_type: 'inquiry', entity_id: inquiry_id, entity_ref: inquiry.client_name });
     }
 
     // Send WhatsApp notification to client

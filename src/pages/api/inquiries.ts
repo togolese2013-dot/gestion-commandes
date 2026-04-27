@@ -3,6 +3,7 @@ import { createInquiry, getAllInquiries } from '../../lib/inquiries';
 import { requireAuth } from '../../lib/auth';
 import { sendNewInquiryWebhook } from '../../lib/webhook';
 import { broadcastToAdmins, broadcastBadgeUpdate } from '../../lib/sse';
+import { logActivity } from '../../lib/audit';
 import fs from 'fs';
 import path from 'path';
 
@@ -88,6 +89,7 @@ export const POST: APIRoute = async (context) => {
     sendNewInquiryWebhook(inquiry).catch((err) => console.error('[inquiries.ts] Webhook error:', err));
     broadcastToAdmins('inquiry_new', inquiry);
     broadcastBadgeUpdate();
+    logActivity({ action: 'inquiry.created', entity_type: 'inquiry', entity_id: inquiry.id, entity_ref: inquiry.client_name, performed_by: inquiry.client_name });
 
     return new Response(JSON.stringify(inquiry), { status: 201 });
   } catch (error) {

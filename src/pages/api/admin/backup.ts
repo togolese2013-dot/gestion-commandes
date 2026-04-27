@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
-import { isAuthenticated } from '../../../lib/auth';
+import { isAuthenticated, getCurrentUser } from '../../../lib/auth';
 import { getDb } from '../../../lib/db';
+import { logActivity } from '../../../lib/audit';
 import fs from 'fs';
 import path from 'path';
 
@@ -64,6 +65,9 @@ export const POST: APIRoute = async ({ request }) => {
     pruneOldBackups();
 
     const stat = fs.statSync(destPath);
+    const currentUser = getCurrentUser(request);
+    logActivity({ action: 'backup.manual', entity_type: 'backup', entity_ref: filename, performed_by: currentUser?.full_name ?? '' });
+
     return new Response(JSON.stringify({
       success: true,
       filename,

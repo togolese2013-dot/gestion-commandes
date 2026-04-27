@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { isAuthenticated } from '../../../lib/auth';
 import { getOrderById, updateOrder, deleteOrder } from '../../../lib/orders';
 import { broadcastToAdmins, broadcastToOrder, broadcastBadgeUpdate } from '../../../lib/sse';
+import { logActivity } from '../../../lib/audit';
 
 function parseId(raw: string | undefined): number | null {
   const id = Number(raw);
@@ -47,6 +48,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
     broadcastToAdmins('order_updated', updated);
     broadcastToOrder(updated.order_number, 'order_status', updated);
     broadcastBadgeUpdate();
+    logActivity({ action: 'order.updated', entity_type: 'order', entity_id: id, entity_ref: updated.order_number, performed_by: updated.client_name });
     return new Response(JSON.stringify(updated), { headers: { 'Content-Type': 'application/json' } });
   } catch (err) {
     console.error('[PUT /api/orders/:id]', err);
@@ -64,5 +66,6 @@ export const DELETE: APIRoute = async ({ request, params }) => {
   if (!deleted) return new Response(JSON.stringify({ error: 'Commande introuvable' }), { status: 404 });
   broadcastToAdmins('order_deleted', { id });
   broadcastBadgeUpdate();
+  logActivity({ action: 'order.deleted', entity_type: 'order', entity_id: id, entity_ref: deleted.order_number ?? '', performed_by: '' });
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 };

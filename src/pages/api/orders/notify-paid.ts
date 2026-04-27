@@ -3,6 +3,7 @@ import { isAuthenticated } from '../../../lib/auth';
 import { getOrderById, markOrderProductsPaid } from '../../../lib/orders';
 import { sendProductsPaidWhatsApp } from '../../../lib/whatsapp';
 import { broadcastToAdmins, broadcastToOrder } from '../../../lib/sse';
+import { logActivity } from '../../../lib/audit';
 
 export const POST: APIRoute = async ({ request }) => {
   if (!isAuthenticated(request)) {
@@ -36,6 +37,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (updatedOrder) {
       broadcastToAdmins('order_updated', updatedOrder);
       broadcastToOrder(updatedOrder.order_number, 'order_status', updatedOrder);
+      logActivity({ action: 'order.products_paid', entity_type: 'order', entity_id: updatedOrder.id, entity_ref: updatedOrder.order_number, performed_by: '' });
     }
 
     return new Response(JSON.stringify({ success: true }), {

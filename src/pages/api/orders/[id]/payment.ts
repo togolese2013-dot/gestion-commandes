@@ -3,6 +3,7 @@ import { isAuthenticated, getCurrentUser } from '../../../../lib/auth';
 import { recordPayment } from '../../../../lib/orders';
 import { sendPaymentWebhook } from '../../../../lib/webhook';
 import { broadcastToAdmins, broadcastToOrder } from '../../../../lib/sse';
+import { logActivity } from '../../../../lib/audit';
 
 export const POST: APIRoute = async ({ request, params }) => {
   if (!isAuthenticated(request)) {
@@ -29,6 +30,7 @@ export const POST: APIRoute = async ({ request, params }) => {
     sendPaymentWebhook(order, amount, payment_method);
     broadcastToAdmins('order_updated', order);
     broadcastToOrder(order.order_number, 'order_status', order);
+    logActivity({ action: 'order.payment_recorded', entity_type: 'order', entity_id: id, entity_ref: order.order_number, performed_by: performedBy, details: { amount, payment_method } });
 
     return new Response(JSON.stringify(order), { headers: { 'Content-Type': 'application/json' } });
   } catch (err) {
