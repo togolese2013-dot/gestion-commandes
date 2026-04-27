@@ -65,6 +65,13 @@ function buildUrl(p: number, t: string) {
   u.searchParams.set('type', t);
   return u.pathname + u.search;
 }
+
+// Pre-parse details JSON for each log to avoid TypeScript generics in JSX templates
+const parsedLogs = logs.map(log => {
+  let details: Record<string, unknown> = {};
+  try { details = JSON.parse(log.details || '{}'); } catch { /* ignore */ }
+  return { ...log, parsedDetails: details, hasDetails: Object.keys(details).length > 0 };
+});
 ---
 
 <Layout title="Journal d'activité" currentUser={currentUser}>
@@ -117,12 +124,9 @@ function buildUrl(p: number, t: string) {
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
-            {logs.map(log => {
-              const color  = entityColor(log.entity_type, log.action);
-              const icon   = entityIcon(log.entity_type);
-              let details: Record<string, unknown> = {};
-              try { details = JSON.parse(log.details || '{}'); } catch { /* ignore */ }
-              const hasDetails = Object.keys(details).length > 0;
+            {parsedLogs.map(log => {
+              const color = entityColor(log.entity_type, log.action);
+              const icon  = entityIcon(log.entity_type);
               return (
                 <tr class="hover:bg-gray-50 transition-colors">
                   <td class="px-5 py-3.5 text-gray-500 whitespace-nowrap font-mono text-xs">{fmtDate(log.created_at)}</td>
@@ -139,7 +143,7 @@ function buildUrl(p: number, t: string) {
                     {log.performed_by || <span class="text-gray-300">—</span>}
                   </td>
                   <td class="px-5 py-3.5">
-                    {hasDetails ? (
+                    {log.hasDetails ? (
                       <button
                         class="details-btn text-blue-500 hover:text-blue-700 text-xs underline underline-offset-2"
                         data-details={log.details}
@@ -165,12 +169,9 @@ function buildUrl(p: number, t: string) {
           <div class="text-4xl mb-3">📭</div>
           <p class="font-medium">Aucune activité</p>
         </div>
-      ) : logs.map(log => {
-        const color  = entityColor(log.entity_type, log.action);
-        const icon   = entityIcon(log.entity_type);
-        let details: Record<string, unknown> = {};
-        try { details = JSON.parse(log.details || '{}'); } catch { /* ignore */ }
-        const hasDetails = Object.keys(details).length > 0;
+      ) : parsedLogs.map(log => {
+        const color = entityColor(log.entity_type, log.action);
+        const icon  = entityIcon(log.entity_type);
         return (
           <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <div class="flex items-start justify-between gap-3">
@@ -182,7 +183,7 @@ function buildUrl(p: number, t: string) {
             <p class="mt-2 font-semibold text-gray-800 text-sm">{actionLabel(log.action)}</p>
             {log.entity_ref && <p class="text-xs text-gray-500 mt-0.5 truncate">{log.entity_ref}</p>}
             {log.performed_by && <p class="text-xs text-gray-400 mt-0.5">Par : {log.performed_by}</p>}
-            {hasDetails && (
+            {log.hasDetails && (
               <button
                 class="details-btn mt-2 text-blue-500 hover:text-blue-700 text-xs underline underline-offset-2"
                 data-details={log.details}
