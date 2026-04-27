@@ -97,7 +97,7 @@ const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? status
         </div>
 
         <!-- Progress steps -->
-        <div class="flex items-center justify-between px-2 py-4">
+        <div id="stepper" class="flex items-center justify-between px-2 py-4">
           {[
             { label: 'Commande reçue', step: 1 },
             { label: 'Produits achetés', step: 2 },
@@ -106,7 +106,7 @@ const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? status
           ].map((s, i) => (
             <div class="flex items-center flex-1">
               <div class="flex flex-col items-center flex-1">
-                <div class={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                <div id={`step-circle-${s.step}`} class={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   s.step <= (statusInfo?.step ?? 1)
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
                     : 'bg-gray-100 text-gray-400'
@@ -117,12 +117,12 @@ const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? status
                     </svg>
                   ) : s.step.toString()}
                 </div>
-                <span class={`text-[10px] mt-1.5 font-medium text-center leading-tight ${
+                <span id={`step-label-${s.step}`} class={`text-[10px] mt-1.5 font-medium text-center leading-tight ${
                   s.step <= (statusInfo?.step ?? 1) ? 'text-blue-700' : 'text-gray-400'
                 }`}>{s.label}</span>
               </div>
               {i < 3 && (
-                <div class={`h-0.5 flex-1 mx-1 mb-5 rounded transition-all ${
+                <div id={`step-conn-${s.step}`} class={`h-0.5 flex-1 mx-1 mb-5 rounded transition-all ${
                   s.step < (statusInfo?.step ?? 1) ? 'bg-blue-400' : 'bg-gray-200'
                 }`}></div>
               )}
@@ -131,10 +131,10 @@ const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? status
         </div>
 
         <!-- Status banner -->
-        <div class={`rounded-2xl border-2 p-5 text-center ${statusInfo?.color}`}>
-          <div class="text-3xl mb-2">{statusInfo?.icon}</div>
-          <div class="font-bold text-base mb-1">{statusInfo?.label}</div>
-          <div class="text-sm opacity-75 leading-relaxed">{statusInfo?.description}</div>
+        <div id="status-banner" class={`rounded-2xl border-2 p-5 text-center ${statusInfo?.color}`}>
+          <div id="status-icon" class="text-3xl mb-2">{statusInfo?.icon}</div>
+          <div id="status-label" class="font-bold text-base mb-1">{statusInfo?.label}</div>
+          <div id="status-desc" class="text-sm opacity-75 leading-relaxed">{statusInfo?.description}</div>
         </div>
 
         <!-- Info card -->
@@ -206,7 +206,7 @@ const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? status
             </div>
             <div class="flex justify-between items-center pt-3 border-t border-gray-100">
               <span class="font-bold text-gray-900">Reste à payer</span>
-              <span class={`text-lg font-bold ${order.remaining_balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              <span id="order-remaining" class={`text-lg font-bold ${order.remaining_balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                 {order.remaining_balance.toLocaleString('fr-FR')} FCFA
               </span>
             </div>
@@ -305,4 +305,126 @@ const statusInfo = order ? (statusConfig[order.status ?? 'en_attente'] ?? status
     const q = new URLSearchParams(window.location.search).get('q');
     if (q) input.value = q.toUpperCase();
   }
+</script>
+
+<script define:vars={{ orderNumber: order?.order_number ?? null }}>
+// ── SSE: Live order tracking ───────────────────────────────────────────────────
+if (orderNumber) {
+  // Mirror of server-side statusConfig
+  const STATUS_CONFIG = {
+    en_attente: (isPaid) => ({
+      label:       isPaid ? 'Produits achetés — En acheminement' : 'En cours de traitement',
+      icon:        isPaid ? '🛍️' : '⏳',
+      description: isPaid
+        ? "Vos produits ont été achetés et sont en cours d'acheminement vers le Togo. Vous serez contacté(e) dès leur arrivée."
+        : "Votre commande est en cours de préparation. Vous serez contacté(e) via WhatsApp dès que vos colis seront disponibles à la boutique (Togo).",
+      color: isPaid
+        ? 'bg-blue-50 border-blue-200 text-blue-900'
+        : 'bg-amber-50 border-amber-200 text-amber-900',
+      step: isPaid ? 2 : 1,
+    }),
+    disponible: () => ({
+      label:       'Prête à récupérer',
+      icon:        '✅',
+      description: 'Bonne nouvelle ! Votre commande est prête. Venez la récupérer avec votre numéro de commande.',
+      color:       'bg-green-50 border-green-200 text-green-900',
+      step:        3,
+    }),
+    recupere: () => ({
+      label:       'Commande récupérée',
+      icon:        '📦',
+      description: 'Cette commande a été récupérée et soldée. Merci pour votre confiance !',
+      color:       'bg-gray-50 border-gray-200 text-gray-700',
+      step:        4,
+    }),
+  };
+
+  const CHECK_SVG = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
+
+  function getInfo(order) {
+    const isPaid = !!order.products_paid_at;
+    const fn = STATUS_CONFIG[order.status ?? 'en_attente'] ?? STATUS_CONFIG.en_attente;
+    return fn(isPaid);
+  }
+
+  function updateStepper(currentStep) {
+    for (let s = 1; s <= 4; s++) {
+      const circle = document.getElementById(`step-circle-${s}`);
+      const label  = document.getElementById(`step-label-${s}`);
+      const conn   = document.getElementById(`step-conn-${s}`);  // connector after step s
+
+      if (!circle || !label) continue;
+
+      if (s < currentStep) {
+        // Done — blue + checkmark
+        circle.className = 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all bg-blue-600 text-white shadow-md shadow-blue-200';
+        circle.innerHTML = CHECK_SVG;
+        label.className  = 'text-[10px] mt-1.5 font-medium text-center leading-tight text-blue-700';
+      } else if (s === currentStep) {
+        // Active — blue + number
+        circle.className = 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all bg-blue-600 text-white shadow-md shadow-blue-200';
+        circle.textContent = String(s);
+        label.className  = 'text-[10px] mt-1.5 font-medium text-center leading-tight text-blue-700';
+      } else {
+        // Pending — gray
+        circle.className = 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all bg-gray-100 text-gray-400';
+        circle.textContent = String(s);
+        label.className  = 'text-[10px] mt-1.5 font-medium text-center leading-tight text-gray-400';
+      }
+
+      if (conn) {
+        conn.className = `h-0.5 flex-1 mx-1 mb-5 rounded transition-all ${s < currentStep ? 'bg-blue-400' : 'bg-gray-200'}`;
+      }
+    }
+  }
+
+  function updateBanner(info) {
+    const banner = document.getElementById('status-banner');
+    if (!banner) return;
+    // Reset color classes
+    banner.className = `rounded-2xl border-2 p-5 text-center ${info.color}`;
+    const icon  = document.getElementById('status-icon');
+    const lbl   = document.getElementById('status-label');
+    const desc  = document.getElementById('status-desc');
+    if (icon) icon.textContent  = info.icon;
+    if (lbl)  lbl.textContent   = info.label;
+    if (desc) desc.textContent  = info.description;
+  }
+
+  function updateRemaining(order) {
+    const el = document.getElementById('order-remaining');
+    if (!el) return;
+    const remaining = Number(order.remaining_balance ?? 0);
+    el.textContent = `${remaining.toLocaleString('fr-FR')} FCFA`;
+    el.classList.toggle('text-red-600',  remaining > 0);
+    el.classList.toggle('text-green-600', remaining <= 0);
+  }
+
+  function applyOrder(order) {
+    const info = getInfo(order);
+    updateStepper(info.step);
+    updateBanner(info);
+    updateRemaining(order);
+  }
+
+  // SSE connection
+  let sse: EventSource | null = null;
+
+  function connectSSE() {
+    sse = new EventSource(`/api/sse/order/${encodeURIComponent(orderNumber)}`);
+
+    sse.addEventListener('order_status', (e: MessageEvent) => {
+      try { applyOrder(JSON.parse(e.data)); } catch { /* ignore */ }
+    });
+
+    sse.onerror = () => {
+      sse?.close();
+      sse = null;
+      setTimeout(connectSSE, 5_000);
+    };
+  }
+
+  connectSSE();
+  window.addEventListener('beforeunload', () => sse?.close());
+}
 </script>

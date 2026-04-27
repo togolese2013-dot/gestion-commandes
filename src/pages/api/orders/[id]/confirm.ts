@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { isAuthenticated, getCurrentUser } from '../../../../lib/auth';
 import { confirmOrderAvailable, confirmOrderPickedUp, getOrderById } from '../../../../lib/orders';
 import { sendOrderReadyWebhook } from '../../../../lib/webhook';
-import { broadcastToAdmins, broadcastBadgeUpdate } from '../../../../lib/sse';
+import { broadcastToAdmins, broadcastToOrder, broadcastBadgeUpdate } from '../../../../lib/sse';
 
 export const POST: APIRoute = async ({ request, params }) => {
   if (!isAuthenticated(request)) {
@@ -46,6 +46,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 
     if (!order) return new Response(JSON.stringify({ error: 'Commande introuvable' }), { status: 404 });
     broadcastToAdmins('order_updated', order);
+    broadcastToOrder(order.order_number, 'order_status', order);
     broadcastBadgeUpdate();
     return new Response(JSON.stringify(order), { headers: { 'Content-Type': 'application/json' } });
   } catch (err) {

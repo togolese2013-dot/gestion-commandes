@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { isAuthenticated, getCurrentUser } from '../../../../lib/auth';
 import { recordPayment } from '../../../../lib/orders';
 import { sendPaymentWebhook } from '../../../../lib/webhook';
-import { broadcastToAdmins } from '../../../../lib/sse';
+import { broadcastToAdmins, broadcastToOrder } from '../../../../lib/sse';
 
 export const POST: APIRoute = async ({ request, params }) => {
   if (!isAuthenticated(request)) {
@@ -28,6 +28,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 
     sendPaymentWebhook(order, amount, payment_method);
     broadcastToAdmins('order_updated', order);
+    broadcastToOrder(order.order_number, 'order_status', order);
 
     return new Response(JSON.stringify(order), { headers: { 'Content-Type': 'application/json' } });
   } catch (err) {
