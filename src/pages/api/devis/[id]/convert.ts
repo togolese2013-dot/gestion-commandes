@@ -3,6 +3,7 @@ import { requireAuth } from '../../../../lib/auth';
 import { getDevisById } from '../../../../lib/devis';
 import { getInquiryById, updateInquiry } from '../../../../lib/inquiries';
 import { createOrder } from '../../../../lib/orders';
+import { sendNewOrderWebhook } from '../../../../lib/webhook';
 
 export const POST: APIRoute = async (context) => {
   const redirect = requireAuth(context);
@@ -62,6 +63,13 @@ export const POST: APIRoute = async (context) => {
       products,
       notes: `Converti du devis ${devis.devis_number}`,
     });
+
+    // Notify client via WhatsApp
+    try {
+      await sendNewOrderWebhook(order);
+    } catch (webhookErr) {
+      console.error('[Webhook new_order on convert failed]', webhookErr);
+    }
 
     return new Response(JSON.stringify({
       success: true,

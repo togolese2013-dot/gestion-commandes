@@ -769,6 +769,11 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
 });
     document.getElementById('btn-new-request').addEventListener('click', resetForm);
 
+    // Block spaces in phone number field
+    const phoneInput = document.getElementById('client-phone');
+    phoneInput.addEventListener('keydown', e => { if (e.key === ' ') e.preventDefault(); });
+    phoneInput.addEventListener('input', () => { phoneInput.value = phoneInput.value.replace(/\s/g, ''); });
+
     // Delivery card toggle
     document.getElementById('delivery-grid').addEventListener('click', (e) => {
       const card = e.target.closest('.delivery-card');
@@ -852,7 +857,7 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
           </div>
 
           <div class="field-group">
-            <label class="field-label">Photo ou lien du produit <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9ca3af;">(optionnel)</span></label>
+            <label class="field-label">Photo ou lien du produit <span class="req">*</span></label>
             <div class="media-tabs">
               <button type="button" class="media-tab active" data-tab="photo">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1008,10 +1013,24 @@ const GA_ID = import.meta.env.PUBLIC_GA_ID;
       }
 
       for (let i = 0; i < products.length; i++) {
-        const card = document.querySelector(`[data-id="${products[i].id}"]`);
+        const p = products[i];
+        const card = document.querySelector(`[data-id="${p.id}"]`);
         const pName = card.querySelector('.p-name').value.trim();
         if (!pName) {
           showError(`Veuillez renseigner le nom du produit ${i + 1}.`);
+          return;
+        }
+        const pState = card.querySelector('.p-state').value;
+        if (!pState) {
+          showError(`Veuillez sélectionner l'état du produit ${i + 1} (Neuf ou Occasion).`);
+          card.querySelector('.p-state').focus();
+          return;
+        }
+        const hasPhoto = p.files.length > 0;
+        const hasLink = p.links.some(l => l.url && l.url.trim() !== '');
+        if (!hasPhoto && !hasLink) {
+          showError(`Produit ${i + 1} : veuillez ajouter au moins une photo ou un lien du produit.`);
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
         }
       }

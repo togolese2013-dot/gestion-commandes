@@ -128,6 +128,34 @@ export async function sendNewInquiryWebhook(inquiry: Inquiry): Promise<void> {
   }
 }
 
+export async function sendProductsPaidWebhook(order: Order): Promise<void> {
+  const url = getEnv('N8N_WEBHOOK_PRODUCTS_PAID');
+  console.log('[Webhook products_paid] URL:', url || 'NON DEFINIE');
+  if (!url) { console.error('[Webhook products_paid] Variable N8N_WEBHOOK_PRODUCTS_PAID manquante'); return; }
+  if (url.includes('your-n8n-instance')) { console.error('[Webhook products_paid] URL placeholder détectée'); return; }
+
+  const siteUrl = getEnv('PUBLIC_SITE_URL');
+  const payload = {
+    event: 'products_paid',
+    order_number: order.order_number,
+    client_name: order.client_name,
+    client_phone: order.client_phone,
+    total_amount: order.total_amount,
+    order_url: `${siteUrl}/commande/${order.order_number}`,
+  };
+  console.log('[Webhook products_paid] Envoi vers:', url);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    console.log('[Webhook products_paid] Réponse HTTP:', res.status);
+  } catch (err) {
+    console.error('[Webhook products_paid] Erreur fetch:', err);
+  }
+}
+
 export async function sendDevisWebhook(inquiry: Inquiry, devis_number: string, share_url: string): Promise<void> {
   const url = getEnv('N8N_WEBHOOK_DEVIS_SENT');
   if (!url || url.includes('your-n8n-instance')) return;
