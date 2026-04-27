@@ -79,8 +79,9 @@ export function broadcastBadgeUpdate(): void {
   const orders     = getAllOrders();
   const inquiries  = getAllInquiries();
   const orders_pending    = orders.filter(o => o.status === 'en_attente').length;
+  const orders_disponible = orders.filter(o => o.status === 'disponible').length;
   const inquiries_pending = inquiries.filter(i => i.status === 'en_attente').length;
-  broadcastToAdmins('badge_update', { orders_pending, inquiries_pending });
+  broadcastToAdmins('badge_update', { orders_pending, orders_disponible, inquiries_pending });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

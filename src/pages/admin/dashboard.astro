@@ -88,12 +88,12 @@ const yTicks = [0, 0.25, 0.5, 0.75, 1].map(r => ({
       </div>
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col gap-1">
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">⏳ En attente</p>
-        <p class="text-3xl font-bold text-yellow-600">{stats.en_attente}</p>
+        <p id="dash-en-attente" class="text-3xl font-bold text-yellow-600">{stats.en_attente}</p>
         <p class="text-xs text-gray-400">à traiter</p>
       </div>
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col gap-1">
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">✅ Disponible</p>
-        <p class="text-3xl font-bold text-green-600">{stats.disponible}</p>
+        <p id="dash-disponible" class="text-3xl font-bold text-green-600">{stats.disponible}</p>
         <p class="text-xs text-gray-400">à récupérer</p>
       </div>
     </div>
@@ -251,4 +251,45 @@ const yTicks = [0, 0.25, 0.5, 0.75, 1].map(r => ({
 
   </div>
 </Layout>
+
+<script>
+// ── SSE: Dashboard live updates ───────────────────────────────────────────────
+(function () {
+  function showRefreshBanner(msg: string) {
+    if (document.getElementById('sse-refresh-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'sse-refresh-banner';
+    banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[300] bg-blue-600 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3';
+    banner.innerHTML = `
+      <span>${msg}</span>
+      <button class="bg-white text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors">Rafraîchir</button>
+      <button class="text-blue-200 hover:text-white text-lg leading-none ml-1">✕</button>
+    `;
+    (banner.querySelectorAll('button')[0] as HTMLButtonElement).addEventListener('click', () => window.location.reload());
+    (banner.querySelectorAll('button')[1] as HTMLButtonElement).addEventListener('click', () => banner.remove());
+    document.body.appendChild(banner);
+  }
+
+  // badge_update carries live en_attente + disponible counts
+  window.addEventListener('sse:badge_update', (e: Event) => {
+    const data = (e as CustomEvent).detail;
+    const enAttenteEl = document.getElementById('dash-en-attente');
+    const disponibleEl = document.getElementById('dash-disponible');
+    if (enAttenteEl && data.orders_pending !== undefined) enAttenteEl.textContent = String(data.orders_pending);
+    if (disponibleEl && data.orders_disponible !== undefined) disponibleEl.textContent = String(data.orders_disponible);
+  });
+
+  // new order: show banner (CA/totals require a full reload to be accurate)
+  window.addEventListener('sse:new_order', (e: Event) => {
+    const order = (e as CustomEvent).detail;
+    showRefreshBanner(`🆕 Nouvelle commande : ${order.client_name}`);
+  });
+
+  // new inquiry: show banner
+  window.addEventListener('sse:inquiry_new', (e: Event) => {
+    const inq = (e as CustomEvent).detail;
+    showRefreshBanner(`🆕 Nouvelle demande : ${inq.client_name}`);
+  });
+})();
+</script>
 

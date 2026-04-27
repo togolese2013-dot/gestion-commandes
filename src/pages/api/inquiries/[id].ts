@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getInquiryById, updateInquiry, deleteInquiry } from '../../../lib/inquiries';
 import { requireAuth } from '../../../lib/auth';
+import { broadcastToAdmins, broadcastBadgeUpdate } from '../../../lib/sse';
 
 export const GET: APIRoute = async (context) => {
   try {
@@ -34,6 +35,8 @@ export const PATCH: APIRoute = async (context) => {
       return new Response(JSON.stringify({ error: 'Non trouvé' }), { status: 404 });
     }
 
+    broadcastToAdmins('inquiry_updated', inquiry);
+    broadcastBadgeUpdate();
     return new Response(JSON.stringify(inquiry), { status: 200 });
   } catch (error) {
     console.error('Error updating inquiry:', error);
@@ -55,6 +58,8 @@ export const DELETE: APIRoute = async (context) => {
       return new Response(JSON.stringify({ error: 'Non trouvé' }), { status: 404 });
     }
 
+    broadcastToAdmins('inquiry_deleted', { id });
+    broadcastBadgeUpdate();
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (error) {
     console.error('Error deleting inquiry:', error);

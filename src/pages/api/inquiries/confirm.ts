@@ -3,6 +3,7 @@ import { getInquiryById, updateInquiry } from '../../../lib/inquiries';
 import { createDevisFromData } from '../../../lib/devis';
 import { sendDevisWebhook } from '../../../lib/webhook';
 import { getEnv } from '../../../lib/env';
+import { broadcastToAdmins, broadcastBadgeUpdate } from '../../../lib/sse';
 
 export const POST: APIRoute = async ({ request }) => {
   if (request.method !== 'POST') {
@@ -46,12 +47,16 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Update inquiry with products, delivery type, and note
-    updateInquiry(inquiry_id, {
+    const updatedInquiry = updateInquiry(inquiry_id, {
       products,
       delivery_type,
       notes: note,
       status: 'acceptee', // Mark as accepted (devis sent)
     });
+    if (updatedInquiry) {
+      broadcastToAdmins('inquiry_updated', updatedInquiry);
+      broadcastBadgeUpdate();
+    }
 
     // Send WhatsApp notification to client
     const siteUrl = getEnv('PUBLIC_SITE_URL');

@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { createInquiry, getAllInquiries } from '../../lib/inquiries';
 import { requireAuth } from '../../lib/auth';
 import { sendNewInquiryWebhook } from '../../lib/webhook';
+import { broadcastToAdmins, broadcastBadgeUpdate } from '../../lib/sse';
 import fs from 'fs';
 import path from 'path';
 
@@ -85,6 +86,8 @@ export const POST: APIRoute = async (context) => {
 
     // Notify owner via WhatsApp (fire-and-forget)
     sendNewInquiryWebhook(inquiry).catch((err) => console.error('[inquiries.ts] Webhook error:', err));
+    broadcastToAdmins('inquiry_new', inquiry);
+    broadcastBadgeUpdate();
 
     return new Response(JSON.stringify(inquiry), { status: 201 });
   } catch (error) {

@@ -480,7 +480,7 @@ const isAdminRole = currentUser?.role === 'admin';
           });
 
           // Relay all SSE events to window so page scripts can subscribe without a second connection
-          const relayedEvents = ['new_order', 'order_updated', 'order_deleted', 'inquiry_new', 'inquiry_updated'];
+          const relayedEvents = ['new_order', 'order_updated', 'order_deleted', 'inquiry_new', 'inquiry_updated', 'inquiry_deleted', 'badge_update'];
           relayedEvents.forEach(evt => {
             sseSource!.addEventListener(evt, (e: MessageEvent) => {
               try {

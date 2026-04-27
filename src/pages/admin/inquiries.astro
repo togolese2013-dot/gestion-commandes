@@ -1468,6 +1468,72 @@ function getDevisNumber(id: number): string {
       }
     }
 
+    // ── SSE: real-time inquiry updates ────────────────────────────────────────
+    (function () {
+      const STATUS_INFO = {
+        en_attente: { label: 'En attente',   badge: 'bg-yellow-100 text-yellow-800', card: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+        acceptee:   { label: 'Devis envoyé', badge: 'bg-blue-100 text-blue-800',     card: 'bg-blue-50 text-blue-700 border-blue-200' },
+        refusee:    { label: 'Refusée',      badge: 'bg-red-100 text-red-800',       card: 'bg-red-50 text-red-700 border-red-200' },
+        annulee:    { label: 'Annulée',      badge: 'bg-gray-100 text-gray-600',     card: 'bg-gray-50 text-gray-500 border-gray-200' },
+        convertie:  { label: 'Convertie',    badge: 'bg-blue-100 text-blue-800',     card: 'bg-blue-50 text-blue-700 border-blue-200' },
+      };
+
+      function showRefreshBanner(msg) {
+        if (document.getElementById('sse-refresh-banner')) return;
+        const banner = document.createElement('div');
+        banner.id = 'sse-refresh-banner';
+        banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[300] bg-blue-600 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3';
+        banner.innerHTML = `
+          <span>${msg}</span>
+          <button class="bg-white text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors">Rafraîchir</button>
+          <button class="text-blue-200 hover:text-white text-lg leading-none ml-1">✕</button>
+        `;
+        banner.querySelectorAll('button')[0].addEventListener('click', () => window.location.reload());
+        banner.querySelectorAll('button')[1].addEventListener('click', () => banner.remove());
+        document.body.appendChild(banner);
+      }
+
+      // New inquiry from client form
+      window.addEventListener('sse:inquiry_new', (e) => {
+        const inq = e.detail;
+        window.__showToast?.(`🆕 Nouvelle demande : ${inq.client_name}`, 'success', 8000);
+        showRefreshBanner(`🆕 Nouvelle demande de ${inq.client_name}`);
+      });
+
+      // Inquiry status updated (by another admin session)
+      window.addEventListener('sse:inquiry_updated', (e) => {
+        const inq = e.detail;
+        const info = STATUS_INFO[inq.status] ?? STATUS_INFO.en_attente;
+
+        // Update data-status on rows/cards
+        document.querySelectorAll(`tr[data-id="${inq.id}"], .inquiry-card[data-id="${inq.id}"]`).forEach(el => {
+          el.setAttribute('data-status', inq.status);
+        });
+
+        // Update status badge
+        document.querySelectorAll(
+          `tr[data-id="${inq.id}"] .status-badge, .inquiry-card[data-id="${inq.id}"] .status-badge`
+        ).forEach(badge => {
+          badge.textContent = info.label;
+          badge.className = badge.className.replace(/bg-\w+-\d+\s+|text-\w+-\d+\s+|border-\w+-\d+\s*/g, '').trim();
+          info.card.split(' ').forEach(c => badge.classList.add(c));
+        });
+
+        // Update status select
+        document.querySelectorAll(`.status-select[data-id="${inq.id}"]`).forEach(sel => {
+          sel.value = inq.status;
+          sel.className = sel.className.replace(/bg-\w+-100\s+|text-\w+-\d+\s*/g, '').trim();
+          info.badge.split(' ').forEach(c => sel.classList.add(c));
+        });
+      });
+
+      // Inquiry deleted
+      window.addEventListener('sse:inquiry_deleted', (e) => {
+        const { id } = e.detail;
+        document.querySelectorAll(`.inquiry-card[data-id="${id}"], tr[data-id="${id}"]`).forEach(r => r.remove());
+      });
+    })();
+
     // ── Success overlay (devis sent) ───────────────────────────
     const dsoOverlay = document.getElementById('devis-success-overlay');
     const dsoCopy = document.getElementById('dso-copy');
