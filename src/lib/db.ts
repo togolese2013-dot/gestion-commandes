@@ -202,6 +202,10 @@ function runMigrations(db: Database.Database) {
     )`,
     `CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_activity_logs_entity_type ON activity_logs(entity_type)`,
+    // Cancellation fields for orders
+    `ALTER TABLE orders ADD COLUMN cancelled_by TEXT DEFAULT ''`,
+    `ALTER TABLE orders ADD COLUMN cancelled_at TEXT DEFAULT NULL`,
+    `ALTER TABLE orders ADD COLUMN cancellation_reason TEXT DEFAULT ''`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* column already exists or constraint issue */ }
@@ -212,6 +216,9 @@ function runMigrations(db: Database.Database) {
 
   // Add 'convertie' to inquiries status CHECK constraint
   migrateInquiriesAddConvertie(db);
+
+  // Add 'annulee' to orders status CHECK constraint
+  migrateOrdersAddAnnulee(db);
 }
 
 function migrateInquiriesConstraint(db: Database.Database) {
@@ -303,6 +310,69 @@ function migrateInquiriesAddConvertie(db: Database.Database) {
   } catch (e) {
     db.pragma('foreign_keys = ON');
     console.log('[Migration] inquiries convertie already present');
+  }
+}
+
+function migrateOrdersAddAnnulee(db: Database.Database) {
+  const row = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='orders'`).get() as any;
+  if (!row || row.sql.includes("'annulee'")) return; // Already has 'annulee'
+
+  const migrate = db.transaction(() => {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS orders_v2 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_number TEXT UNIQUE NOT NULL,
+        client_name TEXT NOT NULL,
+        client_phone TEXT NOT NULL,
+        delivery_type TEXT NOT NULL CHECK(delivery_type IN ('avion', 'bateau')),
+        total_amount REAL NOT NULL DEFAULT 0,
+        deposit REAL NOT NULL DEFAULT 0,
+        remaining_balance REAL NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'en_attente' CHECK(status IN ('en_attente', 'disponible', 'recupere', 'annulee')),
+        notes TEXT DEFAULT '',
+        deposit_payment_method TEXT DEFAULT '',
+        created_by TEXT DEFAULT '',
+        marked_available_by TEXT DEFAULT '',
+        picked_up_by TEXT DEFAULT '',
+        cancelled_by TEXT DEFAULT '',
+        cancelled_at TEXT DEFAULT NULL,
+        cancellation_reason TEXT DEFAULT '',
+        reminder_sent_at TEXT DEFAULT NULL,
+        products_paid_at TEXT DEFAULT NULL,
+        client_id INTEGER REFERENCES clients(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO orders_v2
+        SELECT id, order_number, client_name, client_phone, delivery_type,
+               total_amount, deposit, remaining_balance, status, notes,
+               COALESCE(deposit_payment_method, ''),
+               COALESCE(created_by, ''),
+               COALESCE(marked_available_by, ''),
+               COALESCE(picked_up_by, ''),
+               COALESCE(cancelled_by, ''),
+               cancelled_at,
+               COALESCE(cancellation_reason, ''),
+               reminder_sent_at,
+               products_paid_at,
+               client_id,
+               created_at, updated_at
+        FROM orders;
+      DROP TABLE orders;
+      ALTER TABLE orders_v2 RENAME TO orders;
+      CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+      CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
+    `);
+  });
+
+  try {
+    db.pragma('foreign_keys = OFF');
+    migrate();
+    db.pragma('foreign_keys = ON');
+    console.log('[Migration] orders status: added annulee');
+  } catch (e) {
+    db.pragma('foreign_keys = ON');
+    console.log('[Migration] orders annulee already present');
   }
 }
 

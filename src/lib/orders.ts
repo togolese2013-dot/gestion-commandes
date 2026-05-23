@@ -27,12 +27,15 @@ export interface Order {
   total_amount: number;
   deposit: number;
   remaining_balance: number;
-  status?: 'en_attente' | 'disponible' | 'recupere';
+  status?: 'en_attente' | 'disponible' | 'recupere' | 'annulee';
   notes?: string;
   deposit_payment_method?: string;
   created_by?: string;
   marked_available_by?: string;
   picked_up_by?: string;
+  cancelled_by?: string;
+  cancelled_at?: string | null;
+  cancellation_reason?: string;
   products_paid_at?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -353,6 +356,15 @@ export function deleteOrder(id: number): boolean {
   const db = getDb();
   const result = db.prepare(`DELETE FROM orders WHERE id = ?`).run(id);
   return result.changes > 0;
+}
+
+export function cancelOrder(id: number, reason = '', performedBy = ''): Order | null {
+  if (!id || isNaN(id)) return null;
+  const db = getDb();
+  db.prepare(
+    `UPDATE orders SET status = 'annulee', cancelled_by = ?, cancelled_at = datetime('now'), cancellation_reason = ?, updated_at = datetime('now') WHERE id = ? AND status IN ('en_attente', 'disponible')`
+  ).run(performedBy, reason, id);
+  return getOrderById(id);
 }
 
 /** Mark order products as paid (set products_paid_at timestamp). */

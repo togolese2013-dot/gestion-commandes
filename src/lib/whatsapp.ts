@@ -110,3 +110,31 @@ export async function sendProductsPaidWhatsApp(order: Order): Promise<void> {
     components
   );
 }
+
+/**
+ * Notify the client that their order has been cancelled.
+ * Template: commande_annulee
+ *   Body {{1}} = client_name
+ *   Body {{2}} = order_number
+ *   Body {{3}} = reason (raison de l'annulation)
+ */
+export async function sendOrderCancelledWhatsApp(order: Order, reason = ''): Promise<void> {
+  const orderNumber = order.order_number ?? '';
+  const components = [
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: order.client_name },
+        { type: 'text', text: orderNumber },
+        { type: 'text', text: reason || 'Annulation par l\'équipe Togolese' },
+      ],
+    },
+  ];
+
+  await sendTemplate(
+    order.client_phone,
+    'commande_annulee',
+    'fr',
+    components
+  );
+}

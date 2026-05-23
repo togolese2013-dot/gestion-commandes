@@ -156,6 +156,26 @@ export async function sendProductsPaidWebhook(order: Order): Promise<void> {
   }
 }
 
+export async function sendOrderCancelledWebhook(order: Order, reason = ''): Promise<void> {
+  const url = getEnv('N8N_WEBHOOK_ORDER_CANCELLED');
+  if (!url || url.includes('your-n8n-instance')) return;
+
+  const siteUrl = getEnv('PUBLIC_SITE_URL');
+  await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event: 'order_cancelled',
+      order_number: order.order_number,
+      client_name: order.client_name,
+      client_phone: order.client_phone,
+      reason,
+      total_amount: order.total_amount,
+      order_url: `${siteUrl}/commande/${order.order_number}`,
+    }),
+  }).catch(err => console.error('[Webhook order_cancelled]', err));
+}
+
 export async function sendDevisWebhook(inquiry: Inquiry, devis_number: string, share_url: string): Promise<void> {
   const url = getEnv('N8N_WEBHOOK_DEVIS_SENT');
   if (!url || url.includes('your-n8n-instance')) return;
