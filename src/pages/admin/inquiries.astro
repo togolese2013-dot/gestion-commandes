@@ -293,6 +293,7 @@ function getDevisNumber(id: number): string {
         </table>
       </div>
     </div>
+    <div id="inquiries-pagination"></div>
   </div>
 
   <!-- ══════════════════════════════════════════════════
@@ -703,42 +704,106 @@ function getDevisNumber(id: number): string {
   </style>
 
   <script>
-    // ── Filtres ────────────────────────────────────────────────────────────
-    (function () {
-      const btns = document.querySelectorAll('.filter-btn');
-      const rows = document.querySelectorAll('tbody tr[data-status]');
-      const cards = document.querySelectorAll('.inquiry-card[data-status]');
+    // ── Filtres + Pagination ───────────────────────────────────────────────
+    let activeFilter = 'toutes';
+    let inqPage = 1;
+    const INQ_PAGE_SIZE = 25;
 
-      btns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const filter = btn.getAttribute('data-filter');
+    function applyInqFilters() {
+      const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
+      const q = (searchInput?.value || '').toLowerCase().trim();
+      const rows = Array.from(document.querySelectorAll('tbody tr[data-status]')) as HTMLElement[];
+      const cards = Array.from(document.querySelectorAll('.inquiry-card[data-status]')) as HTMLElement[];
 
-          // Style boutons
-          btns.forEach(b => {
-            b.style.background = 'white';
-            b.style.color = '#6b7280';
-            b.style.borderColor = '#e5e7eb';
-            const badge = b.querySelector('span');
-            if (badge) badge.style.background = '#f3f4f6';
-          });
-          btn.style.background = '#047857';
-          btn.style.color = 'white';
-          btn.style.borderColor = '#047857';
-          const activeBadge = btn.querySelector('span');
-          if (activeBadge) activeBadge.style.background = 'rgba(255,255,255,0.25)';
+      // Pair rows+cards: each inquiry has one tr (desktop) + one card (mobile)
+      // We paginate pairs together by pairing by data-id
+      const desktopFiltered: HTMLElement[] = [];
+      const mobileFiltered: HTMLElement[] = [];
 
-          // Filtrer lignes tableau + cartes mobile
-          [...rows, ...cards].forEach(el => {
-            const status = el.getAttribute('data-status');
-            const devisRefuse = el.getAttribute('data-devis-refuse') === 'true';
-            const visible = filter === 'toutes'
-              || status === filter
-              || (filter === 'refusee' && devisRefuse);
-            (el as HTMLElement).style.display = visible ? '' : 'none';
-          });
-        });
+      [...rows, ...cards].forEach(el => {
+        const status = el.getAttribute('data-status') ?? '';
+        const devisRefuse = el.getAttribute('data-devis-refuse') === 'true';
+        const matchFilter = activeFilter === 'toutes' || status === activeFilter
+          || (activeFilter === 'refusee' && devisRefuse);
+        const matchSearch = !q || (el.textContent || '').toLowerCase().includes(q);
+        const show = matchFilter && matchSearch;
+        el.style.display = show ? '' : 'none';
+        if (show) {
+          if (el.tagName === 'TR') desktopFiltered.push(el);
+          else mobileFiltered.push(el);
+        }
       });
-    })();
+
+      const total = desktopFiltered.length;
+      const totalPages = Math.max(1, Math.ceil(total / INQ_PAGE_SIZE));
+      if (inqPage > totalPages) inqPage = totalPages;
+      const start = (inqPage - 1) * INQ_PAGE_SIZE;
+      const end = start + INQ_PAGE_SIZE;
+
+      desktopFiltered.forEach((el, i) => { el.style.display = (i >= start && i < end) ? '' : 'none'; });
+      mobileFiltered.forEach((el, i) => { el.style.display = (i >= start && i < end) ? '' : 'none'; });
+
+      renderInqPagination(total, totalPages);
+    }
+
+    function renderInqPagination(total: number, totalPages: number) {
+      const el = document.getElementById('inquiries-pagination');
+      if (!el) return;
+      if (totalPages <= 1) { el.innerHTML = ''; return; }
+      const s = (inqPage - 1) * INQ_PAGE_SIZE + 1;
+      const e = Math.min(inqPage * INQ_PAGE_SIZE, total);
+      const pages: (number | string)[] = [];
+      for (let p = 1; p <= totalPages; p++) {
+        if (p === 1 || p === totalPages || Math.abs(p - inqPage) <= 1) pages.push(p);
+        else if (pages[pages.length - 1] !== '…') pages.push('…');
+      }
+      const btns = pages.map(p => {
+        if (p === '…') return `<span class="px-2 text-gray-400">…</span>`;
+        if (p === inqPage) return `<button class="px-3 py-1.5 rounded-lg bg-green-700 text-white font-semibold text-sm">${p}</button>`;
+        return `<button onclick="goInqPage(${p})" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm transition">${p}</button>`;
+      }).join('');
+      el.innerHTML = `<div class="flex items-center justify-between text-sm text-gray-500 py-3 px-1 mt-2">
+        <span class="text-xs text-gray-400">${s}–${e} sur ${total} demandes</span>
+        <div class="flex items-center gap-1">
+          <button onclick="goInqPage(${inqPage - 1})" ${inqPage === 1 ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition">‹</button>
+          ${btns}
+          <button onclick="goInqPage(${inqPage + 1})" ${inqPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition">›</button>
+        </div>
+      </div>`;
+    }
+
+    (window as any).goInqPage = (p: number) => {
+      inqPage = p;
+      applyInqFilters();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Expose so other scripts can call after dynamic updates
+    (window as any).applyInqFilters = applyInqFilters;
+
+    const btns = document.querySelectorAll('.filter-btn');
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.getAttribute('data-filter') ?? 'toutes';
+        activeFilter = filter;
+        inqPage = 1;
+
+        btns.forEach(b => {
+          (b as HTMLElement).style.background = 'white';
+          (b as HTMLElement).style.color = '#6b7280';
+          (b as HTMLElement).style.borderColor = '#e5e7eb';
+          const badge = b.querySelector('span');
+          if (badge) (badge as HTMLElement).style.background = '#f3f4f6';
+        });
+        (btn as HTMLElement).style.background = '#047857';
+        (btn as HTMLElement).style.color = 'white';
+        (btn as HTMLElement).style.borderColor = '#047857';
+        const activeBadge = btn.querySelector('span');
+        if (activeBadge) (activeBadge as HTMLElement).style.background = 'rgba(255,255,255,0.25)';
+
+        applyInqFilters();
+      });
+    });
   </script>
 
   <script define:vars={{ inquiries, devisMap, templates }}>
@@ -758,6 +823,11 @@ function getDevisNumber(id: number): string {
       select.addEventListener('change', async (e) => {
         const id = e.target.dataset.id;
         const status = e.target.value;
+        // Update data-status immediately for live filter
+        document.querySelectorAll(`tr[data-id="${id}"], .inquiry-card[data-id="${id}"]`).forEach(el => {
+          el.setAttribute('data-status', status);
+        });
+        (window as any).applyInqFilters?.();
         try {
           const res = await fetch(`/api/inquiries/${id}`, {
             method: 'PATCH',
@@ -945,19 +1015,10 @@ function getDevisNumber(id: number): string {
       });
     });
 
-    // Search bar filtering
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-      searchInput.addEventListener('input', () => {
-        const q = searchInput.value.toLowerCase().trim();
-        const rows = document.querySelectorAll('tbody tr[data-id]');
-        const cards = document.querySelectorAll('.inquiry-card[data-id]');
-        [...rows, ...cards].forEach(el => {
-          const text = (el.textContent || '').toLowerCase();
-          el.style.display = (!q || text.includes(q)) ? '' : 'none';
-        });
-      });
-    }
+    // Search bar filtering — delegates to global exposed in first script block
+    document.getElementById('search-input')?.addEventListener('input', () => {
+      (window as any).goInqPage?.(1);
+    });
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -1525,12 +1586,16 @@ function getDevisNumber(id: number): string {
           sel.className = sel.className.replace(/bg-\w+-100\s+|text-\w+-\d+\s*/g, '').trim();
           info.badge.split(' ').forEach(c => sel.classList.add(c));
         });
+
+        // Re-apply filters so updated row reflects active filter
+        (window as any).applyInqFilters?.();
       });
 
       // Inquiry deleted
       window.addEventListener('sse:inquiry_deleted', (e) => {
         const { id } = e.detail;
         document.querySelectorAll(`.inquiry-card[data-id="${id}"], tr[data-id="${id}"]`).forEach(r => r.remove());
+        (window as any).applyInqFilters?.();
       });
     })();
 
@@ -1600,6 +1665,8 @@ function getDevisNumber(id: number): string {
         badge.className = badge.className.replace(/bg-\w+-100|text-\w+-\d+/g, '');
         badge.classList.add('bg-blue-100', 'text-blue-800');
       });
+
+      (window as any).applyInqFilters?.();
 
       // Toast
       const toast = document.createElement('div');

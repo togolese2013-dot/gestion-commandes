@@ -11,6 +11,15 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
   }
 
+  const secret = getEnv('N8N_API_SECRET', '');
+  const authHeader = request.headers.get('x-api-secret') || '';
+  if (!secret || authHeader !== secret) {
+    return new Response(JSON.stringify({ error: 'Non autorisé' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const body = await request.json();
     const { inquiry_id, products, total, delivery_type, note } = body;

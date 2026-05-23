@@ -225,6 +225,7 @@ export interface DashboardStats {
   en_attente: number;
   disponible: number;
   recupere: number;
+  annulee: number;
   chiffre_affaires: number;
   total_encaisse: number;
   total_impayes: number;
@@ -246,27 +247,28 @@ const MONTH_LABELS: Record<string, string> = {
 export function getDashboardStats(): DashboardStats {
   const db = getDb();
 
-  // Global KPIs
+  // Global KPIs — annulées exclues des métriques financières
   const row = db.prepare(`
     SELECT
       COUNT(*) as total,
       SUM(status = 'en_attente') as en_attente,
       SUM(status = 'disponible') as disponible,
       SUM(status = 'recupere') as recupere,
-      SUM(total_amount) as chiffre_affaires,
-      SUM(deposit) as total_encaisse,
-      SUM(remaining_balance) as total_impayes,
-      SUM(delivery_type = 'avion') as express,
-      SUM(delivery_type = 'bateau') as eco
+      SUM(status = 'annulee') as annulee,
+      SUM(CASE WHEN status != 'annulee' THEN total_amount ELSE 0 END) as chiffre_affaires,
+      SUM(CASE WHEN status != 'annulee' THEN deposit ELSE 0 END) as total_encaisse,
+      SUM(CASE WHEN status != 'annulee' THEN remaining_balance ELSE 0 END) as total_impayes,
+      SUM(CASE WHEN status != 'annulee' AND delivery_type = 'avion' THEN 1 ELSE 0 END) as express,
+      SUM(CASE WHEN status != 'annulee' AND delivery_type = 'bateau' THEN 1 ELSE 0 END) as eco
     FROM orders
   `).get() as any;
 
-  // Today / this week
+  // Today / this week — annulées exclues
   const todayRow = db.prepare(
-    `SELECT COUNT(*) as cnt FROM orders WHERE date(created_at) = date('now')`
+    `SELECT COUNT(*) as cnt FROM orders WHERE date(created_at) = date('now') AND status != 'annulee'`
   ).get() as { cnt: number };
   const weekRow = db.prepare(
-    `SELECT COUNT(*) as cnt FROM orders WHERE created_at >= date('now', '-6 days')`
+    `SELECT COUNT(*) as cnt FROM orders WHERE created_at >= date('now', '-6 days') AND status != 'annulee'`
   ).get() as { cnt: number };
 
   // Monthly revenue: last 12 months
@@ -313,6 +315,7 @@ export function getDashboardStats(): DashboardStats {
     en_attente: row.en_attente ?? 0,
     disponible: row.disponible ?? 0,
     recupere: row.recupere ?? 0,
+    annulee: row.annulee ?? 0,
     chiffre_affaires: row.chiffre_affaires ?? 0,
     total_encaisse: row.total_encaisse ?? 0,
     total_impayes: row.total_impayes ?? 0,

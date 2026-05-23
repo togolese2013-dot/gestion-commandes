@@ -401,6 +401,7 @@ const statusColor: Record<string, string> = {
         </div>
       </>
     )}
+    <div id="orders-pagination"></div>
   </div>
 
   <!-- View Modal -->
@@ -718,42 +719,82 @@ function fmt(n: number) {
   return Number(n).toLocaleString('fr-FR');
 }
 
-// ---- Filter + Search ----
+// ---- Filter + Search + Pagination ----
 let activeStatus = 'all';
+const PAGE_SIZE = 25;
+let currentPage = 1;
 
 function applyFilters() {
   const search = (document.getElementById('search-input') as HTMLInputElement).value.toLowerCase().trim();
+  const rows = Array.from(document.querySelectorAll('.order-row')) as HTMLElement[];
+  const filtered: HTMLElement[] = [];
 
-  let visible = 0;
-  document.querySelectorAll('.order-row').forEach(row => {
-    const r = row as HTMLElement;
-    const status = r.dataset.status ?? '';
-    const client = r.dataset.client ?? '';
-    const number = r.dataset.number ?? '';
-
+  rows.forEach(row => {
+    const status = row.dataset.status ?? '';
+    const client = row.dataset.client ?? '';
+    const number = row.dataset.number ?? '';
     const matchStatus = activeStatus === 'all' || status === activeStatus;
     const matchSearch = !search || client.includes(search) || number.includes(search);
-
-    const show = matchStatus && matchSearch;
-    r.style.display = show ? '' : 'none';
-    if (show) visible++;
+    if (matchStatus && matchSearch) filtered.push(row);
+    else row.style.display = 'none';
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+  filtered.forEach((row, i) => { row.style.display = (i >= start && i < end) ? '' : 'none'; });
+
   const countEl = document.getElementById('search-count')!;
-  countEl.textContent = `${visible} commande${visible !== 1 ? 's' : ''} trouvée${visible !== 1 ? 's' : ''}`;
-  countEl.classList.toggle('hidden', !search);
+  countEl.textContent = `${filtered.length} commande${filtered.length !== 1 ? 's' : ''} trouvée${filtered.length !== 1 ? 's' : ''}`;
+  countEl.classList.toggle('hidden', !search && activeStatus === 'all');
+
+  renderPagination(filtered.length, totalPages);
 }
+
+function renderPagination(total: number, totalPages: number) {
+  const el = document.getElementById('orders-pagination');
+  if (!el) return;
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  const s = (currentPage - 1) * PAGE_SIZE + 1;
+  const e = Math.min(currentPage * PAGE_SIZE, total);
+  const pages: (number | string)[] = [];
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) pages.push(p);
+    else if (pages[pages.length - 1] !== '…') pages.push('…');
+  }
+  const btns = pages.map(p => {
+    if (p === '…') return `<span class="px-2 text-gray-400">…</span>`;
+    if (p === currentPage) return `<button class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold text-sm">${p}</button>`;
+    return `<button onclick="goToPage(${p})" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm transition">${p}</button>`;
+  }).join('');
+  el.innerHTML = `<div class="flex items-center justify-between text-sm text-gray-500 py-3 px-1 mt-2">
+    <span class="text-xs text-gray-400">${s}–${e} sur ${total} commandes</span>
+    <div class="flex items-center gap-1">
+      <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition">‹</button>
+      ${btns}
+      <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition">›</button>
+    </div>
+  </div>`;
+}
+
+(window as any).goToPage = (p: number) => {
+  currentPage = p;
+  applyFilters();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeStatus = btn.getAttribute('data-filter') ?? 'all';
+    currentPage = 1;
     applyFilters();
   });
 });
 
-document.getElementById('search-input')?.addEventListener('input', applyFilters);
+document.getElementById('search-input')?.addEventListener('input', () => { currentPage = 1; applyFilters(); });
 
 
 // ---- View Modal ----
