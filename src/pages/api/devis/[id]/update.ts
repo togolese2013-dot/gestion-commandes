@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getDevisById, updateDevis } from '../../../../lib/devis';
 import { requireAuth } from '../../../../lib/auth';
+import { uploadProductsPhotos, isR2Configured } from '../../../../lib/r2';
 
 export const PUT: APIRoute = async (context) => {
   try {
@@ -36,9 +37,15 @@ export const PUT: APIRoute = async (context) => {
       }
     }
 
+    // Upload any remaining base64 photos to R2
+    let migratedProducts = products_summary;
+    if (isR2Configured()) {
+      migratedProducts = await uploadProductsPhotos(products_summary, 'devis');
+    }
+
     // Recalculate amounts
     let calculatedTotal = 0;
-    products_summary.forEach((p: any) => {
+    migratedProducts.forEach((p: any) => {
       const qty = p.quantity || 1;
       const budget = p.budget || 0;
       calculatedTotal += qty * budget;
@@ -49,7 +56,7 @@ export const PUT: APIRoute = async (context) => {
 
     // Update devis
     const updatedDevis = updateDevis(parseInt(id), {
-      products_summary,
+      products_summary: migratedProducts,
       total_amount: calculatedTotal,
       acompte_amount: calculatedAcompte,
       solde_amount: calculatedSolde,

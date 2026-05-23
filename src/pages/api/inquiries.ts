@@ -4,15 +4,7 @@ import { requireAuth } from '../../lib/auth';
 import { sendNewInquiryWebhook } from '../../lib/webhook';
 import { broadcastToAdmins, broadcastBadgeUpdate } from '../../lib/sse';
 import { logActivity } from '../../lib/audit';
-import fs from 'fs';
-import path from 'path';
-
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'inquiries');
-
-// Ensure upload directory exists
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+import { uploadBase64ToR2, isR2Configured } from '../../lib/r2';
 
 export const POST: APIRoute = async (context) => {
   try {
@@ -57,8 +49,15 @@ export const POST: APIRoute = async (context) => {
             const base64 = Buffer.from(buffer).toString('base64');
             const mimeType = file.type || 'image/jpeg';
             const dataUrl = `data:${mimeType};base64,${base64}`;
-            productPhotos.push(dataUrl);
-            console.log(`[inquiries.ts] Photo stored for product ${idx}: ${file.name} (${file.size} bytes)`);
+
+            if (isR2Configured()) {
+              const r2Url = await uploadBase64ToR2(dataUrl, 'inquiries');
+              productPhotos.push(r2Url ?? dataUrl);
+              console.log(`[inquiries.ts] Photo ${r2Url ? 'uploaded to R2' : 'stored as base64'}: ${file.name}`);
+            } else {
+              productPhotos.push(dataUrl);
+              console.log(`[inquiries.ts] Photo stored as base64 (R2 non configuré): ${file.name}`);
+            }
           } catch (err) {
             console.error(`[inquiries.ts] Error processing file: ${err}`);
           }
