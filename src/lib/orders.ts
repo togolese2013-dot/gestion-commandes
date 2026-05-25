@@ -365,7 +365,7 @@ export function cancelOrder(id: number, reason = '', performedBy = ''): Order | 
   if (!id || isNaN(id)) return null;
   const db = getDb();
   db.prepare(
-    `UPDATE orders SET status = 'annulee', cancelled_by = ?, cancelled_at = datetime('now'), cancellation_reason = ?, updated_at = datetime('now') WHERE id = ? AND status IN ('en_attente', 'disponible')`
+    `UPDATE orders SET status = 'annulee', total_amount = 0, deposit = 0, remaining_balance = 0, cancelled_by = ?, cancelled_at = datetime('now'), cancellation_reason = ?, updated_at = datetime('now') WHERE id = ? AND status IN ('en_attente', 'disponible')`
   ).run(performedBy, reason, id);
   return getOrderById(id);
 }

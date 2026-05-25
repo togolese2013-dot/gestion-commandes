@@ -207,6 +207,8 @@ function runMigrations(db: Database.Database) {
     `ALTER TABLE orders ADD COLUMN cancelled_by TEXT DEFAULT ''`,
     `ALTER TABLE orders ADD COLUMN cancelled_at TEXT DEFAULT NULL`,
     `ALTER TABLE orders ADD COLUMN cancellation_reason TEXT DEFAULT ''`,
+    // Zero out amounts on already-cancelled orders (full refund policy)
+    `UPDATE orders SET total_amount = 0, deposit = 0, remaining_balance = 0 WHERE status = 'annulee'`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* column already exists or constraint issue */ }
