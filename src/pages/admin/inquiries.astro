@@ -827,7 +827,7 @@ function getDevisNumber(id: number): string {
         document.querySelectorAll(`tr[data-id="${id}"], .inquiry-card[data-id="${id}"]`).forEach(el => {
           el.setAttribute('data-status', status);
         });
-        (window as any).applyInqFilters?.();
+        window.applyInqFilters?.();
         try {
           const res = await fetch(`/api/inquiries/${id}`, {
             method: 'PATCH',
@@ -1017,7 +1017,7 @@ function getDevisNumber(id: number): string {
 
     // Search bar filtering — delegates to global exposed in first script block
     document.getElementById('search-input')?.addEventListener('input', () => {
-      (window as any).goInqPage?.(1);
+      window.goInqPage?.(1);
     });
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
@@ -1588,14 +1588,14 @@ function getDevisNumber(id: number): string {
         });
 
         // Re-apply filters so updated row reflects active filter
-        (window as any).applyInqFilters?.();
+        window.applyInqFilters?.();
       });
 
       // Inquiry deleted
       window.addEventListener('sse:inquiry_deleted', (e) => {
         const { id } = e.detail;
         document.querySelectorAll(`.inquiry-card[data-id="${id}"], tr[data-id="${id}"]`).forEach(r => r.remove());
-        (window as any).applyInqFilters?.();
+        window.applyInqFilters?.();
       });
     })();
 
@@ -1666,7 +1666,7 @@ function getDevisNumber(id: number): string {
         badge.classList.add('bg-blue-100', 'text-blue-800');
       });
 
-      (window as any).applyInqFilters?.();
+      window.applyInqFilters?.();
 
       // Toast
       const toast = document.createElement('div');
