@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PORT=4321
+      - HOST=0.0.0.0
+      - DB_PATH=/data/orders.db
+    ports:
+      - "127.0.0.1:4321:4321"
+    volumes:
+      - sqlite_data:/data
+      - sqlite_data:/data/backups
+
+volumes:
+  sqlite_data:

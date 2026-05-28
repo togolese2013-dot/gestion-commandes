@@ -1,0 +1,19 @@
+togolese.fr, www.togolese.fr {
+    reverse_proxy localhost:4321
+
+    encode gzip
+
+    header {
+        X-Frame-Options DENY
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/togolese.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
