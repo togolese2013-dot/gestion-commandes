@@ -6,7 +6,7 @@
  *   - API routes → Network-only (never cache)
  */
 
-const CACHE_NAME    = 'togolese-v1';
+const CACHE_NAME    = 'togolese-v2';
 const OFFLINE_URL   = '/offline';
 const STATIC_ASSETS = [
   '/offline',
