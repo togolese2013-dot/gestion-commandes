@@ -112,6 +112,38 @@ export async function sendProductsPaidWhatsApp(order: Order): Promise<void> {
 }
 
 /**
+ * Notify the client that their inquiry (demande de devis) has been cancelled.
+ * Template: commande_annulee (reused — swap to 'demande_annulee' once approved in Meta)
+ *   Body {{1}} = client_name
+ *   Body {{2}} = inquiry ref (e.g. DEV-0042)
+ *   Body {{3}} = reason
+ */
+export async function sendInquiryCancelledWhatsApp(
+  clientName: string,
+  clientPhone: string,
+  inquiryRef: string,
+  reason = ''
+): Promise<void> {
+  const components = [
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: clientName },
+        { type: 'text', text: inquiryRef },
+        { type: 'text', text: reason || 'Annulation par l\'équipe Togolese' },
+      ],
+    },
+  ];
+
+  await sendTemplate(
+    clientPhone,
+    'commande_annulee', // TODO: swap to 'demande_annulee' when Meta template approved
+    'fr',
+    components
+  );
+}
+
+/**
  * Notify the client that their order has been cancelled.
  * Template: commande_annulee
  *   Body {{1}} = client_name
