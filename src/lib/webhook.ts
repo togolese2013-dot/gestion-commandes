@@ -178,17 +178,26 @@ export async function sendOrderCancelledWebhook(order: Order, reason = ''): Prom
 
 export async function sendDevisWebhook(inquiry: Inquiry, devis_number: string, share_url: string): Promise<void> {
   const url = getEnv('N8N_WEBHOOK_DEVIS_SENT');
-  if (!url || url.includes('your-n8n-instance')) return;
+  console.log('[Webhook devis_sent] URL:', url || 'NON DEFINIE');
+  if (!url) { console.error('[Webhook devis_sent] Variable N8N_WEBHOOK_DEVIS_SENT manquante'); return; }
+  if (url.includes('your-n8n-instance')) { console.error('[Webhook devis_sent] URL placeholder détectée'); return; }
 
-  await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      event: 'devis_sent',
-      devis_number,
-      client_name: inquiry.client_name,
-      client_phone: inquiry.client_phone,
-      share_url,
-    }),
-  }).catch(err => console.error('[Webhook devis_sent]', err));
+  const payload = {
+    event: 'devis_sent',
+    devis_number,
+    client_name: inquiry.client_name,
+    client_phone: inquiry.client_phone,
+    share_url,
+  };
+  console.log('[Webhook devis_sent] Envoi vers:', url);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    console.log('[Webhook devis_sent] Réponse HTTP:', res.status);
+  } catch (err) {
+    console.error('[Webhook devis_sent] Erreur fetch:', err);
+  }
 }
