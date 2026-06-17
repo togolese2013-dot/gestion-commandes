@@ -1,7 +1,7 @@
 # Handoff — Togolese · Gestion Commandes
 
 > Document de transfert complet à destination d'un développeur reprenant le projet.
-> Dernière mise à jour : 2026-04-15.
+> Dernière mise à jour : 2026-05-29.
 
 ---
 
@@ -17,7 +17,7 @@
 | Base de données | SQLite via better-sqlite3 |
 | Authentification | Cookie HMAC signé (8h) |
 | Notifications | N8N webhooks → WhatsApp |
-| Déploiement | Railway (Node.js standalone) |
+| Déploiement | Hetzner CX22 — Docker + Caddy + Cloudflare |
 | Langue UI | Français |
 
 ---
@@ -360,19 +360,43 @@ Les photos produits sont stockées en **base64** dans la colonne JSON `products`
 
 ---
 
-## 12. Déploiement (Railway)
+## 12. Déploiement (Hetzner)
 
-```bash
-# Build
-npm run build
+**Serveur** : VPS Hetzner CX22 — `178.105.157.67` (FSN1, Falkenstein)
+**Stack** : Docker + Caddy (reverse proxy + SSL auto) + Cloudflare (proxy/CDN)
 
-# Start
-node dist/server/entry.mjs --port $PORT --host
+```
+Cloudflare → Caddy (:443) → Docker app (:4321)
 ```
 
-Variables Railway à configurer : toutes celles de la section 5.
+### Fichiers de déploiement
 
-La base SQLite est persistante via un volume Railway monté à `DB_PATH`.
+| Fichier | Rôle |
+|---------|------|
+| `Dockerfile` | Build image Node.js |
+| `docker-compose.yml` | Orchestration + volume SQLite |
+| `Caddyfile` | Reverse proxy + SSL Let's Encrypt |
+| `scripts/deploy.sh` | Script de mise à jour |
+
+### Mettre à jour l'app
+
+```bash
+ssh root@178.105.157.67 "bash /opt/gestion-commandes/scripts/deploy.sh"
+```
+
+### SQLite — emplacement
+
+- Container : `/data/orders.db`
+- Hôte : `/var/lib/docker/volumes/gestion-commandes_sqlite_data/_data/orders.db`
+- `DB_PATH=/data/orders.db` dans `.env`
+
+### Variables d'environnement
+
+Fichier `.env` sur le serveur : `/opt/gestion-commandes/.env` (non versionné).
+
+### N8N
+
+Tourne séparément sur Oracle Cloud (`n8n.togolese.fr`).
 
 ---
 
@@ -380,6 +404,7 @@ La base SQLite est persistante via un volume Railway monté à `DB_PATH`.
 
 | Date | Changement |
 |------|-----------|
+| 2026-05-29 | Migration Railway → Hetzner CX22 (Docker + Caddy + Cloudflare) |
 | 2026-04-15 | Champ téléphone `/demande` : sélecteur code pays séparé du numéro |
 | 2026-04-15 | Pages impression : logo T bleu, couleurs vertes, email contact@togolese.fr |
 | 2026-04-15 | Bon de commande (`/admin/print/[numero]`) : thème bleu, header avec logo |
@@ -421,4 +446,4 @@ npm run preview      # Prévisualiser le build
 
 ---
 
-*Fin du document de handoff — Togolese Gestion Commandes — 2026-04-15*
+*Fin du document de handoff — Togolese Gestion Commandes — 2026-05-29*

@@ -5,15 +5,17 @@ import { sendDevisWebhook } from '../../../lib/webhook';
 import { getEnv } from '../../../lib/env';
 import { broadcastToAdmins, broadcastBadgeUpdate } from '../../../lib/sse';
 import { logActivity } from '../../../lib/audit';
+import { requireAuth } from '../../../lib/auth';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
+  const { request } = context;
+
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
   }
 
-  const secret = getEnv('N8N_API_SECRET', '');
-  const authHeader = request.headers.get('x-api-secret') || '';
-  if (!secret || authHeader !== secret) {
+  const authRedirect = requireAuth(context);
+  if (authRedirect) {
     return new Response(JSON.stringify({ error: 'Non autorisé' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
