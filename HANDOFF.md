@@ -165,6 +165,7 @@ N8N_WEBHOOK_NEW_ORDER=https://n8n.togolese.fr/webhook/commande
 N8N_WEBHOOK_NEW_INQUIRY=https://n8n.togolese.fr/webhook/nouvelle-demande
 N8N_WEBHOOK_ORDER_READY=https://n8n.togolese.fr/webhook/commande_disponible1
 N8N_WEBHOOK_PAYMENT=https://n8n.togolese.fr/webhook/paiement
+N8N_WEBHOOK_DEVIS_SENT=https://n8n.togolese.fr/webhook/devis-envoye
 N8N_API_SECRET=                     # Secret partagé N8N
 ```
 
@@ -404,6 +405,8 @@ Tourne séparément sur Oracle Cloud (`n8n.togolese.fr`).
 
 | Date | Changement |
 |------|-----------|
+| 2026-06-17 | Fix `/api/inquiries/confirm` : auth N8N secret → cookie session admin |
+| 2026-06-17 | Ajout `N8N_WEBHOOK_DEVIS_SENT` dans `.env` Hetzner (notification WhatsApp devis) |
 | 2026-05-29 | Migration Railway → Hetzner CX22 (Docker + Caddy + Cloudflare) |
 | 2026-04-15 | Champ téléphone `/demande` : sélecteur code pays séparé du numéro |
 | 2026-04-15 | Pages impression : logo T bleu, couleurs vertes, email contact@togolese.fr |
@@ -446,4 +449,4 @@ npm run preview      # Prévisualiser le build
 
 ---
 
-*Fin du document de handoff — Togolese Gestion Commandes — 2026-05-29*
+*Fin du document de handoff — Togolese Gestion Commandes — 2026-06-17*
