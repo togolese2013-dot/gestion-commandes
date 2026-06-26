@@ -112,6 +112,40 @@ export async function sendProductsPaidWhatsApp(order: Order): Promise<void> {
 }
 
 /**
+ * Notify the client that their order is available for pickup.
+ * Template: commande_disponible
+ *   Body {{1}} = client_name
+ *   Body {{2}} = order_number
+ *   Body {{3}} = remaining_balance (FCFA)
+ *   Body {{4}} = order_url (lien de suivi)
+ */
+export async function sendOrderReadyWhatsApp(order: Order): Promise<void> {
+  const siteUrl = getEnv('PUBLIC_SITE_URL') ?? 'https://togolese.fr';
+  const orderNumber = order.order_number ?? '';
+  const remaining = String(Number(order.remaining_balance).toLocaleString('fr-FR'));
+  const orderUrl = `${siteUrl}/commande/${orderNumber}`;
+
+  const components = [
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: order.client_name },
+        { type: 'text', text: orderNumber },
+        { type: 'text', text: remaining },
+        { type: 'text', text: orderUrl },
+      ],
+    },
+  ];
+
+  await sendTemplate(
+    order.client_phone,
+    'commande_disponible',
+    'fr',
+    components
+  );
+}
+
+/**
  * Notify the client that their inquiry (demande de devis) has been cancelled.
  * Template: commande_annulee (reused — swap to 'demande_annulee' once approved in Meta)
  *   Body {{1}} = client_name

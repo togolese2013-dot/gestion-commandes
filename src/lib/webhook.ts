@@ -74,12 +74,20 @@ export async function sendOrderReadyWebhook(order: Order): Promise<void> {
   if (url.includes('your-n8n-instance')) { console.error('[Webhook order_ready] URL placeholder détectée'); return; }
 
   const siteUrl = getEnv('PUBLIC_SITE_URL');
+  const products = order.products ?? [];
+  const products_text = products.length > 0
+    ? products.map((p: any) => `• ${p.name} x${p.quantity}`).join('\n')
+    : 'N/A';
   const payload = {
     event: 'order_ready',
     order_number: order.order_number,
     client_name: order.client_name,
     client_phone: order.client_phone,
+    total_amount: order.total_amount,
+    deposit: order.deposit,
     remaining_balance: order.remaining_balance,
+    delivery_type: order.delivery_type,
+    products_text,
     order_url: `${siteUrl}/commande/${order.order_number}`,
   };
   console.log('[Webhook order_ready] Envoi vers:', url);

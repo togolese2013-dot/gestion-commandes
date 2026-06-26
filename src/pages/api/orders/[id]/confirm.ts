@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { isAuthenticated, getCurrentUser } from '../../../../lib/auth';
 import { confirmOrderAvailable, confirmOrderPickedUp, getOrderById } from '../../../../lib/orders';
-import { sendOrderReadyWebhook } from '../../../../lib/webhook';
+import { sendOrderReadyWhatsApp } from '../../../../lib/whatsapp';
 import { broadcastToAdmins, broadcastToOrder, broadcastBadgeUpdate } from '../../../../lib/sse';
 import { logActivity } from '../../../../lib/audit';
 
@@ -38,7 +38,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       // await so the webhook request completes before response is sent
       if (order) {
         try {
-          await sendOrderReadyWebhook(order);
+          await sendOrderReadyWhatsApp(order);
         } catch (webhookErr) {
           console.error('[Webhook order_ready failed]', webhookErr);
         }
