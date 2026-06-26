@@ -51,6 +51,8 @@ async function sendTemplate(
     console.log(`[WhatsApp] Tentative ${attempt}/${MAX_RETRIES + 1} — template "${templateName}" → ${formatPhone(to)}`);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
       const res  = await fetch(url, {
         method: 'POST',
         headers: {
@@ -58,7 +60,9 @@ async function sendTemplate(
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       const data = await res.json().catch(() => ({}));
 

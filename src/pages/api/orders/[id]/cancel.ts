@@ -40,9 +40,11 @@ export const POST: APIRoute = async ({ request, params }) => {
       return new Response(JSON.stringify({ error: 'Échec de l\'annulation' }), { status: 500 });
     }
 
-    // Fire-and-forget notifications
-    sendOrderCancelledWhatsApp(order, reason).catch(err => console.error('[Cancel] WhatsApp:', err));
-    sendOrderCancelledWebhook(order, reason).catch(err => console.error('[Cancel] Webhook:', err));
+    // Fire-and-forget notifications — decoupled from request cycle via setTimeout
+    setTimeout(() => {
+      sendOrderCancelledWhatsApp(order, reason).catch(err => console.error('[Cancel] WhatsApp:', err));
+      sendOrderCancelledWebhook(order, reason).catch(err => console.error('[Cancel] Webhook:', err));
+    }, 0);
 
     broadcastToAdmins('order_updated', order);
     broadcastBadgeUpdate();
