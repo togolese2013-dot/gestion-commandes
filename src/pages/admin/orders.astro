@@ -260,12 +260,20 @@ const statusColor: Record<string, string> = {
                         </span>
                       )}
                       <div class="h-px bg-gray-100"></div>
-                      <a href={`/admin/print/remboursement/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
-                        Lettre d'engagement remboursement
-                      </a>
-                      <a href={`/admin/print/remboursement/bon/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
-                        Bon de remboursement
-                      </a>
+                      {order.status === 'annulee' ? (
+                        <>
+                          <a href={`/admin/print/remboursement/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
+                            Lettre d'engagement remboursement
+                          </a>
+                          <a href={`/admin/print/remboursement/bon/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
+                            Bon de remboursement
+                          </a>
+                        </>
+                      ) : (
+                        <span class="block px-4 py-2 text-sm text-gray-300 cursor-not-allowed" title="Disponible après annulation">
+                          Remboursement 🔒
+                        </span>
+                      )}
                     </div>
                   </div>
                   {!order.products_paid_at && (
@@ -393,12 +401,20 @@ const statusColor: Record<string, string> = {
                             </span>
                           )}
                           <div class="h-px bg-gray-100"></div>
-                          <a href={`/admin/print/remboursement/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
-                            Lettre d'engagement remboursement
-                          </a>
-                          <a href={`/admin/print/remboursement/bon/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
-                            Bon de remboursement
-                          </a>
+                          {order.status === 'annulee' ? (
+                            <>
+                              <a href={`/admin/print/remboursement/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
+                                Lettre d'engagement remboursement
+                              </a>
+                              <a href={`/admin/print/remboursement/bon/${order.order_number}`} target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
+                                Bon de remboursement
+                              </a>
+                            </>
+                          ) : (
+                            <span class="block px-4 py-2 text-sm text-gray-300 cursor-not-allowed" title="Disponible après annulation">
+                              Remboursement 🔒
+                            </span>
+                          )}
                         </div>
                       </div>
                       {!order.products_paid_at && (
